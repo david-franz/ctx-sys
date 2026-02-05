@@ -2,10 +2,10 @@
 
 **Context System** - An intelligent context management framework for AI coding assistants.
 
-> **PROJECT STATUS**: Phase 4 (Document Intelligence) is complete with 445 passing tests.
+> **PROJECT STATUS**: Phase 5 (Graph RAG) is complete with 529 passing tests.
 >
-> **What exists**: Core foundation + code intelligence + conversation memory + document intelligence with markdown parsing, requirement extraction, and document-code linking
-> **Next up**: Phase 5 (Graph RAG)
+> **What exists**: Core foundation + code intelligence + conversation memory + document intelligence + graph RAG with relationship storage, entity resolution, and semantic linking
+> **Next up**: Phase 6 (Advanced Retrieval)
 
 ## Philosophy
 
@@ -567,11 +567,11 @@ See [docs/](./docs/) for detailed implementation plans.
 - [x] Requirement extraction ([F4.2](docs/phase-4/F4.2-requirement-extraction.md)) - 35 tests
 - [x] Document-code linking ([F4.3](docs/phase-4/F4.3-document-code-linking.md)) - 30 tests
 
-### Phase 5: Graph RAG (Design Complete)
+### Phase 5: Graph RAG ✅ Complete (84 tests)
 
-- [ ] Graph storage ([F5.1](docs/phase-5/F5.1-graph-storage.md))
-- [ ] Entity resolution ([F5.2](docs/phase-5/F5.2-entity-resolution.md))
-- [ ] Semantic relationships ([F5.3](docs/phase-5/F5.3-semantic-relationships.md))
+- [x] Graph storage ([F5.1](docs/phase-5/F5.1-graph-storage.md)) - 39 tests
+- [x] Entity resolution ([F5.2](docs/phase-5/F5.2-entity-resolution.md)) - 22 tests
+- [x] Semantic relationships ([F5.3](docs/phase-5/F5.3-semantic-relationships.md)) - 23 tests
 
 ### Phase 6: Advanced Retrieval (Design Complete)
 
@@ -643,11 +643,20 @@ Document intelligence layer is fully implemented with:
 - Requirement extraction with MoSCoW prioritization and user story detection
 - Document-code linking with pattern-based code reference resolution
 
-### Next: Phase 5 (Graph RAG)
+### Phase 5 Complete
 
-- Graph storage
-- Entity resolution
-- Semantic relationships
+Graph RAG layer is fully implemented with:
+
+- Database-backed relationship storage with traversal and statistics
+- Entity resolution with duplicate detection and semantic merging
+- Semantic relationship discovery via embedding similarity
+
+### Next: Phase 6 (Advanced Retrieval)
+
+- Query parsing
+- Multi-strategy search
+- Context assembly
+- Relevance feedback
 
 ## Contributing
 
