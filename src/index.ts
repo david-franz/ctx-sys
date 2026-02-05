@@ -44,5 +44,17 @@ export {
   GenericExtractor
 } from './ast';
 
+// Summarization
+export {
+  SymbolSummarizer,
+  SymbolSummary,
+  ParameterSummary,
+  FileSummary,
+  FileMetrics,
+  SummaryLevel,
+  SummarizationOptions,
+  LLMSummarizer
+} from './summarization';
+
 // Application Context
 export { AppContext, getDefaultDbPath } from './context';
