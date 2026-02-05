@@ -154,3 +154,22 @@ export {
   GraphStatistics,
   TraversalOptions
 } from './graph';
+
+// Advanced Retrieval
+export {
+  QueryParser,
+  QueryIntent,
+  EntityMention,
+  ParsedQuery,
+  QueryParserOptions,
+  SearchResult,
+  SearchStrategy,
+  SearchConfig,
+  AssembledContext,
+  RelevanceFeedbackInput,
+  StoredFeedback,
+  HyDEResult,
+  GateDecision,
+  CritiqueResult,
+  CritiqueIssue
+} from './retrieval';
