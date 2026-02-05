@@ -234,3 +234,13 @@ export {
   CritiqueResult,
   CritiqueIssue
 } from './retrieval';
+
+// Model Abstraction
+export {
+  ProviderFactory,
+  ProviderFactoryOptions,
+  ModelProviderConfig,
+  ProviderHealth,
+  MockSummarizationProvider,
+  defaultProviderFactory
+} from './models';
