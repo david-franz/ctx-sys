@@ -67,5 +67,15 @@ export {
   FileStatus
 } from './indexer';
 
+// Relationship Extraction
+export {
+  RelationshipExtractor,
+  Relationship,
+  RelationshipType,
+  GraphNode,
+  GraphStats,
+  ExtractionOptions
+} from './relationships';
+
 // Application Context
 export { AppContext, getDefaultDbPath } from './context';
