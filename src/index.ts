@@ -77,5 +77,17 @@ export {
   ExtractionOptions
 } from './relationships';
 
+// Git Diff Processing
+export {
+  GitDiffProcessor,
+  DiffResult,
+  FileDiff,
+  DiffHunk,
+  DiffLine,
+  DiffOptions,
+  ChangeType,
+  ChangedSymbol
+} from './git';
+
 // Application Context
 export { AppContext, getDefaultDbPath } from './context';
