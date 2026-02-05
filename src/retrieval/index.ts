@@ -14,12 +14,21 @@ export {
   StrategyWeights
 } from './multi-strategy-search';
 
+// Context Assembly
+export {
+  ContextAssembler,
+  ContextSource,
+  ContextFormat,
+  AssemblyOptions,
+  AssembledContext,
+  estimateTokens
+} from './context-assembler';
+
 // Shared Types
 export {
   SearchResult,
   SearchStrategy,
   SearchConfig,
-  AssembledContext,
   RelevanceFeedbackInput,
   StoredFeedback,
   HyDEResult,

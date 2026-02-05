@@ -54,26 +54,6 @@ export interface SearchConfig {
 }
 
 /**
- * Assembled context for LLM consumption.
- */
-export interface AssembledContext {
-  /** Primary relevant entities */
-  primary: Entity[];
-  /** Supporting context entities */
-  supporting: Entity[];
-  /** Formatted context string */
-  formatted: string;
-  /** Token count estimate */
-  estimatedTokens: number;
-  /** Sources used */
-  sources: Array<{
-    entityId: string;
-    entityName: string;
-    relevance: number;
-  }>;
-}
-
-/**
  * Feedback for a search result.
  */
 export interface RelevanceFeedbackInput {
