@@ -80,23 +80,6 @@ export interface StoredFeedback extends RelevanceFeedbackInput {
 }
 
 /**
- * HyDE (Hypothetical Document Embeddings) result.
- */
-/**
- * Retrieval gate decision.
- */
-export interface GateDecision {
-  /** Whether retrieval is needed */
-  shouldRetrieve: boolean;
-  /** Confidence in the decision */
-  confidence: number;
-  /** Reason for the decision */
-  reason: string;
-  /** Suggested search strategies if retrieval is needed */
-  suggestedStrategies?: SearchStrategy[];
-}
-
-/**
  * Draft critique result.
  */
 export interface CritiqueResult {

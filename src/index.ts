@@ -190,7 +190,13 @@ export {
   SearchConfig,
   RelevanceFeedbackInput,
   StoredFeedback,
+  RetrievalGate,
+  GateModelProvider,
   GateDecision,
+  GateContext,
+  GateConfig,
+  MockGateModelProvider,
+  DEFAULT_GATE_CONFIG,
   CritiqueResult,
   CritiqueIssue
 } from './retrieval';

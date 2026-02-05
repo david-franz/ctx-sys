@@ -46,6 +46,17 @@ export {
   buildHypotheticalPrompt
 } from './hyde-expander';
 
+// Retrieval Gating
+export {
+  RetrievalGate,
+  GateModelProvider,
+  GateDecision,
+  GateContext,
+  GateConfig,
+  MockGateModelProvider,
+  DEFAULT_GATE_CONFIG
+} from './retrieval-gate';
+
 // Shared Types
 export {
   SearchResult,
@@ -53,7 +64,6 @@ export {
   SearchConfig,
   RelevanceFeedbackInput,
   StoredFeedback,
-  GateDecision,
   CritiqueResult,
   CritiqueIssue
 } from './types';
