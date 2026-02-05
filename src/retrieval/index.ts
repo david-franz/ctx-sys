@@ -24,6 +24,15 @@ export {
   estimateTokens
 } from './context-assembler';
 
+// Relevance Feedback
+export {
+  RelevanceFeedback,
+  FeedbackType,
+  FeedbackSignal,
+  FeedbackStats,
+  RecordFeedbackOptions
+} from './relevance-feedback';
+
 // Shared Types
 export {
   SearchResult,
