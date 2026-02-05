@@ -188,10 +188,13 @@ DROP TABLE IF EXISTS ${prefix}_entities;
 
 /**
  * Sanitize project ID for use as table prefix.
- * Replaces non-alphanumeric characters with underscores.
+ * Replaces non-alphanumeric characters with underscores and
+ * prefixes with 'p_' to ensure valid SQL identifiers (can't start with digit).
  */
 export function sanitizeProjectId(projectId: string): string {
-  return projectId.replace(/[^a-zA-Z0-9]/g, '_');
+  const sanitized = projectId.replace(/[^a-zA-Z0-9]/g, '_');
+  // Prefix with 'p_' to ensure table names don't start with a digit
+  return `p_${sanitized}`;
 }
 
 /**

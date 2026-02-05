@@ -168,20 +168,21 @@ describe('F1.1 Database Schema', () => {
 
   describe('Schema Functions', () => {
     it('should sanitize project ID correctly', () => {
-      expect(sanitizeProjectId('my-project')).toBe('my_project');
-      expect(sanitizeProjectId('my.project.name')).toBe('my_project_name');
-      expect(sanitizeProjectId('test123')).toBe('test123');
-      expect(sanitizeProjectId('a-b_c.d')).toBe('a_b_c_d');
+      // All prefixed with 'p_' to ensure valid SQL identifiers
+      expect(sanitizeProjectId('my-project')).toBe('p_my_project');
+      expect(sanitizeProjectId('my.project.name')).toBe('p_my_project_name');
+      expect(sanitizeProjectId('test123')).toBe('p_test123');
+      expect(sanitizeProjectId('a-b_c.d')).toBe('p_a_b_c_d');
     });
 
     it('should return correct project table names', () => {
       const tables = getProjectTableNames('test-proj');
-      expect(tables).toContain('test_proj_entities');
-      expect(tables).toContain('test_proj_vectors');
-      expect(tables).toContain('test_proj_relationships');
-      expect(tables).toContain('test_proj_sessions');
-      expect(tables).toContain('test_proj_messages');
-      expect(tables).toContain('test_proj_ast_cache');
+      expect(tables).toContain('p_test_proj_entities');
+      expect(tables).toContain('p_test_proj_vectors');
+      expect(tables).toContain('p_test_proj_relationships');
+      expect(tables).toContain('p_test_proj_sessions');
+      expect(tables).toContain('p_test_proj_messages');
+      expect(tables).toContain('p_test_proj_ast_cache');
     });
 
     it('should create all project tables', () => {
@@ -200,15 +201,15 @@ describe('F1.1 Database Schema', () => {
     it('should support LIKE-based text search', () => {
       db.createProject('search-test');
 
-      // Insert an entity
+      // Insert an entity (table name is prefixed with p_)
       db.run(
-        `INSERT INTO search_test_entities (id, type, name, content, summary) VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO p_search_test_entities (id, type, name, content, summary) VALUES (?, ?, ?, ?, ?)`,
         ['e1', 'function', 'testFunction', 'function test() { return 1; }', 'A test function']
       );
 
       // Search using LIKE
       const results = db.all<{ name: string }>(
-        `SELECT name FROM search_test_entities WHERE name LIKE ? OR content LIKE ?`,
+        `SELECT name FROM p_search_test_entities WHERE name LIKE ? OR content LIKE ?`,
         ['%test%', '%test%']
       );
       expect(results.length).toBeGreaterThan(0);
@@ -264,7 +265,7 @@ describe('F1.1 Database Schema', () => {
   describe('Project Table Indexes', () => {
     it('should create indexes on entity columns', () => {
       db.createProject('index-test');
-      const prefix = 'index_test';
+      const prefix = 'p_index_test';
 
       const indexes = db.all<{ name: string }>(
         `SELECT name FROM sqlite_master WHERE type='index' AND name LIKE ?`,
