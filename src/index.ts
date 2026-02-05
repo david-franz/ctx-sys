@@ -27,5 +27,22 @@ export {
 // MCP Server
 export { CtxSysMcpServer, McpServerConfig, ToolRegistry, Tool } from './mcp';
 
+// AST Parsing
+export {
+  ASTParser,
+  Symbol,
+  SymbolType,
+  Parameter,
+  ImportStatement,
+  ImportSpecifier,
+  ParseResult,
+  ParseError,
+  SupportedLanguage,
+  LanguageExtractor,
+  TypeScriptExtractor,
+  PythonExtractor,
+  GenericExtractor
+} from './ast';
+
 // Application Context
 export { AppContext, getDefaultDbPath } from './context';
