@@ -2,10 +2,10 @@
 
 **Context System** - An intelligent context management framework for AI coding assistants.
 
-> **⚠️ PROJECT STATUS**: This is currently a design document and technical specification. No implementation code has been written yet. The roadmap below represents planned features, not completed work.
+> **PROJECT STATUS**: Phase 1 (Foundation) is complete with 138 passing tests.
 >
-> **What exists**: ~19,000 lines of detailed design documentation across 9 implementation phases
-> **What doesn't exist**: Any working code, tests, or prototype
+> **What exists**: Core foundation with database, project management, entity storage, embedding pipeline, and MCP server scaffold
+> **In progress**: Phase 2 (Code Intelligence)
 
 ## Philosophy
 
@@ -435,7 +435,7 @@ defaults:
 | Component | Technology | Rationale |
 |-----------|------------|-----------|
 | **Language** | TypeScript | MCP SDK compatibility, type safety |
-| **Database** | SQLite + sqlite-vec | Single file, portable, vector support |
+| **Database** | sql.js (WebAssembly SQLite) | Single file, portable, no native deps |
 | **AST Parsing** | tree-sitter | Multi-language, fast, accurate |
 | **Embeddings (local)** | Ollama + nomic-embed-text | Quality local embeddings |
 | **Embeddings (cloud)** | OpenAI text-embedding-3-small | Fallback option |
@@ -447,7 +447,7 @@ defaults:
 
 ## Installation
 
-> **⚠️ Not yet implemented.** The commands below represent the planned installation process.
+> Phase 1 is implemented. You can install and run the MCP server.
 
 ```bash
 # Clone the repository
@@ -466,21 +466,15 @@ npm link
 
 ## Quick Start
 
-> **⚠️ Not yet implemented.** The commands below represent the planned user experience.
-
 ```bash
-# Initialize a project
-ctx-sys init --path ./my-project --name my-project
+# Start the MCP server (stdio transport for MCP clients)
+npm start serve
 
-# Index the codebase
-ctx-sys index
-
-# Start the MCP server
-ctx-sys serve
-
-# Or use the CLI directly
-ctx-sys query "how does authentication work?"
+# Or with custom database path
+npm start serve --db /path/to/custom.db
 ```
+
+> **Note**: Full CLI commands like `init`, `index`, and `query` are planned for later phases.
 
 ### With Claude Code (Planned)
 
@@ -542,15 +536,15 @@ ctx-sys link --source "RateLimiter" --target "Rate Limiting" \
 
 See [docs/](./docs/) for detailed implementation plans.
 
-> **Note**: All phases below represent planned features. Checkboxes indicate design document completion, not implementation.
+> **Note**: Checkboxes indicate implementation completion status.
 
-### Phase 1: Foundation (Design Complete)
+### Phase 1: Foundation ✅ Complete (138 tests)
 
-- [ ] Database schema and migrations ([F1.1](docs/phase-1/F1.1-database-schema.md))
-- [ ] Project management ([F1.2](docs/phase-1/F1.2-project-management.md))
-- [ ] Entity storage ([F1.3](docs/phase-1/F1.3-entity-storage.md))
-- [ ] Embedding pipeline ([F1.4](docs/phase-1/F1.4-embedding-pipeline.md))
-- [ ] MCP server ([F1.5](docs/phase-1/F1.5-mcp-server.md))
+- [x] Database schema and migrations ([F1.1](docs/phase-1/F1.1-database-schema.md)) - 21 tests
+- [x] Project management ([F1.2](docs/phase-1/F1.2-project-management.md)) - 29 tests
+- [x] Entity storage ([F1.3](docs/phase-1/F1.3-entity-storage.md)) - 35 tests
+- [x] Embedding pipeline ([F1.4](docs/phase-1/F1.4-embedding-pipeline.md)) - 24 tests
+- [x] MCP server scaffold ([F1.5](docs/phase-1/F1.5-mcp-server.md)) - 29 tests
 
 ### Phase 2: Code Intelligence (Design Complete)
 
@@ -612,14 +606,23 @@ See [docs/](./docs/) for detailed implementation plans.
 
 ## Current Status & Next Steps
 
-This project is currently in the design phase. To move forward:
+### Phase 1 Complete
 
-1. **Validate the concept** - Build a minimal prototype focusing on Phase 1 + basic retrieval
-2. **Prove value** - Use it in a real project to identify what actually matters
-3. **Iterate** - Refine the design based on real-world usage
-4. **Implement incrementally** - Start with Foundation (Phase 1) and build from there
+Foundation layer is fully implemented with:
 
-The comprehensive design documentation provides a roadmap, but implementation should be guided by practical validation rather than attempting to build all features upfront.
+- sql.js database with project isolation and migrations
+- Project management (CRUD, config, active project)
+- Entity storage with search and hash detection
+- Embedding pipeline with Mock/Ollama/OpenAI providers
+- MCP server scaffold with tool registry
+
+### Next: Phase 2 (Code Intelligence)
+
+- AST parsing with tree-sitter
+- Symbol summarization
+- Codebase indexing
+- Relationship extraction
+- Git diff processing
 
 ## Contributing
 
