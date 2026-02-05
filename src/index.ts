@@ -117,8 +117,12 @@ export { AppContext, getDefaultDbPath } from './context';
 // Document Intelligence
 export {
   MarkdownParser,
+  RequirementExtractor,
   MarkdownDocument,
   MarkdownSection,
   CodeBlock,
-  Link
+  Link,
+  Requirement,
+  RequirementInput,
+  RequirementSource
 } from './documents';
