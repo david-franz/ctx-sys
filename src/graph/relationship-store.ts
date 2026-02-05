@@ -114,7 +114,8 @@ export class RelationshipStore {
       sql = `SELECT * FROM ${this.tableName} WHERE target_id = ?`;
       params.push(entityId);
     } else {
-      sql = `SELECT * FROM ${this.tableName} WHERE source_id = ? OR target_id = ?`;
+      // Wrap OR in parentheses to ensure AND conditions apply to both
+      sql = `SELECT * FROM ${this.tableName} WHERE (source_id = ? OR target_id = ?)`;
       params.push(entityId, entityId);
     }
 

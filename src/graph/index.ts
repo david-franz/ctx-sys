@@ -8,6 +8,13 @@ export {
   MergeResult
 } from './entity-resolver';
 export {
+  SemanticLinker,
+  SemanticDiscoveryOptions,
+  DiscoveryResult,
+  SemanticLink,
+  FindRelatedOptions
+} from './semantic-linker';
+export {
   GraphRelationshipType,
   StoredRelationship,
   RelationshipInput,
