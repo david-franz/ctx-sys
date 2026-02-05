@@ -33,6 +33,19 @@ export {
   RecordFeedbackOptions
 } from './relevance-feedback';
 
+// HyDE Query Expansion
+export {
+  HyDEQueryExpander,
+  HypotheticalProvider,
+  HypotheticalOptions,
+  HyDEConfig,
+  HyDEResult,
+  HyDEQueryContext,
+  MockHypotheticalProvider,
+  DEFAULT_HYDE_CONFIG,
+  buildHypotheticalPrompt
+} from './hyde-expander';
+
 // Shared Types
 export {
   SearchResult,
@@ -40,7 +53,6 @@ export {
   SearchConfig,
   RelevanceFeedbackInput,
   StoredFeedback,
-  HyDEResult,
   GateDecision,
   CritiqueResult,
   CritiqueIssue

@@ -94,6 +94,14 @@ export class EmbeddingManager {
   }
 
   /**
+   * Generate embedding for text without storing it.
+   * Useful for query embeddings and HyDE.
+   */
+  async embedText(text: string): Promise<number[]> {
+    return this.provider.embed(text);
+  }
+
+  /**
    * Find similar entities by query text.
    */
   async findSimilar(

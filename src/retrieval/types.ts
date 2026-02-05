@@ -82,15 +82,6 @@ export interface StoredFeedback extends RelevanceFeedbackInput {
 /**
  * HyDE (Hypothetical Document Embeddings) result.
  */
-export interface HyDEResult {
-  /** Original query */
-  originalQuery: string;
-  /** Generated hypothetical document */
-  hypotheticalDoc: string;
-  /** Expanded search queries */
-  expandedQueries: string[];
-}
-
 /**
  * Retrieval gate decision.
  */
