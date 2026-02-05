@@ -255,3 +255,22 @@ export {
   DEFAULT_WATCH_CONFIG,
   createFileWatcher
 } from './watch';
+
+// Agent Checkpointing
+export {
+  CheckpointManager,
+  TriggerType,
+  StepStatus,
+  PlanStep,
+  StepResult,
+  AgentState,
+  CheckpointMetadata,
+  Checkpoint,
+  CheckpointSummary,
+  SaveOptions,
+  CheckpointedExecutor,
+  ExecuteOptions,
+  ExecutionResult,
+  StepExecutor,
+  createStepExecutor
+} from './agent';

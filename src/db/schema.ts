@@ -165,6 +165,26 @@ CREATE TABLE IF NOT EXISTS ${prefix}_ast_cache (
   parsed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Agent checkpoints for resumable execution
+CREATE TABLE IF NOT EXISTS ${prefix}_checkpoints (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  step_number INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  -- Serialized state
+  state_json TEXT NOT NULL,
+
+  -- Metadata
+  description TEXT,
+  trigger_type TEXT NOT NULL,
+  duration_ms INTEGER,
+  token_usage INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_${prefix}_checkpoints_session ON ${prefix}_checkpoints(session_id, step_number DESC);
+CREATE INDEX IF NOT EXISTS idx_${prefix}_checkpoints_created ON ${prefix}_checkpoints(created_at DESC);
+
 -- Note: Full-text search is implemented via LIKE queries since sql.js doesn't support FTS5
 -- In production with native SQLite, FTS5 can be added for better performance
 `;
@@ -177,6 +197,7 @@ export function dropProjectTables(projectId: string): string {
   const prefix = sanitizeProjectId(projectId);
 
   return `
+DROP TABLE IF EXISTS ${prefix}_checkpoints;
 DROP TABLE IF EXISTS ${prefix}_messages;
 DROP TABLE IF EXISTS ${prefix}_sessions;
 DROP TABLE IF EXISTS ${prefix}_relationships;
@@ -208,6 +229,7 @@ export function getProjectTableNames(projectId: string): string[] {
     `${prefix}_relationships`,
     `${prefix}_sessions`,
     `${prefix}_messages`,
-    `${prefix}_ast_cache`
+    `${prefix}_ast_cache`,
+    `${prefix}_checkpoints`
   ];
 }
