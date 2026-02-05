@@ -244,3 +244,14 @@ export {
   MockSummarizationProvider,
   defaultProviderFactory
 } from './models';
+
+// File Watching
+export {
+  FileWatcher,
+  WatchConfig,
+  WatchEvent,
+  WatchEventType,
+  WatchStats,
+  DEFAULT_WATCH_CONFIG,
+  createFileWatcher
+} from './watch';
