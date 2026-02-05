@@ -2,10 +2,10 @@
 
 **Context System** - An intelligent context management framework for AI coding assistants.
 
-> **PROJECT STATUS**: Phase 1 (Foundation) is complete with 138 passing tests.
+> **PROJECT STATUS**: Phase 2 (Code Intelligence) is complete with 259 passing tests.
 >
-> **What exists**: Core foundation with database, project management, entity storage, embedding pipeline, and MCP server scaffold
-> **In progress**: Phase 2 (Code Intelligence)
+> **What exists**: Core foundation + code intelligence with AST parsing, symbol summarization, codebase indexing, relationship extraction, and git diff processing
+> **Next up**: Phase 3 (Conversation Memory)
 
 ## Philosophy
 
@@ -546,13 +546,13 @@ See [docs/](./docs/) for detailed implementation plans.
 - [x] Embedding pipeline ([F1.4](docs/phase-1/F1.4-embedding-pipeline.md)) - 24 tests
 - [x] MCP server scaffold ([F1.5](docs/phase-1/F1.5-mcp-server.md)) - 29 tests
 
-### Phase 2: Code Intelligence (Design Complete)
+### Phase 2: Code Intelligence ✅ Complete (121 tests)
 
-- [ ] AST parsing ([F2.1](docs/phase-2/F2.1-ast-parsing.md))
-- [ ] Symbol summarization ([F2.2](docs/phase-2/F2.2-symbol-summarization.md))
-- [ ] Codebase indexing ([F2.3](docs/phase-2/F2.3-codebase-indexing.md))
-- [ ] Relationship extraction ([F2.4](docs/phase-2/F2.4-relationship-extraction.md))
-- [ ] Git diff processing ([F2.5](docs/phase-2/F2.5-git-diff-processing.md))
+- [x] AST parsing ([F2.1](docs/phase-2/F2.1-ast-parsing.md)) - 35 tests
+- [x] Symbol summarization ([F2.2](docs/phase-2/F2.2-symbol-summarization.md)) - 19 tests
+- [x] Codebase indexing ([F2.3](docs/phase-2/F2.3-codebase-indexing.md)) - 26 tests
+- [x] Relationship extraction ([F2.4](docs/phase-2/F2.4-relationship-extraction.md)) - 22 tests
+- [x] Git diff processing ([F2.5](docs/phase-2/F2.5-git-diff-processing.md)) - 19 tests
 
 ### Phase 3: Conversation Memory (Design Complete)
 
@@ -616,13 +616,22 @@ Foundation layer is fully implemented with:
 - Embedding pipeline with Mock/Ollama/OpenAI providers
 - MCP server scaffold with tool registry
 
-### Next: Phase 2 (Code Intelligence)
+### Phase 2 Complete
 
-- AST parsing with tree-sitter
-- Symbol summarization
-- Codebase indexing
-- Relationship extraction
-- Git diff processing
+Code intelligence layer is fully implemented with:
+
+- AST parsing using web-tree-sitter with WASM grammars (TypeScript, Python)
+- Symbol summarization with configurable detail levels (minimal/standard/detailed)
+- Codebase indexing with incremental updates and hash-based change detection
+- Relationship extraction with dependency graph traversal
+- Git diff processing with hunk-level granularity
+
+### Next: Phase 3 (Conversation Memory)
+
+- Message storage
+- Session management
+- Conversation summarization
+- Decision extraction
 
 ## Contributing
 
