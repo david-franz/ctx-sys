@@ -56,5 +56,16 @@ export {
   LLMSummarizer
 } from './summarization';
 
+// Codebase Indexing
+export {
+  CodebaseIndexer,
+  IndexedFile,
+  IndexStats,
+  IndexResult,
+  IndexOptions,
+  IndexEntry,
+  FileStatus
+} from './indexer';
+
 // Application Context
 export { AppContext, getDefaultDbPath } from './context';
