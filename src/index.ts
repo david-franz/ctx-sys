@@ -89,5 +89,27 @@ export {
   ChangedSymbol
 } from './git';
 
+// Conversation Memory
+export {
+  MessageStore,
+  MessageInput,
+  SessionManager,
+  ConversationSummarizer,
+  SummaryProvider,
+  MockSummaryProvider,
+  SummarizerOptions,
+  DecisionExtractor,
+  MockDecisionProvider,
+  Message,
+  MessageMetadata,
+  ToolCall,
+  MessageQueryOptions,
+  Session,
+  SessionConfig,
+  ConversationSummary,
+  Decision,
+  DecisionInput
+} from './conversation';
+
 // Application Context
 export { AppContext, getDefaultDbPath } from './context';
