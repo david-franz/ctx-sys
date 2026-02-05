@@ -197,6 +197,15 @@ export {
   GateConfig,
   MockGateModelProvider,
   DEFAULT_GATE_CONFIG,
+  DraftCritique,
+  CritiqueModelProvider,
+  CritiqueConfig,
+  DEFAULT_CRITIQUE_CONFIG,
+  ExtractedClaim,
+  CritiqueIteration,
+  DraftCritiqueOutput,
+  CritiqueOptions,
+  MockCritiqueModelProvider,
   CritiqueResult,
   CritiqueIssue
 } from './retrieval';

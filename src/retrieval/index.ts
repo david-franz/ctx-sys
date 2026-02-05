@@ -57,6 +57,19 @@ export {
   DEFAULT_GATE_CONFIG
 } from './retrieval-gate';
 
+// Draft-Critique Loop
+export {
+  DraftCritique,
+  CritiqueModelProvider,
+  CritiqueConfig,
+  DEFAULT_CRITIQUE_CONFIG,
+  ExtractedClaim,
+  CritiqueIteration,
+  DraftCritiqueOutput,
+  CritiqueOptions,
+  MockCritiqueModelProvider
+} from './draft-critique';
+
 // Shared Types
 export {
   SearchResult,
