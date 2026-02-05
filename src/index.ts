@@ -118,11 +118,14 @@ export { AppContext, getDefaultDbPath } from './context';
 export {
   MarkdownParser,
   RequirementExtractor,
+  DocumentLinker,
   MarkdownDocument,
   MarkdownSection,
   CodeBlock,
   Link,
   Requirement,
   RequirementInput,
-  RequirementSource
+  RequirementSource,
+  CodeReference,
+  LinkingResult
 } from './documents';

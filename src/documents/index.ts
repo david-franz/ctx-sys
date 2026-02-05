@@ -1,5 +1,6 @@
 export { MarkdownParser } from './markdown-parser';
 export { RequirementExtractor } from './requirement-extractor';
+export { DocumentLinker } from './document-linker';
 export {
   MarkdownDocument,
   MarkdownSection,
@@ -7,5 +8,7 @@ export {
   Link,
   Requirement,
   RequirementInput,
-  RequirementSource
+  RequirementSource,
+  CodeReference,
+  LinkingResult
 } from './types';
