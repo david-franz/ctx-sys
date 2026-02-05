@@ -113,3 +113,12 @@ export {
 
 // Application Context
 export { AppContext, getDefaultDbPath } from './context';
+
+// Document Intelligence
+export {
+  MarkdownParser,
+  MarkdownDocument,
+  MarkdownSection,
+  CodeBlock,
+  Link
+} from './documents';
