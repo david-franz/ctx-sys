@@ -7,6 +7,13 @@ export {
   QueryParserOptions
 } from './query-parser';
 
+// Multi-Strategy Search
+export {
+  MultiStrategySearch,
+  MultiSearchOptions,
+  StrategyWeights
+} from './multi-strategy-search';
+
 // Shared Types
 export {
   SearchResult,
