@@ -2,10 +2,10 @@
 
 **Context System** - An intelligent context management framework for AI coding assistants.
 
-> **PROJECT STATUS**: Phase 3 (Conversation Memory) is complete with 356 passing tests.
+> **PROJECT STATUS**: Phase 4 (Document Intelligence) is complete with 445 passing tests.
 >
-> **What exists**: Core foundation + code intelligence + conversation memory with message storage, session management, summarization, and decision extraction
-> **Next up**: Phase 4 (Document Intelligence)
+> **What exists**: Core foundation + code intelligence + conversation memory + document intelligence with markdown parsing, requirement extraction, and document-code linking
+> **Next up**: Phase 5 (Graph RAG)
 
 ## Philosophy
 
@@ -561,11 +561,11 @@ See [docs/](./docs/) for detailed implementation plans.
 - [x] Conversation summarization ([F3.3](docs/phase-3/F3.3-conversation-summarization.md)) - 20 tests
 - [x] Decision extraction ([F3.4](docs/phase-3/F3.4-decision-extraction.md)) - 17 tests
 
-### Phase 4: Document Intelligence (Design Complete)
+### Phase 4: Document Intelligence ✅ Complete (89 tests)
 
-- [ ] Markdown parsing ([F4.1](docs/phase-4/F4.1-markdown-parsing.md))
-- [ ] Requirement extraction ([F4.2](docs/phase-4/F4.2-requirement-extraction.md))
-- [ ] Document-code linking ([F4.3](docs/phase-4/F4.3-document-code-linking.md))
+- [x] Markdown parsing ([F4.1](docs/phase-4/F4.1-markdown-parsing.md)) - 24 tests
+- [x] Requirement extraction ([F4.2](docs/phase-4/F4.2-requirement-extraction.md)) - 35 tests
+- [x] Document-code linking ([F4.3](docs/phase-4/F4.3-document-code-linking.md)) - 30 tests
 
 ### Phase 5: Graph RAG (Design Complete)
 
@@ -635,11 +635,19 @@ Conversation memory layer is fully implemented with:
 - Conversation summarization with pluggable LLM providers
 - Decision extraction with pattern detection and LLM support
 
-### Next: Phase 4 (Document Intelligence)
+### Phase 4 Complete
 
-- Markdown parsing
-- Requirement extraction
-- Document-code linking
+Document intelligence layer is fully implemented with:
+
+- Markdown parsing with section hierarchy, code blocks, and link extraction
+- Requirement extraction with MoSCoW prioritization and user story detection
+- Document-code linking with pattern-based code reference resolution
+
+### Next: Phase 5 (Graph RAG)
+
+- Graph storage
+- Entity resolution
+- Semantic relationships
 
 ## Contributing
 
