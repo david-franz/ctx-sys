@@ -134,6 +134,11 @@ export {
 export {
   RelationshipStore,
   GraphTraversal,
+  EntityResolver,
+  DuplicateGroup,
+  DuplicateDetectionOptions,
+  MergeOptions,
+  MergeResult,
   GraphRelationshipType,
   StoredRelationship,
   RelationshipInput,
