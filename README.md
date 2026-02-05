@@ -2,10 +2,10 @@
 
 **Context System** - An intelligent context management framework for AI coding assistants.
 
-> **PROJECT STATUS**: Phase 2 (Code Intelligence) is complete with 259 passing tests.
+> **PROJECT STATUS**: Phase 3 (Conversation Memory) is complete with 356 passing tests.
 >
-> **What exists**: Core foundation + code intelligence with AST parsing, symbol summarization, codebase indexing, relationship extraction, and git diff processing
-> **Next up**: Phase 3 (Conversation Memory)
+> **What exists**: Core foundation + code intelligence + conversation memory with message storage, session management, summarization, and decision extraction
+> **Next up**: Phase 4 (Document Intelligence)
 
 ## Philosophy
 
@@ -554,12 +554,12 @@ See [docs/](./docs/) for detailed implementation plans.
 - [x] Relationship extraction ([F2.4](docs/phase-2/F2.4-relationship-extraction.md)) - 22 tests
 - [x] Git diff processing ([F2.5](docs/phase-2/F2.5-git-diff-processing.md)) - 19 tests
 
-### Phase 3: Conversation Memory (Design Complete)
+### Phase 3: Conversation Memory ✅ Complete (97 tests)
 
-- [ ] Message storage ([F3.1](docs/phase-3/F3.1-message-storage.md))
-- [ ] Session management ([F3.2](docs/phase-3/F3.2-session-management.md))
-- [ ] Conversation summarization ([F3.3](docs/phase-3/F3.3-conversation-summarization.md))
-- [ ] Decision extraction ([F3.4](docs/phase-3/F3.4-decision-extraction.md))
+- [x] Message storage ([F3.1](docs/phase-3/F3.1-message-storage.md)) - 32 tests
+- [x] Session management ([F3.2](docs/phase-3/F3.2-session-management.md)) - 28 tests
+- [x] Conversation summarization ([F3.3](docs/phase-3/F3.3-conversation-summarization.md)) - 20 tests
+- [x] Decision extraction ([F3.4](docs/phase-3/F3.4-decision-extraction.md)) - 17 tests
 
 ### Phase 4: Document Intelligence (Design Complete)
 
@@ -626,12 +626,20 @@ Code intelligence layer is fully implemented with:
 - Relationship extraction with dependency graph traversal
 - Git diff processing with hunk-level granularity
 
-### Next: Phase 3 (Conversation Memory)
+### Phase 3 Complete
 
-- Message storage
-- Session management
-- Conversation summarization
-- Decision extraction
+Conversation memory layer is fully implemented with:
+
+- Message storage with session organization and search
+- Session management with lifecycle states (active/archived/summarized)
+- Conversation summarization with pluggable LLM providers
+- Decision extraction with pattern detection and LLM support
+
+### Next: Phase 4 (Document Intelligence)
+
+- Markdown parsing
+- Requirement extraction
+- Document-code linking
 
 ## Contributing
 
