@@ -2,6 +2,11 @@
 
 **Context System** - An intelligent context management framework for AI coding assistants.
 
+> **⚠️ PROJECT STATUS**: This is currently a design document and technical specification. No implementation code has been written yet. The roadmap below represents planned features, not completed work.
+>
+> **What exists**: ~19,000 lines of detailed design documentation across 9 implementation phases
+> **What doesn't exist**: Any working code, tests, or prototype
+
 ## Philosophy
 
 Modern AI coding assistants suffer from context limitations. Long conversations lose important details, codebases are too large to fit in context, and relevant information is scattered across files, docs, and past conversations.
@@ -19,17 +24,23 @@ The result: AI assistants that remember everything but only surface what matters
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                     AI Assistants                                 │
-│              (VS Copilot / Claude Code / etc.)                    │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │ MCP Protocol
-                          ▼
+│                   Developer Integrations                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
+│  │  VS Code     │  │  Git Hooks   │  │  AI Assistants       │   │
+│  │  Extension   │  │  (auto-sync) │  │  (Claude/Copilot)    │   │
+│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘   │
+└─────────┼──────────────────┼─────────────────────┼───────────────┘
+          │                  │                     │
+          └──────────────────┼─────────────────────┘
+                             │ MCP Protocol
+                             ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                      ctx-sys MCP Server                           │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │                      Tool Interface                         │  │
 │  │  • context_query     • index_codebase    • store_message   │  │
 │  │  • sync_from_git     • query_graph       • get_history     │  │
+│  │  • analytics_stats   • checkpoint_save   • hooks_install   │  │
 │  └────────────────────────────────────────────────────────────┘  │
 └─────────────────────────┬────────────────────────────────────────┘
                           │
@@ -43,6 +54,10 @@ The result: AI assistants that remember everything but only surface what matters
 │  │  Embedding   │  │ Relationship │  │  Query Expansion       │  │
 │  │  Generator   │  │  Extractor   │  │  & Ranking             │  │
 │  └──────────────┘  └──────────────┘  └────────────────────────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐  │
+│  │   Impact     │  │   Analytics  │  │  Proactive Context     │  │
+│  │  Analyzer    │  │   Tracker    │  │  Subscription          │  │
+│  └──────────────┘  └──────────────┘  └────────────────────────┘  │
 └─────────────────────────┬────────────────────────────────────────┘
                           │
 ┌─────────────────────────▼────────────────────────────────────────┐
@@ -50,6 +65,10 @@ The result: AI assistants that remember everything but only surface what matters
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐  │
 │  │  Entities   │ │   Vectors   │ │    Graph    │ │  Messages  │  │
 │  │  (+ AST)    │ │ (sqlite-vec)│ │   (edges)   │ │ (sessions) │  │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘  │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐  │
+│  │ Checkpoints │ │  Analytics  │ │Hook History │ │ Reflections│  │
+│  │  (agent)    │ │  (queries)  │ │  (git ops)  │ │ (lessons)  │  │
 │  └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -92,6 +111,26 @@ When you query with `#prompt 'how does authentication work?'`, ctx-sys:
 2. **Searches** using multiple strategies (vector similarity, graph traversal, keyword/FTS)
 3. **Ranks** results by relevance, recency, and connectivity
 4. **Assembles** context with source attribution, respecting token budgets
+
+## Advanced Features
+
+### Agent Patterns (Phase 8)
+
+Designed for long-running AI agent workflows:
+
+- **Checkpointing** - Save/restore agent state for resumable tasks
+- **Hot/Cold Memory** - Automatic memory management with explicit spill/recall API
+- **Reflection Storage** - Learn from past attempts, store lessons learned
+- **Proactive Context** - Push relevant context based on file changes and cursor position
+
+### Integrations & Analytics (Phase 9)
+
+Make ctx-sys value visible and reduce friction:
+
+- **VS Code Extension** - Native integration with sidebar panel, hover info, and command palette
+- **Token Analytics** - Track and visualize ROI with token usage stats and cost savings
+- **Team Knowledge Base** - Share decisions and context across team members
+- **Git Hooks** - Automatic indexing on commit/merge with impact analysis
 
 ## Database Structure
 
@@ -235,6 +274,101 @@ query_cross_project({
 })
 ```
 
+### Agent Pattern Tools
+
+```typescript
+// Save agent state checkpoint
+checkpoint_save({
+  sessionId: string,
+  state: object,           // Arbitrary state object
+  metadata?: object
+})
+
+// Restore from checkpoint
+checkpoint_load({
+  sessionId: string,
+  checkpointId?: string    // Latest if not specified
+})
+
+// Force memory spill (hot → cold)
+memory_spill({
+  sessionId: string,
+  threshold?: number       // Optional size threshold
+})
+
+// Recall from cold storage
+memory_recall({
+  sessionId: string,
+  query: string            // What to recall
+})
+
+// Store a reflection/lesson
+reflection_store({
+  sessionId: string,
+  attempt: string,
+  lesson: string,
+  metadata?: object
+})
+
+// Subscribe to file changes for proactive context
+context_subscribe({
+  filePatterns: string[],
+  callbackUrl: string
+})
+```
+
+### Analytics & Integration Tools
+
+```typescript
+// Get token usage statistics
+analytics_get_stats({
+  projectId: string,
+  period: 'day' | 'week' | 'month' | 'all'
+}) → {
+  tokensSaved: number,
+  costSaved: number,
+  savingsPercent: number,
+  averageRelevance: number
+}
+
+// Record feedback on query usefulness
+analytics_record_feedback({
+  queryLogId: string,
+  wasUseful: boolean
+})
+
+// Measure project for ROI calculation
+analytics_measure_project({
+  projectId: string,
+  projectPath: string
+})
+
+// Install git hooks
+hooks_install({
+  projectId: string,
+  repositoryPath: string,
+  config?: HookConfig
+})
+
+// Generate impact report for code changes
+hooks_generate_impact_report({
+  projectId: string,
+  baseBranch: string,
+  targetBranch: string
+}) → {
+  riskLevel: 'low' | 'medium' | 'high',
+  affectedEntities: Entity[],
+  affectedDecisions: Decision[],
+  suggestions: string[]
+}
+
+// Team knowledge base - search across team
+team_search_decisions({
+  query: string,
+  teamMembers?: string[]
+})
+```
+
 ## Configuration
 
 ### Project Configuration
@@ -313,6 +447,8 @@ defaults:
 
 ## Installation
 
+> **⚠️ Not yet implemented.** The commands below represent the planned installation process.
+
 ```bash
 # Clone the repository
 git clone https://github.com/your-org/ctx-sys.git
@@ -330,6 +466,8 @@ npm link
 
 ## Quick Start
 
+> **⚠️ Not yet implemented.** The commands below represent the planned user experience.
+
 ```bash
 # Initialize a project
 ctx-sys init --path ./my-project --name my-project
@@ -344,7 +482,7 @@ ctx-sys serve
 ctx-sys query "how does authentication work?"
 ```
 
-### With Claude Code
+### With Claude Code (Planned)
 
 Add to your Claude Code MCP configuration:
 
@@ -360,11 +498,11 @@ Add to your Claude Code MCP configuration:
 }
 ```
 
-### With VS Code Copilot
+### With VS Code Copilot (Planned)
 
-[Configuration instructions TBD based on Copilot MCP support]
+Configuration instructions TBD based on Copilot MCP support.
 
-## Usage Examples
+## Usage Examples (Planned)
 
 ### Bootstrap an existing project
 
@@ -402,54 +540,91 @@ ctx-sys link --source "RateLimiter" --target "Rate Limiting" \
 
 ## Development Roadmap
 
-See [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md) for detailed implementation plans.
+See [docs/](./docs/) for detailed implementation plans.
 
-### Phase 1: Foundation
-- [ ] Database schema and migrations
-- [ ] Project management
-- [ ] Basic entity storage
-- [ ] Embedding pipeline
-- [ ] MCP server scaffold
+> **Note**: All phases below represent planned features. Checkboxes indicate design document completion, not implementation.
 
-### Phase 2: Code Intelligence
-- [ ] AST parsing (tree-sitter)
-- [ ] Symbol summarization
-- [ ] Codebase indexing
-- [ ] Relationship extraction
-- [ ] Git diff processing
+### Phase 1: Foundation (Design Complete)
 
-### Phase 3: Conversation Memory
-- [ ] Message storage
-- [ ] Session management
-- [ ] Conversation summarization
-- [ ] Decision extraction
+- [ ] Database schema and migrations ([F1.1](docs/phase-1/F1.1-database-schema.md))
+- [ ] Project management ([F1.2](docs/phase-1/F1.2-project-management.md))
+- [ ] Entity storage ([F1.3](docs/phase-1/F1.3-entity-storage.md))
+- [ ] Embedding pipeline ([F1.4](docs/phase-1/F1.4-embedding-pipeline.md))
+- [ ] MCP server ([F1.5](docs/phase-1/F1.5-mcp-server.md))
 
-### Phase 4: Document Intelligence
-- [ ] Markdown parsing
-- [ ] Requirement extraction
-- [ ] Document-code linking
+### Phase 2: Code Intelligence (Design Complete)
 
-### Phase 5: Graph RAG
-- [ ] Graph storage and traversal
-- [ ] Entity resolution
-- [ ] Semantic relationship discovery
+- [ ] AST parsing ([F2.1](docs/phase-2/F2.1-ast-parsing.md))
+- [ ] Symbol summarization ([F2.2](docs/phase-2/F2.2-symbol-summarization.md))
+- [ ] Codebase indexing ([F2.3](docs/phase-2/F2.3-codebase-indexing.md))
+- [ ] Relationship extraction ([F2.4](docs/phase-2/F2.4-relationship-extraction.md))
+- [ ] Git diff processing ([F2.5](docs/phase-2/F2.5-git-diff-processing.md))
 
-### Phase 6: Smart Retrieval
-- [ ] Query parsing
-- [ ] Multi-strategy search
-- [ ] Context assembly
-- [ ] Relevance feedback
+### Phase 3: Conversation Memory (Design Complete)
 
-### Phase 7: Polish
-- [ ] Configuration system
-- [ ] Watch mode
-- [ ] CLI refinement
-- [ ] Documentation
+- [ ] Message storage ([F3.1](docs/phase-3/F3.1-message-storage.md))
+- [ ] Session management ([F3.2](docs/phase-3/F3.2-session-management.md))
+- [ ] Conversation summarization ([F3.3](docs/phase-3/F3.3-conversation-summarization.md))
+- [ ] Decision extraction ([F3.4](docs/phase-3/F3.4-decision-extraction.md))
+
+### Phase 4: Document Intelligence (Design Complete)
+
+- [ ] Markdown parsing ([F4.1](docs/phase-4/F4.1-markdown-parsing.md))
+- [ ] Requirement extraction ([F4.2](docs/phase-4/F4.2-requirement-extraction.md))
+- [ ] Document-code linking ([F4.3](docs/phase-4/F4.3-document-code-linking.md))
+
+### Phase 5: Graph RAG (Design Complete)
+
+- [ ] Graph storage ([F5.1](docs/phase-5/F5.1-graph-storage.md))
+- [ ] Entity resolution ([F5.2](docs/phase-5/F5.2-entity-resolution.md))
+- [ ] Semantic relationships ([F5.3](docs/phase-5/F5.3-semantic-relationships.md))
+
+### Phase 6: Advanced Retrieval (Design Complete)
+
+- [ ] Query parsing ([F6.1](docs/phase-6/F6.1-query-parsing.md))
+- [ ] Multi-strategy search ([F6.2](docs/phase-6/F6.2-multi-strategy-search.md))
+- [ ] Context assembly ([F6.3](docs/phase-6/F6.3-context-assembly.md))
+- [ ] Relevance feedback ([F6.4](docs/phase-6/F6.4-relevance-feedback.md))
+- [ ] HyDE query expansion ([F6.5](docs/phase-6/F6.5-hyde-query-expansion.md))
+- [ ] Retrieval gating ([F6.6](docs/phase-6/F6.6-retrieval-gating.md))
+- [ ] Draft-critique loop ([F6.7](docs/phase-6/F6.7-draft-critique-loop.md))
+
+### Phase 7: Configuration & Polish (Design Complete)
+
+- [ ] Configuration system ([F7.1](docs/phase-7/F7.1-configuration.md))
+- [ ] Model abstraction ([F7.2](docs/phase-7/F7.2-model-abstraction.md))
+- [ ] Watch mode ([F7.3](docs/phase-7/F7.3-watch-mode.md))
+- [ ] CLI interface ([F7.4](docs/phase-7/F7.4-cli-interface.md))
+
+### Phase 8: Agent Patterns (Design Complete)
+
+- [ ] Agent checkpointing ([F8.1](docs/phase-8/F8.1-agent-checkpointing.md))
+- [ ] Hot/cold memory API ([F8.2](docs/phase-8/F8.2-hot-cold-memory-api.md))
+- [ ] Reflection storage ([F8.3](docs/phase-8/F8.3-reflection-storage.md))
+- [ ] Proactive context ([F8.4](docs/phase-8/F8.4-proactive-context.md))
+
+### Phase 9: Integrations & Analytics (Design Complete)
+
+- [ ] VS Code extension ([F9.1](docs/phase-9/F9.1-vscode-extension.md))
+- [ ] Token analytics ([F9.2](docs/phase-9/F9.2-token-analytics.md))
+- [ ] Team knowledge base ([F9.3](docs/phase-9/F9.3-team-knowledge-base.md))
+- [ ] Git hooks ([F9.4](docs/phase-9/F9.4-git-hooks.md))
+
+## Current Status & Next Steps
+
+This project is currently in the design phase. To move forward:
+
+1. **Validate the concept** - Build a minimal prototype focusing on Phase 1 + basic retrieval
+2. **Prove value** - Use it in a real project to identify what actually matters
+3. **Iterate** - Refine the design based on real-world usage
+4. **Implement incrementally** - Start with Foundation (Phase 1) and build from there
+
+The comprehensive design documentation provides a roadmap, but implementation should be guided by practical validation rather than attempting to build all features upfront.
 
 ## Contributing
 
-[Contributing guidelines TBD]
+This project is currently in early planning stages. Contributions to the design documentation or feedback on the proposed architecture are welcome. Implementation contributions should wait until the core architecture has been validated with a working prototype.
 
 ## License
 
-[License TBD]
+MIT
