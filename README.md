@@ -2,10 +2,10 @@
 
 **Context System** - An intelligent context management framework for AI coding assistants.
 
-> **PROJECT STATUS**: Phase 5 (Graph RAG) is complete with 529 passing tests.
+> **PROJECT STATUS**: Phase 6 (Advanced Retrieval) is complete with 766 passing tests.
 >
-> **What exists**: Core foundation + code intelligence + conversation memory + document intelligence + graph RAG with relationship storage, entity resolution, and semantic linking
-> **Next up**: Phase 6 (Advanced Retrieval)
+> **What exists**: Core foundation + code intelligence + conversation memory + document intelligence + graph RAG + advanced retrieval with query parsing, multi-strategy search, context assembly, relevance feedback, HyDE expansion, retrieval gating, and draft-critique
+> **Next up**: Phase 7 (Configuration & Polish)
 
 ## Philosophy
 
@@ -573,15 +573,15 @@ See [docs/](./docs/) for detailed implementation plans.
 - [x] Entity resolution ([F5.2](docs/phase-5/F5.2-entity-resolution.md)) - 22 tests
 - [x] Semantic relationships ([F5.3](docs/phase-5/F5.3-semantic-relationships.md)) - 23 tests
 
-### Phase 6: Advanced Retrieval (Design Complete)
+### Phase 6: Advanced Retrieval ✅ Complete (237 tests)
 
-- [ ] Query parsing ([F6.1](docs/phase-6/F6.1-query-parsing.md))
-- [ ] Multi-strategy search ([F6.2](docs/phase-6/F6.2-multi-strategy-search.md))
-- [ ] Context assembly ([F6.3](docs/phase-6/F6.3-context-assembly.md))
-- [ ] Relevance feedback ([F6.4](docs/phase-6/F6.4-relevance-feedback.md))
-- [ ] HyDE query expansion ([F6.5](docs/phase-6/F6.5-hyde-query-expansion.md))
-- [ ] Retrieval gating ([F6.6](docs/phase-6/F6.6-retrieval-gating.md))
-- [ ] Draft-critique loop ([F6.7](docs/phase-6/F6.7-draft-critique-loop.md))
+- [x] Query parsing ([F6.1](docs/phase-6/F6.1-query-parsing.md)) - 46 tests
+- [x] Multi-strategy search ([F6.2](docs/phase-6/F6.2-multi-strategy-search.md)) - 28 tests
+- [x] Context assembly ([F6.3](docs/phase-6/F6.3-context-assembly.md)) - 44 tests
+- [x] Relevance feedback ([F6.4](docs/phase-6/F6.4-relevance-feedback.md)) - 39 tests
+- [x] HyDE query expansion ([F6.5](docs/phase-6/F6.5-hyde-query-expansion.md)) - 40 tests
+- [x] Retrieval gating ([F6.6](docs/phase-6/F6.6-retrieval-gating.md)) - 41 tests
+- [x] Draft-critique loop ([F6.7](docs/phase-6/F6.7-draft-critique-loop.md)) - 39 tests
 
 ### Phase 7: Configuration & Polish (Design Complete)
 
@@ -651,12 +651,24 @@ Graph RAG layer is fully implemented with:
 - Entity resolution with duplicate detection and semantic merging
 - Semantic relationship discovery via embedding similarity
 
-### Next: Phase 6 (Advanced Retrieval)
+### Phase 6 Complete
 
-- Query parsing
-- Multi-strategy search
-- Context assembly
-- Relevance feedback
+Advanced retrieval layer is fully implemented with:
+
+- Query parsing with intent detection and entity mention extraction
+- Multi-strategy search combining keyword, semantic, and graph strategies with RRF fusion
+- Context assembly with token budgets, source attribution, and multiple output formats
+- Relevance feedback for learning from search result usage
+- HyDE query expansion for improved semantic retrieval
+- Retrieval gating to skip unnecessary searches
+- Draft-critique loop for verifying LLM responses against context
+
+### Next: Phase 7 (Configuration & Polish)
+
+- Configuration system
+- Model abstraction
+- Watch mode
+- CLI interface
 
 ## Contributing
 
