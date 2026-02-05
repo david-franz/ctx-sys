@@ -129,3 +129,18 @@ export {
   CodeReference,
   LinkingResult
 } from './documents';
+
+// Graph RAG
+export {
+  RelationshipStore,
+  GraphTraversal,
+  GraphRelationshipType,
+  StoredRelationship,
+  RelationshipInput,
+  RelationshipQueryOptions,
+  SubgraphResult,
+  PathInfo,
+  PathResult,
+  GraphStatistics,
+  TraversalOptions
+} from './graph';
