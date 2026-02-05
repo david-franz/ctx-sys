@@ -43,6 +43,7 @@
     "sql.js": "^1.10.0",
     "uuid": "^9.0.0",
     "web-tree-sitter": "^0.26.5",
+    "yaml": "^2.8.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

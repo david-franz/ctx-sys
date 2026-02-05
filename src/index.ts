@@ -1,5 +1,30 @@
 // Main exports for ctx-sys
 
+// Configuration
+export {
+  ConfigManager,
+  ConfigManagerOptions,
+  DEFAULT_GLOBAL_CONFIG,
+  DEFAULT_PROJECT_CONFIG_FILE,
+  GlobalConfig,
+  ProjectConfigFile,
+  ResolvedConfig,
+  ProviderSettings,
+  ProvidersConfig,
+  OllamaProviderConfig,
+  OpenAIProviderConfig,
+  AnthropicProviderConfig,
+  CLIConfig,
+  DefaultsConfig,
+  DatabaseConfig,
+  ProjectIdentity,
+  IndexingConfig,
+  SummarizationConfig as ConfigSummarizationConfig,
+  EmbeddingsConfig,
+  SessionsConfig,
+  RetrievalConfig as ConfigRetrievalConfig
+} from './config';
+
 // Database
 export { DatabaseConnection } from './db/connection';
 export { MigrationManager } from './db/migrations';
