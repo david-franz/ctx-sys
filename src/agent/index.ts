@@ -1,5 +1,5 @@
 /**
- * Agent module - checkpointing and execution management.
+ * Agent module - checkpointing, execution, and memory management.
  */
 
 export {
@@ -22,3 +22,20 @@ export {
   StepExecutor,
   createStepExecutor
 } from './executor';
+
+export {
+  MemoryTierManager,
+  MemoryTier,
+  MemoryItemType,
+  MemoryItem,
+  MemoryStatus,
+  MemorySuggestion,
+  SpillResult,
+  RecallResult,
+  MemoryConfig,
+  DEFAULT_MEMORY_CONFIG,
+  SpillOptions,
+  RecallOptions,
+  AddMemoryOptions,
+  MemoryEmbeddingProvider
+} from './memory-tier';

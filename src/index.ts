@@ -256,7 +256,7 @@ export {
   createFileWatcher
 } from './watch';
 
-// Agent Checkpointing
+// Agent Checkpointing and Memory Management
 export {
   CheckpointManager,
   TriggerType,
@@ -272,5 +272,19 @@ export {
   ExecuteOptions,
   ExecutionResult,
   StepExecutor,
-  createStepExecutor
+  createStepExecutor,
+  MemoryTierManager,
+  MemoryTier,
+  MemoryItemType,
+  MemoryItem,
+  MemoryStatus,
+  MemorySuggestion,
+  SpillResult,
+  RecallResult,
+  MemoryConfig,
+  DEFAULT_MEMORY_CONFIG,
+  SpillOptions,
+  RecallOptions,
+  AddMemoryOptions,
+  MemoryEmbeddingProvider
 } from './agent';

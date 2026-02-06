@@ -185,6 +185,32 @@ CREATE TABLE IF NOT EXISTS ${prefix}_checkpoints (
 CREATE INDEX IF NOT EXISTS idx_${prefix}_checkpoints_session ON ${prefix}_checkpoints(session_id, step_number DESC);
 CREATE INDEX IF NOT EXISTS idx_${prefix}_checkpoints_created ON ${prefix}_checkpoints(created_at DESC);
 
+-- Memory items with tier tracking for hot/cold memory management
+CREATE TABLE IF NOT EXISTS ${prefix}_memory_items (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  content TEXT NOT NULL,
+  type TEXT NOT NULL,
+  tier TEXT NOT NULL DEFAULT 'hot',
+
+  -- Access tracking
+  access_count INTEGER DEFAULT 0,
+  last_accessed_at TEXT,
+  created_at TEXT NOT NULL,
+
+  -- Scoring
+  relevance_score REAL DEFAULT 0.5,
+  token_count INTEGER,
+
+  -- Metadata and embeddings
+  metadata_json TEXT,
+  embedding_json TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_${prefix}_memory_session_tier ON ${prefix}_memory_items(session_id, tier);
+CREATE INDEX IF NOT EXISTS idx_${prefix}_memory_access ON ${prefix}_memory_items(session_id, last_accessed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_${prefix}_memory_relevance ON ${prefix}_memory_items(session_id, relevance_score DESC);
+
 -- Note: Full-text search is implemented via LIKE queries since sql.js doesn't support FTS5
 -- In production with native SQLite, FTS5 can be added for better performance
 `;
@@ -197,6 +223,7 @@ export function dropProjectTables(projectId: string): string {
   const prefix = sanitizeProjectId(projectId);
 
   return `
+DROP TABLE IF EXISTS ${prefix}_memory_items;
 DROP TABLE IF EXISTS ${prefix}_checkpoints;
 DROP TABLE IF EXISTS ${prefix}_messages;
 DROP TABLE IF EXISTS ${prefix}_sessions;
@@ -230,6 +257,7 @@ export function getProjectTableNames(projectId: string): string[] {
     `${prefix}_sessions`,
     `${prefix}_messages`,
     `${prefix}_ast_cache`,
-    `${prefix}_checkpoints`
+    `${prefix}_checkpoints`,
+    `${prefix}_memory_items`
   ];
 }
