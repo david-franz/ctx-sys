@@ -2,16 +2,17 @@
 
 import './globals.css';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Check for saved preference or system preference
     const saved = localStorage.getItem('darkMode');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setDarkMode(saved ? saved === 'true' : prefersDark);
@@ -27,36 +28,41 @@ export default function RootLayout({
   }, [darkMode]);
 
   return (
-    <html lang="en">
+    <html lang="en" className={darkMode ? 'dark' : ''}>
       <head>
-        <title>ctx-sys - Intelligent Context Management</title>
-        <meta name="description" content="Stop repeating yourself. Let ctx-sys provide the perfect context for AI-assisted coding." />
+        <title>ctx-sys - Intelligent Context Management for AI Coding</title>
+        <meta name="description" content="Stop repeating yourself. ctx-sys gives AI assistants the perfect context - save tokens, save money, get better results." />
+        <link rel="icon" href="/logo.png" />
       </head>
-      <body className="min-h-screen bg-white dark:bg-gray-900 antialiased transition-colors">
-        <nav className="border-b border-gray-200 dark:border-gray-700">
+      <body className="min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+        {/* Navigation */}
+        <nav className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex h-16 justify-between items-center">
-              <div className="flex items-center">
-                <a href="/" className="flex items-center gap-2">
-                  <img src="/logo.png" alt="ctx-sys logo" className="h-10 w-auto" />
-                </a>
-              </div>
-              <div className="hidden md:flex md:items-center md:space-x-6">
-                <a href="/docs" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+            <div className="flex h-20 justify-between items-center">
+              {/* Logo */}
+              <Link href="/" className="flex items-center gap-3">
+                <img src="/logo.png" alt="ctx-sys" className="h-12 w-auto" />
+              </Link>
+
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex md:items-center md:gap-8">
+                <Link href="/docs" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
                   Docs
-                </a>
-                <a href="/pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                </Link>
+                <Link href="/pricing" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
                   Pricing
-                </a>
-                <a href="/thesis.pdf" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                </Link>
+                <Link href="/thesis.pdf" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
                   Thesis
+                </Link>
+                <a href="https://github.com/davidfranz/ctx-sys" target="_blank" rel="noopener noreferrer" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
+                  GitHub
                 </a>
-                <a href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                  Login
-                </a>
+
+                {/* Dark Mode Toggle */}
                 <button
                   onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   aria-label="Toggle dark mode"
                 >
                   {darkMode ? (
@@ -69,54 +75,95 @@ export default function RootLayout({
                     </svg>
                   )}
                 </button>
-                <a
+
+                <Link
                   href="/signup"
-                  className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+                  className="rounded-lg bg-cyan-500 hover:bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25"
                 >
                   Get Started
-                </a>
+                </Link>
               </div>
+
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
             </div>
+
+            {/* Mobile Navigation */}
+            {mobileMenuOpen && (
+              <div className="md:hidden py-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex flex-col gap-4">
+                  <Link href="/docs" className="text-slate-600 dark:text-slate-300 font-medium">Docs</Link>
+                  <Link href="/pricing" className="text-slate-600 dark:text-slate-300 font-medium">Pricing</Link>
+                  <Link href="/thesis.pdf" className="text-slate-600 dark:text-slate-300 font-medium">Thesis</Link>
+                  <a href="https://github.com/davidfranz/ctx-sys" className="text-slate-600 dark:text-slate-300 font-medium">GitHub</a>
+                  <Link href="/signup" className="rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white text-center">Get Started</Link>
+                </div>
+              </div>
+            )}
           </div>
         </nav>
+
+        {/* Main Content */}
         {children}
-        <footer className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+
+        {/* Footer */}
+        <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Product</h3>
-                <ul className="mt-4 space-y-2">
-                  <li><a href="/docs" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Documentation</a></li>
-                  <li><a href="/pricing" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pricing</a></li>
-                  <li><a href="/changelog" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Changelog</a></li>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Product</h3>
+                <ul className="mt-4 space-y-3">
+                  <li><Link href="/docs" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Documentation</Link></li>
+                  <li><Link href="/pricing" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Pricing</Link></li>
+                  <li><Link href="/changelog" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Changelog</Link></li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Resources</h3>
-                <ul className="mt-4 space-y-2">
-                  <li><a href="/guides" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Guides</a></li>
-                  <li><a href="/thesis.pdf" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Thesis</a></li>
-                  <li><a href="/support" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Support</a></li>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Resources</h3>
+                <ul className="mt-4 space-y-3">
+                  <li><Link href="/docs/guides" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Guides</Link></li>
+                  <li><Link href="/thesis.pdf" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Thesis Paper</Link></li>
+                  <li><Link href="/docs/api" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">API Reference</Link></li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Company</h3>
-                <ul className="mt-4 space-y-2">
-                  <li><a href="/about" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">About</a></li>
-                  <li><a href="https://github.com/davidfranz/ctx-sys" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">GitHub</a></li>
-                  <li><a href="/blog" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Blog</a></li>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Open Source</h3>
+                <ul className="mt-4 space-y-3">
+                  <li><a href="https://github.com/davidfranz/ctx-sys" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">GitHub</a></li>
+                  <li><a href="https://github.com/davidfranz/ctx-sys/issues" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Issues</a></li>
+                  <li><a href="https://github.com/davidfranz/ctx-sys/discussions" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Discussions</a></li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Legal</h3>
-                <ul className="mt-4 space-y-2">
-                  <li><a href="/privacy" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Privacy</a></li>
-                  <li><a href="/terms" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Terms</a></li>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Legal</h3>
+                <ul className="mt-4 space-y-3">
+                  <li><Link href="/privacy" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Privacy</Link></li>
+                  <li><Link href="/terms" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Terms</Link></li>
+                  <li><Link href="/license" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">MIT License</Link></li>
                 </ul>
               </div>
             </div>
-            <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-8">
-              <p className="text-sm text-gray-500 dark:text-gray-400">&copy; 2024 ctx-sys. All rights reserved.</p>
+            <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="ctx-sys" className="h-8 w-auto" />
+                <span className="text-sm text-slate-500 dark:text-slate-400">&copy; 2024 ctx-sys. MIT License.</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <a href="https://github.com/davidfranz/ctx-sys" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                </a>
+              </div>
             </div>
           </div>
         </footer>
