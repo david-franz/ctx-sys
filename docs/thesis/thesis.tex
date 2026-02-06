@@ -171,7 +171,7 @@ The system implements a ``smart librarian'' paradigm: rather than attempting to 
 
 Key contributions include: (1) a unified entity model supporting heterogeneous information types including code symbols, documentation sections, conversation history, and domain concepts; (2) multi-language AST parsing using tree-sitter for structural code understanding; (3) advanced retrieval techniques including HyDE (Hypothetical Document Embeddings) for vocabulary mismatch resolution and retrieval gating for computational efficiency; (4) a draft-critique loop for hallucination detection; and (5) agent-oriented memory management with explicit hot/cold tiering and checkpointing for resumable execution.
 
-The implementation comprises approximately 20,000 lines of TypeScript with comprehensive test coverage (1271 tests across 9 implementation phases). Integration with AI assistants is achieved through the Model Context Protocol (MCP), enabling compatibility with Claude, GitHub Copilot, and similar tools. Evaluation demonstrates significant improvements in context relevance and token efficiency compared to naive full-context approaches.
+The implementation comprises approximately 20,000 lines of TypeScript with comprehensive test coverage (1474 tests across 10 implementation phases). Integration with AI assistants is achieved through the Model Context Protocol (MCP), enabling compatibility with Claude, GitHub Copilot, and similar tools. Evaluation demonstrates significant improvements in context relevance and token efficiency compared to naive full-context approaches.
 
 \textbf{Keywords:} Retrieval-Augmented Generation, Context Management, AI Coding Assistants, Graph RAG, Code Intelligence, Embedding Search
 
@@ -2746,7 +2746,7 @@ Configuration values are resolved with precedence:
 The implementation includes comprehensive unit and integration testing:
 
 \begin{itemize}
-    \item \textbf{Test Count}: 1271 passing tests across 9 implementation phases
+    \item \textbf{Test Count}: 1474 passing tests across 10 implementation phases
     \item \textbf{Code Coverage}: Approximately 85\% line coverage
     \item \textbf{Test Categories}:
     \begin{itemize}
@@ -2770,7 +2770,7 @@ The implementation includes comprehensive unit and integration testing:
         Test lines of code & $\sim$16,000 \\
         Number of modules & 52 \\
         External dependencies & 10 \\
-        Passing tests & 1271 \\
+        Passing tests & 1474 \\
         Implementation phases & 9 \\
         \bottomrule
     \end{tabular}
@@ -2871,7 +2871,7 @@ The key contributions of this work include:
     
     \item Implementation of advanced patterns (HyDE, retrieval gating, draft-critique) adapted for code-specific use cases
     
-    \item A complete, tested reference implementation with 1271 passing tests and MCP integration for practical deployment
+    \item A complete, tested reference implementation with 1474 passing tests and MCP integration for practical deployment
 \end{enumerate}
 
 \section{Future Work}
