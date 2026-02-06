@@ -51,3 +51,21 @@ export {
   DEFAULT_REFLECTION_CONFIG,
   ReflectionEmbeddingProvider
 } from './reflection';
+
+export {
+  ProactiveContextProvider,
+  TriggerType as ProactiveTriggerType,
+  SuggestionType,
+  SuggestionStatus,
+  WatchPatternType,
+  CallbackType,
+  WatchPattern,
+  ContextSubscription,
+  SubscriptionInput,
+  SuggestionItem,
+  ContextSuggestion,
+  ProactiveQuery,
+  ProactiveConfig,
+  DEFAULT_PROACTIVE_CONFIG,
+  ProactiveContextSource
+} from './proactive';

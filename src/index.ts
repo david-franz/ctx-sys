@@ -295,5 +295,20 @@ export {
   ReflectionSummary,
   ReflectionConfig,
   DEFAULT_REFLECTION_CONFIG,
-  ReflectionEmbeddingProvider
+  ReflectionEmbeddingProvider,
+  ProactiveContextProvider,
+  ProactiveTriggerType,
+  SuggestionType,
+  SuggestionStatus,
+  WatchPatternType,
+  CallbackType,
+  WatchPattern,
+  ContextSubscription,
+  SubscriptionInput,
+  SuggestionItem,
+  ContextSuggestion,
+  ProactiveQuery,
+  ProactiveConfig,
+  DEFAULT_PROACTIVE_CONFIG,
+  ProactiveContextSource
 } from './agent';

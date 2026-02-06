@@ -238,6 +238,36 @@ CREATE TABLE IF NOT EXISTS ${prefix}_reflections (
 CREATE INDEX IF NOT EXISTS idx_${prefix}_reflections_session ON ${prefix}_reflections(session_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_${prefix}_reflections_outcome ON ${prefix}_reflections(outcome, created_at DESC);
 
+-- Context subscriptions for proactive suggestions
+CREATE TABLE IF NOT EXISTS ${prefix}_context_subscriptions (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  watch_patterns_json TEXT,
+  callback_type TEXT NOT NULL,
+  callback_url TEXT,
+  min_relevance_score REAL DEFAULT 0.5,
+  max_suggestions INTEGER DEFAULT 5,
+  cooldown_ms INTEGER DEFAULT 5000,
+  last_triggered_at TEXT,
+  enabled INTEGER DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_${prefix}_subscriptions_session ON ${prefix}_context_subscriptions(session_id, enabled);
+
+-- Context suggestions for tracking and feedback
+CREATE TABLE IF NOT EXISTS ${prefix}_context_suggestions (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  trigger_json TEXT,
+  suggestions_json TEXT,
+  status TEXT DEFAULT 'pending',
+  used_item_index INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_${prefix}_suggestions_session ON ${prefix}_context_suggestions(session_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_${prefix}_suggestions_status ON ${prefix}_context_suggestions(status);
+
 -- Note: Full-text search is implemented via LIKE queries since sql.js doesn't support FTS5
 -- In production with native SQLite, FTS5 can be added for better performance
 `;
@@ -250,6 +280,8 @@ export function dropProjectTables(projectId: string): string {
   const prefix = sanitizeProjectId(projectId);
 
   return `
+DROP TABLE IF EXISTS ${prefix}_context_suggestions;
+DROP TABLE IF EXISTS ${prefix}_context_subscriptions;
 DROP TABLE IF EXISTS ${prefix}_reflections;
 DROP TABLE IF EXISTS ${prefix}_memory_items;
 DROP TABLE IF EXISTS ${prefix}_checkpoints;
@@ -287,6 +319,8 @@ export function getProjectTableNames(projectId: string): string[] {
     `${prefix}_ast_cache`,
     `${prefix}_checkpoints`,
     `${prefix}_memory_items`,
-    `${prefix}_reflections`
+    `${prefix}_reflections`,
+    `${prefix}_context_subscriptions`,
+    `${prefix}_context_suggestions`
   ];
 }
