@@ -211,6 +211,33 @@ CREATE INDEX IF NOT EXISTS idx_${prefix}_memory_session_tier ON ${prefix}_memory
 CREATE INDEX IF NOT EXISTS idx_${prefix}_memory_access ON ${prefix}_memory_items(session_id, last_accessed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_${prefix}_memory_relevance ON ${prefix}_memory_items(session_id, relevance_score DESC);
 
+-- Reflections for agent self-improvement
+CREATE TABLE IF NOT EXISTS ${prefix}_reflections (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+
+  -- Task context
+  task_description TEXT NOT NULL,
+  attempt_number INTEGER DEFAULT 1,
+
+  -- Outcome
+  outcome TEXT NOT NULL,
+
+  -- Lessons (JSON arrays)
+  what_worked_json TEXT,
+  what_did_not_work_json TEXT,
+  next_strategy TEXT NOT NULL,
+
+  -- Retrieval
+  tags_json TEXT,
+  embedding_json TEXT,
+  related_entity_ids_json TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_${prefix}_reflections_session ON ${prefix}_reflections(session_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_${prefix}_reflections_outcome ON ${prefix}_reflections(outcome, created_at DESC);
+
 -- Note: Full-text search is implemented via LIKE queries since sql.js doesn't support FTS5
 -- In production with native SQLite, FTS5 can be added for better performance
 `;
@@ -223,6 +250,7 @@ export function dropProjectTables(projectId: string): string {
   const prefix = sanitizeProjectId(projectId);
 
   return `
+DROP TABLE IF EXISTS ${prefix}_reflections;
 DROP TABLE IF EXISTS ${prefix}_memory_items;
 DROP TABLE IF EXISTS ${prefix}_checkpoints;
 DROP TABLE IF EXISTS ${prefix}_messages;
@@ -258,6 +286,7 @@ export function getProjectTableNames(projectId: string): string[] {
     `${prefix}_messages`,
     `${prefix}_ast_cache`,
     `${prefix}_checkpoints`,
-    `${prefix}_memory_items`
+    `${prefix}_memory_items`,
+    `${prefix}_reflections`
   ];
 }

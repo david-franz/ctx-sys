@@ -39,3 +39,15 @@ export {
   AddMemoryOptions,
   MemoryEmbeddingProvider
 } from './memory-tier';
+
+export {
+  ReflectionStore,
+  ReflectionOutcome,
+  Reflection,
+  ReflectionInput,
+  ReflectionQuery,
+  ReflectionSummary,
+  ReflectionConfig,
+  DEFAULT_REFLECTION_CONFIG,
+  ReflectionEmbeddingProvider
+} from './reflection';

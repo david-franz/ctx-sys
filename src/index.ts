@@ -286,5 +286,14 @@ export {
   SpillOptions,
   RecallOptions,
   AddMemoryOptions,
-  MemoryEmbeddingProvider
+  MemoryEmbeddingProvider,
+  ReflectionStore,
+  ReflectionOutcome,
+  Reflection,
+  ReflectionInput,
+  ReflectionQuery,
+  ReflectionSummary,
+  ReflectionConfig,
+  DEFAULT_REFLECTION_CONFIG,
+  ReflectionEmbeddingProvider
 } from './agent';
