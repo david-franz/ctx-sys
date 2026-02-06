@@ -1,0 +1,391 @@
+---
+title: Common Issues
+sidebar_position: 1
+description: Solutions to common ctx-sys problems
+---
+
+# Troubleshooting Common Issues
+
+This guide helps resolve the most common issues with ctx-sys.
+
+## Installation Issues
+
+### "Command not found: ctx"
+
+The npm global bin directory is not in your PATH.
+
+**Solution:**
+
+```bash
+# Find the npm global bin path
+npm bin -g
+
+# Add to your shell config (~/.bashrc, ~/.zshrc, or ~/.profile)
+export PATH="$(npm bin -g):$PATH"
+
+# Reload your shell
+source ~/.bashrc  # or ~/.zshrc
+```
+
+### "EACCES: permission denied"
+
+npm doesn't have permission to install globally.
+
+**Solution (Option 1 - Recommended):**
+
+Use a Node version manager like nvm:
+
+```bash
+# Install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Install latest Node
+nvm install node
+
+# Now install ctx-sys
+npm install -g ctx-sys
+```
+
+**Solution (Option 2):**
+
+Change npm's global directory:
+
+```bash
+mkdir ~/.npm-global
+npm config set prefix '~/.npm-global'
+echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+npm install -g ctx-sys
+```
+
+## Ollama Issues
+
+### "Ollama not found"
+
+ctx-sys cannot connect to Ollama.
+
+**Check if Ollama is installed:**
+
+```bash
+ollama --version
+```
+
+**If not installed:**
+
+```bash
+# macOS/Linux
+curl https://ollama.ai/install.sh | sh
+
+# Start Ollama
+ollama serve
+```
+
+**Check if Ollama is running:**
+
+```bash
+curl http://localhost:11434/api/tags
+```
+
+### "Model not found"
+
+The embedding model is not downloaded.
+
+**Solution:**
+
+```bash
+# Pull the default embedding model
+ollama pull nomic-embed-text
+
+# Verify it's available
+ollama list
+```
+
+### "Ollama is slow"
+
+Embeddings are taking too long.
+
+**Solutions:**
+
+1. **Use a smaller model:**
+   ```json
+   {
+     "embeddings": {
+       "model": "all-minilm"
+     }
+   }
+   ```
+
+2. **Increase batch size:**
+   ```json
+   {
+     "embeddings": {
+       "batchSize": 64
+     }
+   }
+   ```
+
+3. **Use GPU (if available):**
+   Ollama automatically uses GPU when available. Ensure CUDA/Metal is properly configured.
+
+## Indexing Issues
+
+### "Indexing takes too long"
+
+Large codebases can take time to index initially.
+
+**Solutions:**
+
+1. **Exclude unnecessary files:**
+   ```json
+   {
+     "indexing": {
+       "exclude": [
+         "**/node_modules/**",
+         "**/dist/**",
+         "**/*.min.js",
+         "**/vendor/**"
+       ]
+     }
+   }
+   ```
+
+2. **Index incrementally:**
+   ```bash
+   # Index only changed files
+   ctx index --changed
+
+   # Index specific directories
+   ctx index src/core
+   ```
+
+3. **Use watch mode for updates:**
+   ```bash
+   ctx start --watch
+   ```
+
+### "Out of memory during indexing"
+
+Large files or too many files cause memory issues.
+
+**Solutions:**
+
+1. **Limit file size:**
+   ```json
+   {
+     "indexing": {
+       "maxFileSize": 524288  // 512KB
+     }
+   }
+   ```
+
+2. **Process in batches:**
+   ```bash
+   ctx index src/module1
+   ctx index src/module2
+   ```
+
+### "Some files not being indexed"
+
+Files might be excluded or in an unsupported format.
+
+**Check what's being excluded:**
+
+```bash
+ctx index --dry-run
+```
+
+**Supported languages:**
+- TypeScript/JavaScript
+- Python
+- Go
+- Rust
+- Java
+- C/C++
+
+## Claude Desktop Issues
+
+### "Server not found"
+
+Claude Desktop cannot start ctx-sys.
+
+**Verify installation:**
+
+```bash
+which ctx
+ctx --version
+```
+
+**Check config path:**
+
+```bash
+# macOS
+cat ~/Library/Application\ Support/Claude/claude_desktop_config.json
+
+# Windows
+type %APPDATA%\Claude\claude_desktop_config.json
+```
+
+**Verify config format:**
+
+```json
+{
+  "mcpServers": {
+    "ctx-sys": {
+      "command": "ctx",
+      "args": ["start"],
+      "cwd": "/absolute/path/to/project"
+    }
+  }
+}
+```
+
+**Important:** The `cwd` must be an absolute path, not relative.
+
+### "No tools available"
+
+Claude Desktop connected but shows no ctx-sys tools.
+
+**Solutions:**
+
+1. **Restart Claude Desktop completely** (quit and reopen)
+
+2. **Check the project is initialized:**
+   ```bash
+   cd /path/to/project
+   ctx status
+   # If not initialized:
+   ctx init
+   ctx index
+   ```
+
+3. **Check server logs:**
+   ```bash
+   ctx start --verbose
+   ```
+
+### "Context seems wrong/outdated"
+
+ctx-sys is returning stale information.
+
+**Solutions:**
+
+1. **Re-index the project:**
+   ```bash
+   ctx index --force
+   ```
+
+2. **Check database location:**
+   ```bash
+   ctx status
+   # Shows database path
+   ```
+
+3. **Reset database:**
+   ```bash
+   rm .ctx-sys/ctx-sys.db
+   ctx index
+   ```
+
+## Database Issues
+
+### "Database locked"
+
+Multiple processes trying to access the database.
+
+**Solutions:**
+
+1. **Stop other ctx-sys instances:**
+   ```bash
+   # Find and kill other processes
+   ps aux | grep ctx-sys
+   kill <pid>
+   ```
+
+2. **Remove stale lock:**
+   ```bash
+   rm .ctx-sys/ctx-sys.db-journal
+   ```
+
+### "Database corrupted"
+
+Database file is damaged.
+
+**Solution:**
+
+```bash
+# Backup old database
+mv .ctx-sys/ctx-sys.db .ctx-sys/ctx-sys.db.bak
+
+# Re-create
+ctx index
+```
+
+## Performance Issues
+
+### "Queries are slow"
+
+Context retrieval takes too long.
+
+**Solutions:**
+
+1. **Reduce result count:**
+   ```json
+   {
+     "retrieval": {
+       "maxResults": 5
+     }
+   }
+   ```
+
+2. **Increase relevance threshold:**
+   ```json
+   {
+     "retrieval": {
+       "minRelevance": 0.7
+     }
+   }
+   ```
+
+3. **Optimize database:**
+   ```bash
+   ctx optimize
+   ```
+
+### "High memory usage"
+
+ctx-sys using too much RAM.
+
+**Solutions:**
+
+1. **Reduce embedding cache:**
+   ```json
+   {
+     "embeddings": {
+       "cacheSize": 1000
+     }
+   }
+   ```
+
+2. **Limit session history:**
+   ```json
+   {
+     "sessions": {
+       "maxMessages": 500
+     }
+   }
+   ```
+
+## Getting Help
+
+If these solutions don't work:
+
+1. **Check logs:**
+   ```bash
+   ctx start --verbose 2>&1 | tee ctx-sys.log
+   ```
+
+2. **Report issues:**
+   [GitHub Issues](https://github.com/your-org/ctx-sys/issues)
+
+3. **Community:**
+   Join our Discord for community support.

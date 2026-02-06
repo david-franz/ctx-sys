@@ -1,0 +1,208 @@
+---
+title: Configuration
+sidebar_position: 3
+description: Configure ctx-sys for your project
+---
+
+# Configuration
+
+ctx-sys uses a configuration file to customize behavior for your project.
+
+## Configuration File
+
+The main configuration file is `.ctx-sys/config.json` in your project root.
+
+```json
+{
+  "project": {
+    "name": "my-project",
+    "description": "My awesome project",
+    "language": "typescript"
+  },
+  "indexing": {
+    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "exclude": ["**/*.test.ts", "**/*.spec.ts", "**/node_modules/**"],
+    "maxFileSize": 1048576,
+    "followSymlinks": false
+  },
+  "embeddings": {
+    "provider": "ollama",
+    "model": "nomic-embed-text",
+    "dimensions": 768,
+    "batchSize": 32
+  },
+  "retrieval": {
+    "maxResults": 10,
+    "minRelevance": 0.5,
+    "includeDecisions": true,
+    "includeHistory": true
+  },
+  "sessions": {
+    "autoSave": true,
+    "maxMessages": 1000,
+    "summarizeAfter": 50
+  }
+}
+```
+
+## Configuration Options
+
+### Project Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `name` | string | directory name | Project identifier |
+| `description` | string | `""` | Project description |
+| `language` | string | `"auto"` | Primary language (auto-detected) |
+
+### Indexing Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `include` | string[] | `["**/*"]` | Glob patterns to include |
+| `exclude` | string[] | common patterns | Glob patterns to exclude |
+| `maxFileSize` | number | 1MB | Maximum file size to index |
+| `followSymlinks` | boolean | `false` | Follow symbolic links |
+
+### Embedding Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `provider` | string | `"ollama"` | Provider: ollama, openai |
+| `model` | string | provider default | Model name |
+| `dimensions` | number | model default | Vector dimensions |
+| `batchSize` | number | `32` | Batch size for embedding |
+
+### Retrieval Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `maxResults` | number | `10` | Maximum results to return |
+| `minRelevance` | number | `0.5` | Minimum relevance score |
+| `includeDecisions` | boolean | `true` | Include past decisions |
+| `includeHistory` | boolean | `true` | Include conversation history |
+
+### Session Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `autoSave` | boolean | `true` | Auto-save sessions |
+| `maxMessages` | number | `1000` | Max messages per session |
+| `summarizeAfter` | number | `50` | Summarize after N messages |
+
+## Environment Variables
+
+Some settings can be overridden via environment variables:
+
+```bash
+# Embedding provider API key
+export OPENAI_API_KEY=sk-...
+
+# Ollama server URL (if not default)
+export OLLAMA_HOST=http://localhost:11434
+
+# Database path (override default)
+export CTX_SYS_DB_PATH=/path/to/database.db
+
+# Log level
+export CTX_SYS_LOG_LEVEL=debug
+```
+
+## Global Configuration
+
+Global settings (applying to all projects) are stored in:
+
+- **macOS/Linux**: `~/.ctx-sys/config.json`
+- **Windows**: `%USERPROFILE%\.ctx-sys\config.json`
+
+```json
+{
+  "defaults": {
+    "provider": "ollama",
+    "model": "nomic-embed-text"
+  },
+  "telemetry": {
+    "enabled": false
+  }
+}
+```
+
+## Recommended Configurations
+
+### TypeScript Project
+
+```json
+{
+  "project": {
+    "language": "typescript"
+  },
+  "indexing": {
+    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "exclude": [
+      "**/*.test.ts",
+      "**/*.spec.ts",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/*.d.ts"
+    ]
+  }
+}
+```
+
+### Python Project
+
+```json
+{
+  "project": {
+    "language": "python"
+  },
+  "indexing": {
+    "include": ["**/*.py"],
+    "exclude": [
+      "**/test_*.py",
+      "**/*_test.py",
+      "**/venv/**",
+      "**/__pycache__/**"
+    ]
+  }
+}
+```
+
+### Monorepo
+
+```json
+{
+  "project": {
+    "name": "my-monorepo"
+  },
+  "indexing": {
+    "include": [
+      "packages/*/src/**/*.ts",
+      "apps/*/src/**/*.ts"
+    ],
+    "exclude": [
+      "**/node_modules/**",
+      "**/dist/**"
+    ]
+  }
+}
+```
+
+## Validation
+
+Validate your configuration:
+
+```bash
+ctx config validate
+```
+
+View effective configuration:
+
+```bash
+ctx config show
+```
+
+## Next Steps
+
+- [Understanding retrieval](/docs/concepts/graph-rag)
+- [Troubleshooting](/docs/troubleshooting/common-issues)

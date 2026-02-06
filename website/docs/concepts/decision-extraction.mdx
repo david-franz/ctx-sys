@@ -1,0 +1,216 @@
+---
+title: Decision Extraction
+sidebar_position: 2
+description: How ctx-sys captures and retrieves architectural decisions
+---
+
+# Decision Extraction
+
+One of ctx-sys's most powerful features is automatic **decision extraction**. This page explains what decisions are, how they're captured, and why they matter.
+
+## Why Track Decisions?
+
+Every codebase contains implicit knowledge:
+
+- *"We use JWT instead of sessions because the API is stateless"*
+- *"The UserService is a singleton to share database connections"*
+- *"We chose PostgreSQL over MongoDB for ACID compliance"*
+
+This knowledge usually exists only in:
+- The minds of developers who made the decision
+- Buried in old Slack messages
+- Lost commit messages
+- Forgotten PR discussions
+
+ctx-sys captures these decisions and surfaces them when relevant.
+
+## What is a Decision?
+
+A decision in ctx-sys has:
+
+```typescript
+interface Decision {
+  id: string;
+  decision: string;      // What was decided
+  rationale?: string;    // Why it was decided
+  alternatives?: string[]; // What was considered
+  context: string;       // Surrounding discussion
+  entities: string[];    // Related code entities
+  sessionId: string;     // Which conversation
+  timestamp: Date;
+}
+```
+
+### Example Decision
+
+```json
+{
+  "decision": "Use Redis for session storage",
+  "rationale": "Need sub-millisecond reads and automatic expiration",
+  "alternatives": [
+    "PostgreSQL - too slow for hot path",
+    "In-memory - doesn't scale horizontally"
+  ],
+  "entities": ["SessionManager", "RedisClient"],
+  "sessionId": "session_abc123"
+}
+```
+
+## How Decisions Are Extracted
+
+### 1. Conversation Analysis
+
+When you discuss code with an AI assistant, ctx-sys monitors for:
+
+- **Decision markers**: "Let's use", "We should", "I'll implement"
+- **Rationale markers**: "because", "so that", "to ensure"
+- **Alternative discussions**: "instead of", "rather than", "compared to"
+
+### 2. Pattern Recognition
+
+Common decision patterns:
+
+| Pattern | Example |
+|---------|---------|
+| Technology choice | "Use TypeScript instead of JavaScript" |
+| Architecture pattern | "Implement the repository pattern" |
+| Naming convention | "Prefix interfaces with 'I'" |
+| Error handling | "Throw errors rather than return null" |
+| API design | "Use REST, not GraphQL" |
+
+### 3. Entity Linking
+
+Decisions are automatically linked to related code:
+
+```
+Decision: "Add retry logic to the API client"
+     │
+     ├── Links to: ApiClient class
+     ├── Links to: retryWithBackoff() function
+     └── Links to: config.retryCount setting
+```
+
+## Using Decisions
+
+### Query Past Decisions
+
+Ask about specific topics:
+
+```bash
+ctx decisions "authentication"
+```
+
+Or through an AI assistant:
+
+> "What decisions have been made about the database schema?"
+
+### View Decision History
+
+```bash
+ctx decisions --all
+```
+
+### Search in Context
+
+When querying for code, related decisions are automatically included:
+
+```
+Query: "How does error handling work?"
+
+Results:
+  1. ErrorHandler class (src/errors/handler.ts)
+  2. handleApiError() function
+  3. Decision: "Use custom error classes for each domain"
+  4. Decision: "Log all errors to CloudWatch"
+```
+
+## Best Practices
+
+### 1. Be Explicit When Deciding
+
+When working with AI assistants, clearly state decisions:
+
+> "Let's use the factory pattern for creating validators because we need to support multiple input types"
+
+This is more likely to be captured than:
+
+> "I think factory might work here"
+
+### 2. Record Alternatives
+
+Mention what you considered and rejected:
+
+> "I considered using inheritance but chose composition because it's more flexible for testing"
+
+### 3. Link to Code
+
+Reference specific files or functions:
+
+> "The AuthMiddleware should validate JWT tokens before each request"
+
+### 4. Update When Things Change
+
+When a decision changes, explicitly state the new decision:
+
+> "We're switching from JWT to session cookies because we need revocation support"
+
+## Decision Retrieval
+
+### Automatic Inclusion
+
+By default, relevant decisions are included in context queries:
+
+```json
+{
+  "retrieval": {
+    "includeDecisions": true,
+    "maxDecisions": 5
+  }
+}
+```
+
+### Decision-Only Queries
+
+Query specifically for decisions:
+
+```bash
+ctx query --type decisions "API design"
+```
+
+### Filter by Time
+
+Find recent decisions:
+
+```bash
+ctx decisions --since "1 week ago"
+```
+
+## Privacy and Control
+
+### What's Captured
+
+- Decisions from conversations with AI assistants
+- Only when ctx-sys is connected
+
+### What's NOT Captured
+
+- Personal conversations
+- Content outside connected tools
+- Anything before ctx-sys was installed
+
+### Data Location
+
+Decisions are stored locally in `.ctx-sys/ctx-sys.db`:
+
+```bash
+# View decision count
+ctx stats decisions
+
+# Export decisions
+ctx export decisions --format json > decisions.json
+```
+
+## Next Steps
+
+- [Graph RAG](/docs/concepts/graph-rag)
+- [Session Management](/docs/concepts/sessions)

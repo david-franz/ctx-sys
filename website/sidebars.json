@@ -1,0 +1,44 @@
+{
+  "docs": [
+    "index",
+    {
+      "type": "category",
+      "label": "Getting Started",
+      "items": [
+        "getting-started/introduction",
+        "getting-started/installation"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Guides",
+      "items": [
+        "guides/claude-integration",
+        "guides/cursor-integration",
+        "guides/configuration"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Concepts",
+      "items": [
+        "concepts/graph-rag",
+        "concepts/decision-extraction"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "API Reference",
+      "items": [
+        "api/mcp-tools"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Troubleshooting",
+      "items": [
+        "troubleshooting/common-issues"
+      ]
+    }
+  ]
+}

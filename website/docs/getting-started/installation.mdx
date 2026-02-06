@@ -1,0 +1,166 @@
+---
+title: Installation
+sidebar_position: 2
+description: How to install ctx-sys on your system
+---
+
+# Installation
+
+ctx-sys can be installed via npm and works on macOS, Linux, and Windows.
+
+## Prerequisites
+
+- **Node.js** 18+ (LTS recommended)
+- **Git** (for version tracking features)
+- **Ollama** (optional, for local embeddings)
+
+## Quick Install
+
+```bash
+npm install -g ctx-sys
+```
+
+Verify the installation:
+
+```bash
+ctx --version
+```
+
+## First-Time Setup
+
+### 1. Initialize a Project
+
+Navigate to your project directory and run:
+
+```bash
+cd your-project
+ctx init
+```
+
+This creates a `.ctx-sys` directory with:
+- `config.json` - Project configuration
+- `ctx-sys.db` - SQLite database for entities and embeddings
+
+### 2. Index Your Codebase
+
+```bash
+ctx index
+```
+
+This parses your source files, extracts symbols, and generates embeddings. First indexing may take a few minutes for large projects.
+
+### 3. Start the Server
+
+```bash
+ctx start
+```
+
+The MCP server starts on stdio mode by default, ready to connect with Claude Desktop or other MCP clients.
+
+## Configuration Options
+
+### Embedding Provider
+
+ctx-sys supports multiple embedding providers:
+
+#### Ollama (Local, Free)
+
+```bash
+# Install Ollama first
+curl https://ollama.ai/install.sh | sh
+
+# Pull an embedding model
+ollama pull nomic-embed-text
+
+# ctx-sys will auto-detect Ollama
+ctx init
+```
+
+#### OpenAI (Cloud)
+
+```bash
+# Set your API key
+export OPENAI_API_KEY=sk-...
+
+# Configure ctx-sys to use OpenAI
+ctx init --provider openai
+```
+
+### Project Configuration
+
+Edit `.ctx-sys/config.json` to customize:
+
+```json
+{
+  "project": {
+    "name": "my-project",
+    "language": "typescript"
+  },
+  "indexing": {
+    "include": ["src/**/*.ts", "lib/**/*.ts"],
+    "exclude": ["**/*.test.ts", "**/node_modules/**"]
+  },
+  "embeddings": {
+    "provider": "ollama",
+    "model": "nomic-embed-text"
+  }
+}
+```
+
+## Updating
+
+```bash
+npm update -g ctx-sys
+```
+
+## Uninstalling
+
+```bash
+npm uninstall -g ctx-sys
+
+# Optionally remove project data
+rm -rf your-project/.ctx-sys
+```
+
+## Troubleshooting
+
+### "Command not found: ctx"
+
+Ensure npm global bin directory is in your PATH:
+
+```bash
+# Find npm global bin path
+npm bin -g
+
+# Add to your shell config (~/.bashrc or ~/.zshrc)
+export PATH="$(npm bin -g):$PATH"
+```
+
+### "Ollama not found"
+
+Install Ollama and ensure it's running:
+
+```bash
+# Install Ollama
+curl https://ollama.ai/install.sh | sh
+
+# Start Ollama service
+ollama serve
+
+# Pull the embedding model
+ollama pull nomic-embed-text
+```
+
+### Database Errors
+
+Reset the database:
+
+```bash
+rm .ctx-sys/ctx-sys.db
+ctx index
+```
+
+## Next Steps
+
+- [Connect to Claude Desktop](/docs/guides/claude-integration)
+- [Configure your project](/docs/guides/configuration)

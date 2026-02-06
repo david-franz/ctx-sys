@@ -1,0 +1,105 @@
+---
+title: Introduction
+sidebar_position: 1
+description: Learn what ctx-sys is and how it can help your development workflow
+---
+
+# Introduction to ctx-sys
+
+**ctx-sys** is an intelligent context management system for AI-assisted coding. It acts as a "smart librarian" for your codebase, providing AI tools like Claude, GPT, and Copilot with precisely the context they need - nothing more, nothing less.
+
+## The Problem
+
+When using AI coding assistants, you face a dilemma:
+
+- **Too little context**: The AI doesn't understand your codebase, leading to incorrect or irrelevant suggestions
+- **Too much context**: Sending your entire codebase burns tokens, costs money, and often confuses the AI
+
+Traditional approaches force you to manually copy-paste relevant files or hope the AI figures out what's relevant. This is time-consuming and error-prone.
+
+## The Solution
+
+ctx-sys solves this by:
+
+1. **Indexing your codebase** - Understanding your code structure, relationships, and patterns
+2. **Remembering conversations** - Tracking decisions, context, and history across sessions
+3. **Retrieving intelligently** - Using semantic search and graph traversal to find exactly what's relevant
+4. **Saving tokens** - Typically reducing context size by 95% while maintaining relevance
+
+## Key Features
+
+### Intelligent Code Understanding
+
+- **AST parsing** for TypeScript, JavaScript, Python, and more
+- **Symbol extraction** with full relationship mapping
+- **Automatic summarization** of complex code sections
+
+### Conversation Memory
+
+- **Session persistence** across IDE restarts
+- **Decision tracking** - never lose track of "why" decisions
+- **Context carry-over** between related conversations
+
+### Smart Retrieval
+
+- **Multi-strategy search** combining keyword, semantic, and graph traversal
+- **HyDE query expansion** for better semantic matching
+- **Relevance feedback** to improve results over time
+
+### Developer Experience
+
+- **Zero configuration** to get started
+- **MCP integration** for seamless Claude Desktop connection
+- **Real-time indexing** with file watching
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                       Your Query                            │
+│                "How does authentication work?"              │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      ctx-sys                                │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │ Query Parser │→│ Multi-Search │→│   Context    │      │
+│  │              │  │  (Semantic,  │  │  Assembler   │      │
+│  │              │  │   Graph,     │  │              │      │
+│  │              │  │   Keyword)   │  │              │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Relevant Context (5k tokens)                   │
+│  - AuthService class with middleware setup                  │
+│  - Previous decision: "Use JWT for stateless auth"          │
+│  - Related: UserController, SessionManager                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Quick Start
+
+Get started in under 2 minutes:
+
+```bash
+# Install globally
+npm install -g ctx-sys
+
+# Initialize in your project
+cd your-project
+ctx init
+
+# Start the MCP server
+ctx start
+```
+
+Then connect to Claude Desktop and start asking questions about your codebase!
+
+## Next Steps
+
+- [Installation Guide](/docs/getting-started/installation) - Detailed setup instructions
+- [Quick Start with Claude](/docs/guides/claude-integration) - Connect ctx-sys to Claude Desktop
+- [Concepts: Graph RAG](/docs/concepts/graph-rag) - Learn how the intelligent retrieval works

@@ -1,0 +1,152 @@
+---
+title: Claude Desktop Integration
+sidebar_position: 1
+description: Connect ctx-sys to Claude Desktop for enhanced coding assistance
+---
+
+# Claude Desktop Integration
+
+This guide shows how to connect ctx-sys to Claude Desktop using the Model Context Protocol (MCP).
+
+## Prerequisites
+
+- ctx-sys installed (`npm install -g ctx-sys`)
+- Claude Desktop installed
+- A project initialized with ctx-sys
+
+## Setup Steps
+
+### 1. Locate Claude Desktop Config
+
+Find your Claude Desktop configuration file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+### 2. Add ctx-sys Server
+
+Edit the configuration file and add ctx-sys to the `mcpServers` section:
+
+```json
+{
+  "mcpServers": {
+    "ctx-sys": {
+      "command": "ctx",
+      "args": ["start"],
+      "cwd": "/path/to/your/project"
+    }
+  }
+}
+```
+
+Replace `/path/to/your/project` with your actual project path.
+
+### 3. Restart Claude Desktop
+
+Close and reopen Claude Desktop for the changes to take effect.
+
+### 4. Verify Connection
+
+In Claude Desktop, you should see ctx-sys tools available. Try asking:
+
+> "What files are in this project?"
+
+Claude should use ctx-sys to answer based on your indexed codebase.
+
+## Automatic Setup
+
+ctx-sys can automatically configure Claude Desktop:
+
+```bash
+ctx connect claude
+```
+
+This command:
+1. Locates your Claude Desktop config
+2. Adds the ctx-sys server entry
+3. Sets the working directory to your current project
+
+## Available Tools
+
+Once connected, Claude has access to these ctx-sys tools:
+
+| Tool | Description |
+|------|-------------|
+| `context_query` | Search the codebase with intelligent retrieval |
+| `entity_search` | Find specific code entities (functions, classes) |
+| `decision_search` | Find past decisions and their context |
+| `index_files` | Index specific files |
+| `index_status` | Check indexing status |
+
+## Example Queries
+
+With ctx-sys connected, try these queries in Claude:
+
+### Understanding Code
+
+> "How does the authentication system work in this codebase?"
+
+Claude will:
+1. Search for auth-related code
+2. Find related decisions
+3. Provide a coherent explanation with code references
+
+### Finding Patterns
+
+> "Show me examples of error handling in this project"
+
+Claude will find error handling patterns across your codebase.
+
+### Getting Context for Changes
+
+> "I want to add a new API endpoint. What existing patterns should I follow?"
+
+Claude will find similar endpoints and explain the conventions used.
+
+## Troubleshooting
+
+### "Server not found"
+
+Ensure the config path is correct and ctx-sys is installed globally:
+
+```bash
+which ctx
+# Should output path like /usr/local/bin/ctx
+```
+
+### "No tools available"
+
+1. Check that your project is initialized: `ctx index`
+2. Verify the `cwd` path in config is correct
+3. Restart Claude Desktop
+
+### "Context seems stale"
+
+Re-index your project:
+
+```bash
+ctx index
+```
+
+Or enable watch mode for automatic updates:
+
+```bash
+ctx start --watch
+```
+
+## Tips for Best Results
+
+1. **Be specific** - "How does the UserService handle authentication?" works better than "How does auth work?"
+
+2. **Reference files** - "Look at src/auth/middleware.ts and explain its purpose"
+
+3. **Ask for context** - "What decisions were made about the database schema?"
+
+4. **Request comparisons** - "How does our error handling compare to typical patterns?"
+
+## Next Steps
+
+- [Configure ctx-sys](/docs/guides/configuration)
+- [Learn about Graph RAG](/docs/concepts/graph-rag)
+- [Troubleshooting guide](/docs/troubleshooting/common-issues)

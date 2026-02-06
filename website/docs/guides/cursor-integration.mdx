@@ -1,0 +1,143 @@
+---
+title: Cursor Integration
+sidebar_position: 2
+description: Use ctx-sys with Cursor IDE for enhanced AI assistance
+---
+
+# Cursor Integration
+
+This guide explains how to use ctx-sys with Cursor IDE.
+
+## Overview
+
+Cursor has built-in AI capabilities, but ctx-sys can enhance them by providing:
+- Better context retrieval from your codebase
+- Persistent conversation memory
+- Decision tracking across sessions
+
+## Setup Options
+
+### Option 1: MCP Server (Recommended)
+
+If Cursor supports MCP servers, configure ctx-sys as an MCP server:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "ctx-sys": {
+        "command": "ctx",
+        "args": ["start"],
+        "cwd": "${workspaceFolder}"
+      }
+    }
+  }
+}
+```
+
+### Option 2: HTTP API
+
+Run ctx-sys as an HTTP server:
+
+```bash
+ctx start --http --port 3000
+```
+
+Then configure Cursor to use the HTTP endpoint for context retrieval.
+
+### Option 3: File-Based Context
+
+Generate context files that Cursor can include:
+
+```bash
+# Generate a context snapshot
+ctx context "How does authentication work?" > .cursor/context.md
+
+# Update context in .cursorrules
+echo "Include context from .cursor/context.md" >> .cursorrules
+```
+
+## Best Practices
+
+### 1. Use .cursorrules
+
+Add ctx-sys context to your `.cursorrules` file:
+
+```markdown
+# Project Context
+
+This project uses:
+- TypeScript with strict mode
+- Express.js for the API
+- PostgreSQL for the database
+
+## Key Decisions
+
+Run `ctx decisions` to see recent architectural decisions.
+
+## Getting Context
+
+For any code changes, first ask ctx-sys:
+`ctx context "your question"`
+```
+
+### 2. Context Commands
+
+Add useful context commands to your workflow:
+
+```bash
+# Add to package.json scripts
+{
+  "scripts": {
+    "ctx:auth": "ctx context 'authentication system'",
+    "ctx:api": "ctx context 'API patterns'",
+    "ctx:db": "ctx context 'database schema'"
+  }
+}
+```
+
+### 3. Git Hooks Integration
+
+Use ctx-sys git hooks to keep context fresh:
+
+```bash
+ctx hooks install
+```
+
+This automatically re-indexes changed files on commit.
+
+## Tips
+
+1. **Keep context focused** - Request specific context rather than "everything about X"
+
+2. **Use decisions** - Run `ctx decisions` to understand past choices
+
+3. **Index before sessions** - Run `ctx index` before starting a coding session
+
+## Troubleshooting
+
+### Cursor not finding context
+
+Ensure your project is indexed:
+
+```bash
+ctx status
+ctx index
+```
+
+### Context seems irrelevant
+
+Try more specific queries:
+
+```bash
+# Instead of:
+ctx context "database"
+
+# Use:
+ctx context "User table schema and relationships"
+```
+
+## Next Steps
+
+- [Configuration guide](/docs/guides/configuration)
+- [Understanding Graph RAG](/docs/concepts/graph-rag)

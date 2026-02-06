@@ -1,0 +1,383 @@
+---
+title: MCP Tools Reference
+sidebar_position: 1
+description: Complete reference for ctx-sys MCP tools
+---
+
+# MCP Tools Reference
+
+This page documents all MCP (Model Context Protocol) tools provided by ctx-sys.
+
+## Context Retrieval
+
+### context_query
+
+Search the codebase and retrieve relevant context.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `query` | string | Yes | Natural language query |
+| `maxTokens` | number | No | Maximum tokens to return (default: 4000) |
+| `includeDecisions` | boolean | No | Include related decisions (default: true) |
+| `includeHistory` | boolean | No | Include conversation history (default: true) |
+
+**Returns:**
+
+```typescript
+{
+  items: Array<{
+    entityId: string;
+    name: string;
+    type: string;
+    content: string;
+    filePath?: string;
+    relevance: number;
+  }>;
+  totalTokens: number;
+  truncated: boolean;
+}
+```
+
+**Example:**
+
+```json
+{
+  "projectId": "my-project",
+  "query": "How does authentication work?",
+  "maxTokens": 2000
+}
+```
+
+---
+
+### entity_search
+
+Search for specific code entities.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `query` | string | No | Search query |
+| `filters` | object | No | Filter criteria |
+| `filters.type` | string | No | Entity type (function, class, etc.) |
+| `filters.filePath` | string | No | File path pattern |
+| `limit` | number | No | Maximum results (default: 20) |
+
+**Returns:**
+
+```typescript
+{
+  entities: Array<{
+    id: string;
+    name: string;
+    type: string;
+    filePath: string;
+    startLine: number;
+    endLine: number;
+    summary?: string;
+  }>;
+  total: number;
+}
+```
+
+**Example:**
+
+```json
+{
+  "projectId": "my-project",
+  "query": "UserService",
+  "filters": {
+    "type": "class"
+  }
+}
+```
+
+---
+
+### decision_search
+
+Search for past decisions.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `query` | string | No | Search query |
+| `limit` | number | No | Maximum results (default: 10) |
+| `since` | string | No | ISO date to filter from |
+
+**Returns:**
+
+```typescript
+{
+  decisions: Array<{
+    id: string;
+    decision: string;
+    rationale?: string;
+    timestamp: string;
+    sessionId: string;
+    entities: string[];
+  }>;
+  total: number;
+}
+```
+
+---
+
+## Indexing
+
+### index_files
+
+Index specific files.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `filePaths` | string[] | Yes | Paths to index |
+| `force` | boolean | No | Re-index even if unchanged |
+
+**Returns:**
+
+```typescript
+{
+  filesIndexed: number;
+  entitiesExtracted: number;
+  duration: number;
+}
+```
+
+---
+
+### index_status
+
+Get indexing status for a project.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+
+**Returns:**
+
+```typescript
+{
+  isUpToDate: boolean;
+  totalFiles: number;
+  indexedFiles: number;
+  unindexedCount: number;
+  lastIndexed: string;
+}
+```
+
+---
+
+## Sessions
+
+### session_create
+
+Create a new conversation session.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `name` | string | No | Session name |
+
+**Returns:**
+
+```typescript
+{
+  sessionId: string;
+  name: string;
+  createdAt: string;
+}
+```
+
+---
+
+### session_add_message
+
+Add a message to a session.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `sessionId` | string | Yes | Session identifier |
+| `role` | string | Yes | "user" or "assistant" |
+| `content` | string | Yes | Message content |
+
+**Returns:**
+
+```typescript
+{
+  messageId: string;
+  timestamp: string;
+}
+```
+
+---
+
+### session_get_history
+
+Get conversation history.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `sessionId` | string | Yes | Session identifier |
+| `limit` | number | No | Maximum messages (default: 50) |
+
+**Returns:**
+
+```typescript
+{
+  messages: Array<{
+    id: string;
+    role: string;
+    content: string;
+    timestamp: string;
+  }>;
+  total: number;
+}
+```
+
+---
+
+## Analytics
+
+### analytics_get_stats
+
+Get token usage statistics.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `period` | string | No | "day", "week", "month", "all" |
+
+**Returns:**
+
+```typescript
+{
+  totalQueries: number;
+  tokensSaved: number;
+  tokensSavedFormatted: string;
+  costSaved: number;
+  costSavedFormatted: string;
+  savingsPercent: number;
+  averageRelevance: number;
+}
+```
+
+---
+
+### analytics_record_feedback
+
+Record feedback on query usefulness.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `queryLogId` | string | Yes | Query log identifier |
+| `wasUseful` | boolean | Yes | Whether the result was useful |
+
+**Returns:**
+
+```typescript
+{
+  success: boolean;
+}
+```
+
+---
+
+## Git Hooks
+
+### hooks_install
+
+Install git hooks in a repository.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `repositoryPath` | string | Yes | Path to git repository |
+| `config` | object | No | Hook configuration |
+
+**Returns:**
+
+```typescript
+{
+  success: boolean;
+  installed: string[];
+  configPath: string;
+}
+```
+
+---
+
+### hooks_generate_impact_report
+
+Generate impact analysis for changes.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `projectId` | string | Yes | Project identifier |
+| `baseBranch` | string | No | Base branch (default: "main") |
+| `targetBranch` | string | No | Target branch (default: "HEAD") |
+
+**Returns:**
+
+```typescript
+{
+  generatedAt: string;
+  riskLevel: "low" | "medium" | "high";
+  summary: {
+    filesChanged: number;
+    entitiesAffected: number;
+    decisionsAffected: number;
+  };
+  risks: string[];
+  suggestions: string[];
+}
+```
+
+---
+
+## Error Codes
+
+| Code | Description |
+|------|-------------|
+| `PROJECT_NOT_FOUND` | Project ID doesn't exist |
+| `INDEX_REQUIRED` | Project needs to be indexed first |
+| `SESSION_NOT_FOUND` | Session ID doesn't exist |
+| `INVALID_QUERY` | Query parameter is invalid |
+| `RATE_LIMITED` | Too many requests |
+| `INTERNAL_ERROR` | Internal server error |
+
+## Rate Limits
+
+- Queries: 100 per minute
+- Indexing: 10 per minute
+- Sessions: 50 per minute
+
+Enterprise plans have higher limits.

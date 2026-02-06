@@ -1,0 +1,205 @@
+---
+title: Graph RAG
+sidebar_position: 1
+description: Understanding how ctx-sys uses knowledge graphs for intelligent retrieval
+---
+
+# Graph RAG
+
+ctx-sys uses **Graph-based Retrieval Augmented Generation (Graph RAG)** to provide intelligent context retrieval. This page explains how it works.
+
+## What is Graph RAG?
+
+Traditional RAG (Retrieval Augmented Generation) uses vector similarity to find relevant documents. Graph RAG enhances this by:
+
+1. **Building a knowledge graph** of entities and relationships
+2. **Traversing the graph** to find connected context
+3. **Combining multiple strategies** for comprehensive retrieval
+
+## The ctx-sys Knowledge Graph
+
+### Entities (Nodes)
+
+ctx-sys extracts and indexes various entity types:
+
+| Entity Type | Description | Examples |
+|-------------|-------------|----------|
+| `function` | Standalone functions | `authenticate()`, `parseConfig()` |
+| `class` | Class definitions | `UserService`, `AuthMiddleware` |
+| `interface` | Type interfaces | `User`, `Config` |
+| `method` | Class methods | `UserService.findById()` |
+| `file` | Source files | `src/auth/service.ts` |
+| `decision` | Recorded decisions | "Use JWT for stateless auth" |
+| `document` | Documentation | `README.md`, `ARCHITECTURE.md` |
+
+### Relationships (Edges)
+
+Entities are connected by various relationship types:
+
+| Relationship | Description |
+|--------------|-------------|
+| `calls` | Function/method invocation |
+| `imports` | Module imports |
+| `extends` | Class inheritance |
+| `implements` | Interface implementation |
+| `references` | Variable/type references |
+| `documents` | Doc-to-code links |
+| `decides` | Decision-to-code links |
+
+## How Retrieval Works
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│               Query: "How does auth work?"                  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+            ┌─────────────────┼─────────────────┐
+            ▼                 ▼                 ▼
+    ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+    │   Keyword    │  │   Semantic   │  │    Graph     │
+    │   Search     │  │   Search     │  │  Traversal   │
+    │              │  │              │  │              │
+    │ "auth" match │  │ Vector       │  │ Connected    │
+    │ in names     │  │ similarity   │  │ entities     │
+    └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+           │                 │                 │
+           └─────────────────┼─────────────────┘
+                             ▼
+                    ┌──────────────┐
+                    │   Merge &    │
+                    │   Rank       │
+                    └──────┬───────┘
+                           │
+                           ▼
+              ┌─────────────────────────┐
+              │   Assembled Context     │
+              │   - AuthService class   │
+              │   - authenticate()      │
+              │   - AuthMiddleware      │
+              │   - Decision: "Use JWT" │
+              └─────────────────────────┘
+```
+
+### 1. Multi-Strategy Search
+
+ctx-sys combines multiple search strategies:
+
+- **Keyword Search**: Exact and fuzzy text matching
+- **Semantic Search**: Vector similarity using embeddings
+- **Graph Traversal**: Following relationships to find connected entities
+
+### 2. Query Parsing
+
+The query is analyzed to extract:
+- **Intent**: What type of information is needed
+- **Entities**: Specific entities mentioned
+- **Scope**: How broad the search should be
+
+### 3. Result Merging
+
+Results from each strategy are merged using configurable weights:
+
+```json
+{
+  "strategyWeights": {
+    "keyword": 0.3,
+    "semantic": 0.4,
+    "graph": 0.3
+  }
+}
+```
+
+## Benefits Over Traditional RAG
+
+### 1. Discovers Hidden Connections
+
+```
+Query: "How is the User class used?"
+
+Traditional RAG might miss:
+  - Controllers that use UserService (which uses User)
+  - Test files that mock User
+  - Documentation about user data model
+
+Graph RAG finds all of these by traversing relationships.
+```
+
+### 2. Preserves Context
+
+Instead of isolated chunks, Graph RAG returns:
+- The entity itself
+- Its immediate relationships
+- Relevant decisions about it
+- Connected documentation
+
+### 3. Reduces Token Waste
+
+By understanding relationships, ctx-sys can:
+- Skip redundant content
+- Include only relevant parts of large files
+- Prioritize directly connected entities
+
+## Practical Example
+
+Consider asking: "How does the payment system work?"
+
+### Traditional RAG Result
+
+Might return random chunks containing "payment":
+- A comment mentioning payment in an unrelated file
+- Part of the PaymentService class
+- A test file with payment in the name
+
+### ctx-sys Graph RAG Result
+
+Returns a coherent picture:
+
+1. **PaymentService** class (the core entity)
+2. **processPayment()** method
+3. **PaymentController** (calls PaymentService)
+4. **StripeClient** (dependency of PaymentService)
+5. **Decision**: "Use Stripe for payment processing"
+6. **Related docs**: payment-flow.md
+
+## Tuning Graph RAG
+
+### Adjust Traversal Depth
+
+```json
+{
+  "retrieval": {
+    "graphDepth": 2,  // How many hops to traverse
+    "maxGraphNodes": 20  // Max entities from graph
+  }
+}
+```
+
+### Weight Strategies
+
+```json
+{
+  "retrieval": {
+    "strategyWeights": {
+      "keyword": 0.2,
+      "semantic": 0.5,
+      "graph": 0.3
+    }
+  }
+}
+```
+
+### Filter by Entity Type
+
+```json
+{
+  "retrieval": {
+    "entityTypes": ["function", "class", "decision"],
+    "excludeTypes": ["test"]
+  }
+}
+```
+
+## Next Steps
+
+- [Decision Extraction](/docs/concepts/decision-extraction)
+- [Configuration guide](/docs/guides/configuration)
