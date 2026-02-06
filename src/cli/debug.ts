@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { formatTable, formatDate, formatBytes, colors } from './formatters';
+import { sanitizeProjectId } from '../db/schema';
 import { CLIOutput, defaultOutput } from './init';
 
 /**
@@ -143,7 +144,7 @@ async function inspectDatabase(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   // Get all tables
   const tables = db.all<{ name: string }>(`
@@ -279,7 +280,7 @@ async function exportData(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const data: Record<string, unknown[]> = {};
 
@@ -343,7 +344,7 @@ async function importData(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const inputPath = path.resolve(inputFile);
   const content = fs.readFileSync(inputPath, 'utf-8');
@@ -435,7 +436,7 @@ async function checkHealth(
     await db.initialize();
 
     const projectId = config.projectConfig.project.name || path.basename(projectPath);
-    const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const prefix = sanitizeProjectId(projectId);
 
     // Check tables exist
     const tables = db.all<{ name: string }>(`

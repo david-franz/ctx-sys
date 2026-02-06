@@ -7,6 +7,7 @@ import * as path from 'path';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { formatTable, formatDate, truncate, colors } from './formatters';
+import { sanitizeProjectId } from '../db/schema';
 import { CLIOutput, defaultOutput } from './init';
 
 interface SessionRow {
@@ -93,7 +94,7 @@ async function listSessions(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const limit = parseInt(options.limit || '20', 10);
 
@@ -162,7 +163,7 @@ async function showMessages(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const limit = parseInt(options.limit || '50', 10);
 

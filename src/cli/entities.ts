@@ -7,6 +7,7 @@ import * as path from 'path';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { formatTable, formatDate, truncate, colors, formatBytes } from './formatters';
+import { sanitizeProjectId } from '../db/schema';
 import { CLIOutput, defaultOutput } from './init';
 
 interface EntityRow {
@@ -145,7 +146,7 @@ async function listEntities(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const limit = parseInt(options.limit || '50', 10);
   const offset = parseInt(options.offset || '0', 10);
@@ -218,7 +219,7 @@ async function showEntity(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   // Try by ID first, then by qualified name
   let entity = db.get<EntityRow & { content?: string }>(
@@ -310,7 +311,7 @@ async function deleteEntity(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   // Check entity exists
   const entity = db.get<EntityRow>(
@@ -364,7 +365,7 @@ async function showEntityStats(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const stats = db.all<EntityStatsRow>(`
     SELECT

@@ -7,6 +7,7 @@ import * as path from 'path';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { formatTable, formatDate, colors, formatBytes } from './formatters';
+import { sanitizeProjectId } from '../db/schema';
 import { CLIOutput, defaultOutput } from './init';
 
 interface QueryLogRow {
@@ -87,7 +88,7 @@ async function showAnalytics(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   // Calculate date filter
   const periodDays = {
@@ -195,7 +196,7 @@ async function showDashboard(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   // Core stats
   const coreStats = db.get<UsageStats>(`

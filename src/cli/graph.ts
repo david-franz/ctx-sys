@@ -7,6 +7,7 @@ import * as path from 'path';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { formatTable, colors } from './formatters';
+import { sanitizeProjectId } from '../db/schema';
 import { CLIOutput, defaultOutput } from './init';
 
 interface RelationshipRow {
@@ -147,7 +148,7 @@ async function traverseGraph(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const maxDepth = parseInt(options.depth || '2', 10);
   const direction = options.direction || 'both';
@@ -182,7 +183,7 @@ async function traverseGraph(
     // Get outgoing relationships
     if (direction === 'outgoing' || direction === 'both') {
       let sql = `
-        SELECT r.type, r.target_id, e.name, e.type as entity_type
+        SELECT r.relationship as type, r.target_id, e.name, e.type as entity_type
         FROM ${prefix}_relationships r
         JOIN ${prefix}_entities e ON r.target_id = e.id
         WHERE r.source_id = ?
@@ -190,7 +191,7 @@ async function traverseGraph(
       const params: unknown[] = [id];
 
       if (typeFilter) {
-        sql += ` AND r.type IN (${typeFilter.map(() => '?').join(',')})`;
+        sql += ` AND r.relationship IN (${typeFilter.map(() => '?').join(',')})`;
         params.push(...typeFilter);
       }
 
@@ -209,7 +210,7 @@ async function traverseGraph(
     // Get incoming relationships
     if (direction === 'incoming' || direction === 'both') {
       let sql = `
-        SELECT r.type, r.source_id, e.name, e.type as entity_type
+        SELECT r.relationship as type, r.source_id, e.name, e.type as entity_type
         FROM ${prefix}_relationships r
         JOIN ${prefix}_entities e ON r.source_id = e.id
         WHERE r.target_id = ?
@@ -217,7 +218,7 @@ async function traverseGraph(
       const params: unknown[] = [id];
 
       if (typeFilter) {
-        sql += ` AND r.type IN (${typeFilter.map(() => '?').join(',')})`;
+        sql += ` AND r.relationship IN (${typeFilter.map(() => '?').join(',')})`;
         params.push(...typeFilter);
       }
 
@@ -282,7 +283,7 @@ async function showGraphStats(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const entityCount = db.get<{ count: number }>(
     `SELECT COUNT(*) as count FROM ${prefix}_entities`
@@ -293,9 +294,9 @@ async function showGraphStats(
   );
 
   const typeStats = db.all<{ type: string; count: number }>(`
-    SELECT type, COUNT(*) as count
+    SELECT relationship as type, COUNT(*) as count
     FROM ${prefix}_relationships
-    GROUP BY type
+    GROUP BY relationship
     ORDER BY count DESC
   `);
 
@@ -363,13 +364,13 @@ async function listRelationships(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const limit = parseInt(options.limit || '50', 10);
 
   let sql = `
     SELECT
-      r.id, r.source_id, r.target_id, r.type, r.weight,
+      r.id, r.source_id, r.target_id, r.relationship as type, r.weight,
       s.name as source_name, s.type as source_type,
       t.name as target_name, t.type as target_type
     FROM ${prefix}_relationships r
@@ -381,7 +382,7 @@ async function listRelationships(
   const params: unknown[] = [];
 
   if (options.type) {
-    sql += ' AND r.type = ?';
+    sql += ' AND r.relationship = ?';
     params.push(options.type);
   }
 
@@ -395,7 +396,7 @@ async function listRelationships(
     params.push(options.target, options.target);
   }
 
-  sql += ' ORDER BY r.type, s.name LIMIT ?';
+  sql += ' ORDER BY r.relationship, s.name LIMIT ?';
   params.push(limit);
 
   const relationships = db.all<RelationshipRow>(sql, params);
@@ -441,7 +442,7 @@ async function createLink(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const weight = parseFloat(options.weight || '1.0');
 
@@ -471,7 +472,7 @@ async function createLink(
   // Create relationship
   const id = crypto.randomUUID();
   db.run(
-    `INSERT INTO ${prefix}_relationships (id, source_id, target_id, type, weight, created_at)
+    `INSERT INTO ${prefix}_relationships (id, source_id, target_id, relationship, weight, created_at)
      VALUES (?, ?, ?, ?, ?, datetime('now'))`,
     [id, source.id, target.id, type, weight]
   );

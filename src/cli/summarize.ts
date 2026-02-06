@@ -8,6 +8,7 @@ import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { LLMSummarizationManager, EntityForSummary } from '../summarization/llm-manager';
 import { formatTable, colors } from './formatters';
+import { sanitizeProjectId } from '../db/schema';
 import { CLIOutput, defaultOutput } from './init';
 
 /**
@@ -97,7 +98,7 @@ async function generateSummaries(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const limit = parseInt(options.limit || '100', 10);
 
@@ -204,7 +205,7 @@ async function showSummarizeStatus(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const stats = db.get<{
     total: number;

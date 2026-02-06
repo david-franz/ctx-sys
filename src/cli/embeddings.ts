@@ -7,6 +7,7 @@ import * as path from 'path';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { formatTable, formatBytes, colors } from './formatters';
+import { sanitizeProjectId } from '../db/schema';
 import { CLIOutput, defaultOutput } from './init';
 
 interface EmbeddingRow {
@@ -113,7 +114,7 @@ async function generateEmbeddings(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   // Find entities needing embeddings
   let sql = `
@@ -189,7 +190,7 @@ async function showEmbeddingStatus(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   const stats = db.get<EmbeddingStats>(`
     SELECT
@@ -272,7 +273,7 @@ async function cleanupEmbeddings(
   await db.initialize();
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const prefix = projectId.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const prefix = sanitizeProjectId(projectId);
 
   // Find orphaned embeddings
   const orphaned = db.all<{ id: string; entity_id: string }>(`
