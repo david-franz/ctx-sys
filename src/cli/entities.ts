@@ -19,7 +19,7 @@ interface EntityRow {
   start_line: number | null;
   end_line: number | null;
   summary: string | null;
-  content_hash: string | null;
+  hash: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -154,7 +154,7 @@ async function listEntities(
   let sql = `
     SELECT
       id, qualified_name, name, type, file_path,
-      start_line, end_line, summary, content_hash,
+      start_line, end_line, summary, hash,
       created_at, updated_at
     FROM ${prefix}_entities
     WHERE 1=1
@@ -240,19 +240,12 @@ async function showEntity(
     process.exit(1);
   }
 
-  // Get content if requested
-  let content: string | null = null;
-  if (options.content) {
-    const contentRow = db.get<{ content: string }>(
-      `SELECT content FROM ${prefix}_entity_content WHERE entity_id = ?`,
-      [entity.id]
-    );
-    content = contentRow?.content || null;
-  }
+  // Get content from entity directly
+  const content: string | null = options.content ? (entity.content || null) : null;
 
   // Get relationships
   const relationships = db.all<{ type: string; target_id: string; target_name: string }>(
-    `SELECT r.type, r.target_id, e.name as target_name
+    `SELECT r.relationship as type, r.target_id, e.name as target_name
      FROM ${prefix}_relationships r
      LEFT JOIN ${prefix}_entities e ON r.target_id = e.id
      WHERE r.source_id = ?
@@ -335,11 +328,8 @@ async function deleteEntity(
   // Delete relationships
   db.run(`DELETE FROM ${prefix}_relationships WHERE source_id = ? OR target_id = ?`, [id, id]);
 
-  // Delete content
-  db.run(`DELETE FROM ${prefix}_entity_content WHERE entity_id = ?`, [id]);
-
   // Delete embeddings
-  db.run(`DELETE FROM ${prefix}_embeddings WHERE entity_id = ?`, [id]);
+  db.run(`DELETE FROM ${prefix}_vectors WHERE entity_id = ?`, [id]);
 
   // Delete entity
   db.run(`DELETE FROM ${prefix}_entities WHERE id = ?`, [id]);
@@ -372,7 +362,7 @@ async function showEntityStats(
       type,
       COUNT(*) as count,
       SUM(CASE WHEN summary IS NOT NULL THEN 1 ELSE 0 END) as with_summary,
-      SUM(CASE WHEN content_hash IS NOT NULL THEN 1 ELSE 0 END) as with_content
+      SUM(CASE WHEN hash IS NOT NULL THEN 1 ELSE 0 END) as with_content
     FROM ${prefix}_entities
     GROUP BY type
     ORDER BY count DESC

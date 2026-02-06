@@ -287,7 +287,6 @@ async function exportData(
   // Export entities
   if (!options.relationships) {
     data.entities = db.all(`SELECT * FROM ${prefix}_entities`);
-    data.entity_content = db.all(`SELECT * FROM ${prefix}_entity_content`);
   }
 
   // Export relationships
@@ -355,7 +354,6 @@ async function importData(
   // Clear existing data if not merging
   if (!options.merge) {
     db.run(`DELETE FROM ${prefix}_relationships`);
-    db.run(`DELETE FROM ${prefix}_entity_content`);
     db.run(`DELETE FROM ${prefix}_entities`);
     db.run(`DELETE FROM ${prefix}_messages`);
     db.run(`DELETE FROM ${prefix}_sessions`);
@@ -367,30 +365,16 @@ async function importData(
       try {
         db.run(`
           INSERT OR REPLACE INTO ${prefix}_entities
-          (id, qualified_name, name, type, file_path, start_line, end_line, summary, content_hash, created_at, updated_at)
+          (id, qualified_name, name, type, file_path, start_line, end_line, summary, hash, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
           entity.id, entity.qualified_name, entity.name, entity.type,
           entity.file_path, entity.start_line, entity.end_line,
-          entity.summary, entity.content_hash, entity.created_at, entity.updated_at
+          entity.summary, entity.hash || entity.content_hash, entity.created_at, entity.updated_at
         ]);
         imported++;
       } catch {
         // Skip duplicates in merge mode
-      }
-    }
-  }
-
-  // Import entity content
-  if (data.entity_content) {
-    for (const content of data.entity_content) {
-      try {
-        db.run(`
-          INSERT OR REPLACE INTO ${prefix}_entity_content (id, entity_id, content, created_at)
-          VALUES (?, ?, ?, ?)
-        `, [content.id, content.entity_id, content.content, content.created_at]);
-      } catch {
-        // Skip duplicates
       }
     }
   }
@@ -401,9 +385,9 @@ async function importData(
       try {
         db.run(`
           INSERT OR REPLACE INTO ${prefix}_relationships
-          (id, source_id, target_id, type, weight, created_at)
+          (id, source_id, target_id, relationship, weight, created_at)
           VALUES (?, ?, ?, ?, ?, ?)
-        `, [rel.id, rel.source_id, rel.target_id, rel.type, rel.weight, rel.created_at]);
+        `, [rel.id, rel.source_id, rel.target_id, rel.relationship || rel.type, rel.weight, rel.created_at]);
         imported++;
       } catch {
         // Skip duplicates
@@ -472,8 +456,8 @@ async function checkHealth(
     // Check embeddings coverage
     const embeddingStats = db.get<{ total: number; embedded: number }>(`
       SELECT
-        (SELECT COUNT(*) FROM ${prefix}_entities WHERE content_hash IS NOT NULL) as total,
-        (SELECT COUNT(*) FROM ${prefix}_embeddings) as embedded
+        (SELECT COUNT(*) FROM ${prefix}_entities WHERE hash IS NOT NULL) as total,
+        (SELECT COUNT(*) FROM ${prefix}_vectors) as embedded
     `);
     const coverage = embeddingStats?.total
       ? (embeddingStats.embedded / embeddingStats.total) * 100

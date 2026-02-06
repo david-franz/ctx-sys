@@ -52,6 +52,34 @@ export class RelationshipStore {
   }
 
   /**
+   * Create or update a relationship (avoids duplicates on re-index).
+   */
+  async upsert(input: RelationshipInput): Promise<void> {
+    const existing = this.db.get<{ id: string }>(
+      `SELECT id FROM ${this.tableName}
+       WHERE source_id = ? AND target_id = ? AND relationship = ?`,
+      [input.sourceId, input.targetId, input.relationship]
+    );
+
+    if (existing) {
+      // Update weight/metadata if changed
+      this.db.run(
+        `UPDATE ${this.tableName} SET weight = ?, metadata = ? WHERE id = ?`,
+        [input.weight ?? 1.0, JSON.stringify(input.metadata || {}), existing.id]
+      );
+    } else {
+      const id = generateId();
+      this.db.run(
+        `INSERT INTO ${this.tableName}
+         (id, source_id, target_id, relationship, weight, metadata)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, input.sourceId, input.targetId, input.relationship,
+         input.weight ?? 1.0, JSON.stringify(input.metadata || {})]
+      );
+    }
+  }
+
+  /**
    * Create multiple relationships in a transaction.
    */
   async createMany(inputs: RelationshipInput[]): Promise<StoredRelationship[]> {

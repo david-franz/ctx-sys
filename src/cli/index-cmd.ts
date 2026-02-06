@@ -8,6 +8,7 @@ import { CodebaseIndexer, IndexOptions, IndexResult } from '../indexer';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { EntityStore } from '../entities';
+import { RelationshipStore } from '../graph/relationship-store';
 import { EmbeddingManager } from '../embeddings/manager';
 import { OllamaEmbeddingProvider } from '../embeddings/ollama';
 import { CLIOutput, defaultOutput } from './init';
@@ -75,9 +76,10 @@ async function runIndex(
     db.createProject(projectId);
 
     const entityStore = new EntityStore(db, projectId);
+    const relationshipStore = new RelationshipStore(db, projectId);
 
-    // Create indexer
-    const indexer = new CodebaseIndexer(projectPath, entityStore);
+    // Create indexer with relationship extraction
+    const indexer = new CodebaseIndexer(projectPath, entityStore, undefined, undefined, relationshipStore);
 
     // Build index options
     const indexOptions: IndexOptions = {

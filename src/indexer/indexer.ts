@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import { ASTParser, ParseResult } from '../ast';
 import { SymbolSummarizer, FileSummary } from '../summarization';
 import { EntityStore, Entity } from '../entities';
+import { RelationshipStore } from '../graph/relationship-store';
 import {
   IndexedFile,
   IndexStats,
@@ -37,6 +38,7 @@ export class CodebaseIndexer {
   private parser: ASTParser;
   private summarizer: SymbolSummarizer;
   private entityStore?: EntityStore;
+  private relationshipStore?: RelationshipStore;
   private projectRoot: string;
   private indexMap: Map<string, IndexEntry> = new Map();
 
@@ -44,10 +46,12 @@ export class CodebaseIndexer {
     projectRoot: string,
     entityStore?: EntityStore,
     parser?: ASTParser,
-    summarizer?: SymbolSummarizer
+    summarizer?: SymbolSummarizer,
+    relationshipStore?: RelationshipStore
   ) {
     this.projectRoot = path.resolve(projectRoot);
     this.entityStore = entityStore;
+    this.relationshipStore = relationshipStore;
     this.parser = parser || new ASTParser();
     this.summarizer = summarizer || new SymbolSummarizer();
   }
@@ -493,10 +497,13 @@ export class CodebaseIndexer {
       }
     });
 
-    // Upsert symbol entities
+    // Upsert symbol entities and build contains/exports relationships
+    const fileEntity = await this.entityStore.getByQualifiedName(filePath);
+    const exportSet = new Set(summary.exports);
+
     for (const symbol of summary.symbols) {
       const code = this.extractSymbolCode(sourceCode, symbol);
-      await this.entityStore.upsert({
+      const symbolEntity = await this.entityStore.upsert({
         type: symbol.type as any,
         name: symbol.name,
         qualifiedName: symbol.qualifiedName,
@@ -512,6 +519,56 @@ export class CodebaseIndexer {
           visibility: symbol.visibility
         }
       });
+
+      // Build file → symbol relationships
+      if (this.relationshipStore && fileEntity) {
+        await this.relationshipStore.upsert({
+          sourceId: fileEntity.id,
+          targetId: symbolEntity.id,
+          relationship: 'CONTAINS'
+        });
+      }
+    }
+
+    // Build file → file import relationships
+    if (this.relationshipStore && fileEntity && summary.dependencies.length > 0) {
+      await this.buildImportRelationships(fileEntity, filePath, summary.dependencies);
+    }
+  }
+
+  /**
+   * Build import relationships from a file to its dependencies.
+   */
+  private async buildImportRelationships(
+    sourceEntity: Entity,
+    filePath: string,
+    dependencies: string[]
+  ): Promise<void> {
+    if (!this.entityStore || !this.relationshipStore) return;
+
+    const fileDir = path.dirname(filePath);
+
+    for (const dep of dependencies) {
+      // Skip external packages (no relative path)
+      if (!dep.startsWith('.') && !dep.startsWith('/')) continue;
+
+      // Resolve to relative path from project root
+      const resolved = path.normalize(path.join(fileDir, dep));
+
+      // Try common extensions
+      const extensions = ['', '.ts', '.tsx', '.js', '.jsx', '/index.ts', '/index.js'];
+      for (const ext of extensions) {
+        const targetPath = resolved + ext;
+        const targetEntity = await this.entityStore.getByQualifiedName(targetPath);
+        if (targetEntity) {
+          await this.relationshipStore.upsert({
+            sourceId: sourceEntity.id,
+            targetId: targetEntity.id,
+            relationship: 'IMPORTS'
+          });
+          break;
+        }
+      }
     }
   }
 
