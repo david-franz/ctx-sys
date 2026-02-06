@@ -17,7 +17,7 @@ ctx-sys is implemented in 12 phases, progressing from foundational infrastructur
 | 7 | Configuration & Polish | Configuration, model abstraction, watch mode, CLI | ✅ Complete |
 | 8 | Agent Patterns | Checkpointing, hot/cold memory API, reflection, proactive context | ✅ Complete |
 | 9 | Analytics & Distribution | Token analytics, git hooks, support docs, website, npm | ✅ Complete |
-| **10** | **RAG Enhancements** | **Code content storage, scalable indexing, smart context, incremental embedding** | 🚧 In Progress |
+| 10 | RAG Enhancements | Code content storage, scalable indexing, smart context, LLM summaries | ✅ Complete |
 | 11 | Integration & Team | VS Code extension, auto context injection, team knowledge base | Planned |
 | 12 | Commercial & Enterprise | Auth & SSO, desktop app, licensing & billing, telemetry | Planned |
 
@@ -212,23 +212,23 @@ Critical improvements to make RAG actually useful - storing real code, handling 
 
 | Feature | Description | Doc | Status |
 |---------|-------------|-----|--------|
-| **F10.0** | Core Service Layer | [F10.0-core-service.md](phase-10/F10.0-core-service.md) | ✅ Complete |
-| **F10.1** | Code Content Storage | [F10.1-code-content-storage.md](phase-10/F10.1-code-content-storage.md) | Planned |
-| **F10.2** | Incremental Embedding | [F10.2-incremental-embedding.md](phase-10/F10.2-incremental-embedding.md) | Planned |
-| **F10.3** | Scalable Indexing | [F10.3-scalable-indexing.md](phase-10/F10.3-scalable-indexing.md) | Planned |
-| **F10.4** | Smart Context Assembly | [F10.4-smart-context-assembly.md](phase-10/F10.4-smart-context-assembly.md) | Planned |
-| **F10.5** | Auto Relationship Extraction | [F10.5-auto-relationship-extraction.md](phase-10/F10.5-auto-relationship-extraction.md) | Planned |
-| **F10.6** | LLM-Generated Summaries | [F10.6-llm-summaries.md](phase-10/F10.6-llm-summaries.md) | Planned |
-| **F10.7** | CLI Completeness | [F10.7-cli-completeness.md](phase-10/F10.7-cli-completeness.md) | Planned |
+| **F10.0** | Core Service Layer | [F10.0-core-service-layer.md](phase-10/F10.0-core-service-layer.md) | ✅ Complete |
+| **F10.1** | Code Content Storage | [F10.1-code-content-storage.md](phase-10/F10.1-code-content-storage.md) | ✅ Complete |
+| **F10.2** | Incremental Embedding | [F10.2-incremental-embedding.md](phase-10/F10.2-incremental-embedding.md) | ✅ Complete |
+| **F10.3** | Scalable Indexing | [F10.3-scalable-indexing.md](phase-10/F10.3-scalable-indexing.md) | ✅ Complete |
+| **F10.4** | Smart Context Assembly | [F10.4-smart-context-assembly.md](phase-10/F10.4-smart-context-assembly.md) | ✅ Complete |
+| **F10.5** | Auto Relationship Extraction | [F10.5-auto-relationship-extraction.md](phase-10/F10.5-auto-relationship-extraction.md) | ✅ Complete |
+| **F10.6** | LLM-Generated Summaries | [F10.6-llm-summaries.md](phase-10/F10.6-llm-summaries.md) | ✅ Complete |
+| **F10.7** | CLI Completeness | [F10.7-cli-completeness.md](phase-10/F10.7-cli-completeness.md) | ✅ Complete |
 
 **Key Deliverables:**
-- Store actual source code in entities (not just descriptions)
-- Stream-based indexing that handles 100k+ entity codebases
-- Return usable code snippets from context_query (not just file paths)
-- Only re-embed changed entities (incremental updates)
-- Automatically extract call graphs and type relationships
-- LLM-generated summaries for semantic understanding (Ollama or cloud)
-- Full CLI access to all features (never need to inspect database directly)
+- ✅ Store actual source code in entities (not just descriptions)
+- ✅ Stream-based indexing that handles 100k+ entity codebases
+- ✅ Return usable code snippets from context_query (not just file paths)
+- ✅ Only re-embed changed entities (incremental updates)
+- ✅ Automatically extract call graphs and type relationships
+- ✅ LLM-generated summaries for semantic understanding (Ollama or cloud)
+- ✅ Full CLI access to all features (30+ commands)
 
 ---
 
@@ -349,16 +349,8 @@ ctx-sys/
 For maximum value delivery, the recommended implementation order is:
 
 1. **Phases 1-9** — Foundation through analytics ✅ Complete
-2. **Phase 10** — RAG Enhancements (current focus)
-   - F10.0 Core Service Layer ✅
-   - F10.1 Code Content Storage (store actual code, not descriptions)
-   - F10.2 Incremental Embedding (only embed changed entities)
-   - F10.3 Scalable Indexing (handle large codebases without OOM)
-   - F10.4 Smart Context Assembly (return usable code snippets)
-   - F10.5 Auto Relationship Extraction (populate graph automatically)
-   - F10.6 LLM Summaries (Ollama/OpenAI/Anthropic for semantic understanding)
-   - F10.7 CLI Completeness (full CLI access to all features)
-3. **Phase 11** — Integration (VS Code -> Auto-inject -> Team)
+2. **Phase 10** — RAG Enhancements ✅ Complete
+3. **Phase 11** — Integration (VS Code -> Auto-inject -> Team) — Next
 4. **Phase 12** — Commercial (Auth/SSO -> Desktop -> Billing -> Telemetry)
 
 ---
