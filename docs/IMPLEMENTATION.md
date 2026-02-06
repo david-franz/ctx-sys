@@ -17,6 +17,7 @@ ctx-sys is implemented in 9 phases, progressing from foundational infrastructure
 | 7 | Configuration & Polish | Configuration, model abstraction, watch mode, CLI |
 | 8 | Agent Patterns | Checkpointing, hot/cold memory API, reflection, proactive context |
 | 9 | Integrations & Analytics | VS Code extension, token analytics, team knowledge, git hooks |
+| 10 | Productization | Website, SSO, Desktop App, Billing, Telemetry |
 
 ### Context Management Patterns
 
@@ -191,22 +192,47 @@ Implements advanced context management patterns for AI agents.
 
 ---
 
-## Phase 9: Integrations & Analytics
+## Phase 9: Analytics, Support, & Web
 
-Make value visible and reduce friction through integrations.
+Analytics infrastructure, support portal, and public-facing web presence.
 
 | Feature | Description | Doc |
 |---------|-------------|-----|
-| **F9.1** | VS Code Extension | [F9.1-vscode-extension.md](phase-9/F9.1-vscode-extension.md) |
-| **F9.2** | Token Analytics | [F9.2-token-analytics.md](phase-9/F9.2-token-analytics.md) |
-| **F9.3** | Team Knowledge Base | [F9.3-team-knowledge-base.md](phase-9/F9.3-team-knowledge-base.md) |
-| **F9.4** | Git Hooks | [F9.4-git-hooks.md](phase-9/F9.4-git-hooks.md) |
+| **F9.1** | Token Analytics | [F9.1-token-analytics.md](phase-9/F9.1-token-analytics.md) |
+| **F9.2** | Git Hooks | [F9.2-git-hooks.md](phase-9/F9.2-git-hooks.md) |
+| **F9.3** | Support & Docs | [F9.3-support-docs.md](phase-9/F9.3-support-docs.md) |
+| **F9.4** | Product Website | [F9.4-product-website.md](phase-9/F9.4-product-website.md) |
+| **F9.5** | NPM Distribution | [F9.5-npm-distribution.md](phase-9/F9.5-npm-distribution.md) |
+
+## Phase 10: Integration & Team
+
+Deep IDE integration and team collaboration features.
+
+| Feature | Description | Doc |
+|---------|-------------|-----|
+| **F10.1** | VS Code Extension | [F10.1-vscode-extension.md](phase-10/F10.1-vscode-extension.md) |
+| **F10.2** | Team Knowledge | [F10.2-team-knowledge-base.md](phase-10/F10.2-team-knowledge-base.md) |
+| **F10.3** | Auth & SSO | [F10.3-auth-sso.md](phase-10/F10.3-auth-sso.md) |
+
+## Phase 11: Commercial Desktop & Enterprise
+
+Standalone desktop application and enterprise monetization features.
+
+| Feature | Description | Doc |
+|---------|-------------|-----|
+| **F11.1** | Desktop App | [F11.1-desktop-app.md](phase-11/F11.1-desktop-app.md) |
+| **F11.2** | Licensing & Billing | [F11.2-licensing-billing.md](phase-11/F11.2-licensing-billing.md) |
+| **F11.3** | Telemetry | [F11.3-telemetry-analytics.md](phase-11/F11.3-telemetry-analytics.md) |
 
 **Key Deliverables:**
-- Native VS Code sidebar with context panel and commands
-- Token savings dashboard with cost estimates
-- Shared team decisions and cross-member knowledge search
-- Automatic indexing on commit/merge with PR context suggestions
+- Zero-config NPM package for easy try-out
+- Native VS Code extension for full IDE integration
+- Marketing website with product docs
+- Enterprise SSO (Google/GitHub/SAML)
+- Shared team knowledge base and decision tracking
+- Production-ready desktop application
+- Licensing and billing integration
+- Telemetry for product usage insights
 
 ---
 
@@ -238,9 +264,9 @@ ctx-sys/
 │   │   ├── memory-tier.ts     # Hot/cold memory API
 │   │   ├── reflection.ts      # Lesson storage
 │   │   └── proactive.ts       # Proactive context
-│   ├── analytics/             # Token Analytics (F9.2)
-│   └── team/                  # Team Knowledge (F9.3)
-├── vscode-extension/          # VS Code Extension (F9.1)
+│   ├── analytics/             # Token Analytics (F9.1)
+│   └── team/                  # Team Knowledge (F10.2)
+├── vscode-extension/          # VS Code Extension (F10.1)
 │   ├── src/
 │   ├── package.json
 │   └── README.md
@@ -254,7 +280,9 @@ ctx-sys/
 │   ├── phase-6/
 │   ├── phase-7/
 │   ├── phase-8/
-│   └── phase-9/
+│   ├── phase-9/
+│   ├── phase-10/
+│   └── phase-11/
 ├── docs/
 │   ├── phase-1/
 │   ├── phase-2/
@@ -264,7 +292,9 @@ ctx-sys/
 │   ├── phase-6/
 │   ├── phase-7/
 │   ├── phase-8/
-│   └── phase-9/
+│   ├── phase-9/
+│   ├── phase-10/
+│   └── phase-11/
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -307,12 +337,13 @@ For maximum value delivery, the recommended implementation order is:
 1. **Phases 1-5** — Foundation (in order)
 2. **Phase 6.1-6.4** — Core retrieval
 3. **Phase 6.5-6.7** — Advanced retrieval patterns (HyDE, gating, critique)
-4. **Phase 9.2** — Token analytics (prove value early)
+4. **Phase 9.1** — Token analytics (prove value early)
 5. **Phase 8.4** — Proactive context (key differentiator)
 6. **Phase 8.1-8.3** — Agent patterns (checkpointing, hot/cold, reflection)
 7. **Phase 7** — Configuration and polish
-8. **Phase 9.1** — VS Code extension
-9. **Phase 9.3-9.4** — Team features and git hooks
+8. **Phase 9** — Web & Support (NPM -> Website)
+9. **Phase 10** — Integration (VS Code -> Team -> Auth)
+10. **Phase 11** — Commercial (Desktop -> Billing -> Telemetry)
 
 ---
 
@@ -322,4 +353,4 @@ For maximum value delivery, the recommended implementation order is:
 2. Each feature doc contains full implementation details
 3. Run tests after completing each feature
 4. Proceed to next phase once current phase is complete
-5. Consider implementing Phase 9.2 (analytics) early to measure impact
+5. Consider implementing Phase 9.1 (analytics) early to measure impact
