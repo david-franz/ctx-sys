@@ -7,6 +7,8 @@ import * as path from 'path';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { EntityStore, Entity, EntityType } from '../entities';
+import { EmbeddingManager } from '../embeddings/manager';
+import { OllamaEmbeddingProvider } from '../embeddings/ollama';
 import { CLIOutput, defaultOutput } from './init';
 
 /**
@@ -27,6 +29,8 @@ export function createSearchCommand(output: CLIOutput = defaultOutput): Command 
     .option('-p, --project <path>', 'Project directory', '.')
     .option('-l, --limit <n>', 'Maximum number of results', '10')
     .option('-t, --type <type>', 'Filter by entity type (function, class, file, etc.)')
+    .option('--semantic', 'Use vector similarity search (requires embeddings)', false)
+    .option('--threshold <n>', 'Minimum similarity score for semantic search', '0.3')
     .option('--format <format>', 'Output format (text, json)', 'text')
     .option('-d, --db <path>', 'Custom database path')
     .action(async (query: string, options) => {
@@ -51,6 +55,8 @@ async function runSearch(
   options: {
     limit?: string;
     type?: string;
+    semantic?: boolean;
+    threshold?: string;
     format?: string;
     db?: string;
   },
@@ -64,36 +70,63 @@ async function runSearch(
   const db = new DatabaseConnection(dbPath);
   await db.initialize();
 
-  // Set up entity store with project ID
-  const projectId = config.projectConfig.project.name || path.basename(projectPath);
-  const entityStore = new EntityStore(db, projectId);
+  try {
+    // Set up entity store with project ID
+    const projectId = config.projectConfig.project.name || path.basename(projectPath);
+    const entityStore = new EntityStore(db, projectId);
 
-  const limit = parseInt(options.limit || '10', 10);
+    const limit = parseInt(options.limit || '10', 10);
+    let results: SearchResultItem[];
 
-  // Perform search using entity store
-  const entities = await entityStore.search(query, {
-    limit,
-    type: options.type as EntityType | undefined
-  });
+    if (options.semantic) {
+      // Vector similarity search using embeddings
+      const ollamaProvider = new OllamaEmbeddingProvider({
+        baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
+        model: config.defaults?.embeddings?.model || 'nomic-embed-text'
+      });
+      const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
 
-  // Convert to search results with simple scoring
-  const results: SearchResultItem[] = entities.map((entity, index) => ({
-    entity,
-    score: 1 - (index / entities.length) // Simple ranking by position
-  }));
+      const threshold = parseFloat(options.threshold || '0.3');
+      const similar = await embeddingManager.findSimilar(query, {
+        limit,
+        threshold,
+        entityTypes: options.type ? [options.type] : undefined
+      });
 
-  // Format output
-  switch (options.format) {
-    case 'json':
-      outputJson(results, output);
-      break;
-    case 'text':
-    default:
-      outputText(results, query, output);
-      break;
+      // Resolve entities for each result
+      results = [];
+      for (const result of similar) {
+        const entity = await entityStore.get(result.entityId);
+        if (entity) {
+          results.push({ entity, score: result.score });
+        }
+      }
+    } else {
+      // Keyword search using LIKE
+      const entities = await entityStore.search(query, {
+        limit,
+        type: options.type as EntityType | undefined
+      });
+
+      results = entities.map((entity, index) => ({
+        entity,
+        score: 1 - (index / entities.length)
+      }));
+    }
+
+    // Format output
+    switch (options.format) {
+      case 'json':
+        outputJson(results, output);
+        break;
+      case 'text':
+      default:
+        outputText(results, query, output);
+        break;
+    }
+  } finally {
+    db.close();
   }
-
-  await db.close();
 }
 
 /**

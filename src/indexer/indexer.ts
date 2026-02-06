@@ -385,7 +385,37 @@ export class CodebaseIndexer {
    * Simple glob matching (supports * and **).
    */
   private simpleGlobMatch(filePath: string, pattern: string): boolean {
-    // Convert glob to regex
+    // Handle directory patterns like "node_modules/**" — match the dir itself
+    // and anything nested (e.g. "website/node_modules")
+    if (pattern.endsWith('/**')) {
+      const dirName = pattern.slice(0, -3);
+      if (
+        filePath === dirName ||
+        filePath.startsWith(dirName + '/') ||
+        filePath.endsWith('/' + dirName) ||
+        filePath.includes('/' + dirName + '/')
+      ) {
+        return true;
+      }
+    }
+
+    // Handle bare directory/file name patterns like "node_modules" or ".git"
+    // Match at any depth: "node_modules", "foo/node_modules", "foo/node_modules/bar"
+    if (!pattern.includes('*') && !pattern.includes('?') && !pattern.includes('/')) {
+      const segments = filePath.split('/');
+      if (segments.includes(pattern)) {
+        return true;
+      }
+    }
+
+    // Handle bare patterns with path separators (e.g. "src/generated")
+    if (!pattern.includes('*') && !pattern.includes('?') && pattern.includes('/')) {
+      if (filePath === pattern || filePath.startsWith(pattern + '/')) {
+        return true;
+      }
+    }
+
+    // Convert glob to regex for wildcard patterns
     const regexStr = pattern
       .replace(/\./g, '\\.')
       .replace(/\*\*/g, '{{DOUBLESTAR}}')
@@ -448,8 +478,8 @@ export class CodebaseIndexer {
   ): Promise<void> {
     if (!this.entityStore) return;
 
-    // Store file as an entity with file overview as content
-    await this.entityStore.create({
+    // Upsert file entity (keeps same ID if it already exists, preserving embeddings)
+    await this.entityStore.upsert({
       type: 'file',
       name: path.basename(filePath),
       qualifiedName: filePath,
@@ -463,10 +493,10 @@ export class CodebaseIndexer {
       }
     });
 
-    // Store symbols as entities with actual code
+    // Upsert symbol entities
     for (const symbol of summary.symbols) {
       const code = this.extractSymbolCode(sourceCode, symbol);
-      await this.entityStore.create({
+      await this.entityStore.upsert({
         type: symbol.type as any,
         name: symbol.name,
         qualifiedName: symbol.qualifiedName,

@@ -5,6 +5,28 @@ interface OllamaConfig {
   model: string;
 }
 
+/**
+ * Normalize base URL: replace localhost with 127.0.0.1 to avoid
+ * IPv6 resolution issues on macOS where Ollama only listens on IPv4.
+ */
+function normalizeBaseUrl(url: string): string {
+  return url.replace('://localhost', '://127.0.0.1');
+}
+
+/**
+ * Max context lengths (in tokens) for known embedding models.
+ * nomic-embed-text has n_ctx_train=2048. ~4 chars per token is a safe estimate.
+ */
+const MODEL_MAX_CHARS: Record<string, number> = {
+  'nomic-embed-text': 4000,
+  'mxbai-embed-large': 2000,
+  'all-minilm': 1000,
+  'bge-base': 2000,
+  'bge-large': 2000
+};
+
+const DEFAULT_MAX_CHARS = 4000;
+
 const MODEL_DIMENSIONS: Record<string, number> = {
   'nomic-embed-text': 768,
   'mxbai-embed-large': 1024,
@@ -22,54 +44,75 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
   readonly dimensions: number;
 
   constructor(private config: OllamaConfig) {
+    this.config.baseUrl = normalizeBaseUrl(config.baseUrl);
     this.modelId = `ollama:${config.model}`;
     this.dimensions = MODEL_DIMENSIONS[config.model] || 768;
   }
 
   async embed(text: string): Promise<number[]> {
-    const response = await fetch(`${this.config.baseUrl}/api/embeddings`, {
+    // Truncate to model's max context to avoid 400 errors
+    const maxChars = MODEL_MAX_CHARS[this.config.model] || DEFAULT_MAX_CHARS;
+    const truncated = text.length > maxChars ? text.slice(0, maxChars) : text;
+
+    const response = await fetch(`${this.config.baseUrl}/api/embed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: this.config.model,
-        prompt: text
+        input: truncated
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Ollama embedding failed: ${response.statusText}`);
+      const body = await response.text().catch(() => '');
+      throw new Error(`Ollama embedding failed (${response.status}): ${body || response.statusText}`);
     }
 
-    const data = await response.json() as { embedding: number[] };
-    return data.embedding;
+    const data = await response.json() as { embeddings: number[][] };
+    return data.embeddings[0];
   }
 
   async embedBatch(texts: string[], options?: BatchOptions): Promise<number[][]> {
     const batchSize = options?.batchSize || 10;
-    const concurrency = options?.concurrency || 3;
     const results: number[][] = [];
     let completed = 0;
+    const maxChars = MODEL_MAX_CHARS[this.config.model] || DEFAULT_MAX_CHARS;
 
-    // Process in batches with concurrency limit
-    for (let i = 0; i < texts.length; i += batchSize * concurrency) {
-      const batchPromises: Promise<number[][]>[] = [];
+    for (let i = 0; i < texts.length; i += batchSize) {
+      const batch = texts.slice(i, Math.min(i + batchSize, texts.length));
 
-      for (let j = 0; j < concurrency && i + j * batchSize < texts.length; j++) {
-        const start = i + j * batchSize;
-        const end = Math.min(start + batchSize, texts.length);
-        const batch = texts.slice(start, end);
+      // Truncate each text and send as array to Ollama's native batch API
+      const truncatedBatch = batch.map(t => t.length > maxChars ? t.slice(0, maxChars) : t);
 
-        batchPromises.push(
-          Promise.all(batch.map(text => this.embed(text)))
-        );
+      const response = await fetch(`${this.config.baseUrl}/api/embed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: this.config.model,
+          input: truncatedBatch
+        })
+      });
+
+      if (!response.ok) {
+        // If batch fails, fall back to individual embedding
+        for (const text of batch) {
+          try {
+            const embedding = await this.embed(text);
+            results.push(embedding);
+          } catch {
+            // Use zero vector for failed embeddings
+            results.push(new Array(this.dimensions).fill(0));
+          }
+          completed++;
+          options?.onProgress?.(completed, texts.length);
+        }
+        continue;
       }
 
-      const batchResults = await Promise.all(batchPromises);
-      for (const batch of batchResults) {
-        results.push(...batch);
-        completed += batch.length;
-        options?.onProgress?.(completed, texts.length);
-      }
+      const data = await response.json() as { embeddings: number[][] };
+      results.push(...data.embeddings);
+      completed += batch.length;
+      options?.onProgress?.(completed, texts.length);
     }
 
     return results;

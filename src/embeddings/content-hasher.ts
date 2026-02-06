@@ -37,10 +37,15 @@ export function buildEmbeddingContent(entity: Entity): string {
     parts.push(entity.summary);
   }
 
-  // Include first 50 lines of code for semantic matching
+  // Include code with whitespace stripped to maximize semantic content per token
   if (entity.content) {
-    const codePreview = entity.content.split('\n').slice(0, 50).join('\n');
-    parts.push(codePreview);
+    const stripped = entity.content
+      .split('\n')
+      .map(line => line.trimStart())       // remove indentation
+      .filter(line => line.length > 0)     // remove blank lines
+      .slice(0, 80)                        // more lines fit now
+      .join('\n');
+    parts.push(stripped);
   }
 
   return parts.join('\n\n');

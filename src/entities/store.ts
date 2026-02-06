@@ -61,6 +61,45 @@ export class EntityStore {
   }
 
   /**
+   * Create or update an entity by qualified name.
+   * Keeps the same ID if the entity already exists (preserving embedding references).
+   */
+  async upsert(input: EntityCreateInput): Promise<Entity> {
+    const qualifiedName = input.qualifiedName || this.generateQualifiedName(input);
+    const existing = await this.getByQualifiedName(qualifiedName);
+
+    if (existing) {
+      // Update in place — keeps the same ID so embeddings stay linked
+      const hash = input.content ? hashContent(input.content) : null;
+      this.db.run(
+        `UPDATE ${this.tableName}
+         SET type = ?, name = ?, content = ?, summary = ?, metadata = ?,
+             file_path = ?, start_line = ?, end_line = ?, hash = ?,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [
+          input.type,
+          input.name,
+          input.content || null,
+          input.summary || null,
+          JSON.stringify(input.metadata || {}),
+          input.filePath || null,
+          input.startLine || null,
+          input.endLine || null,
+          hash,
+          existing.id
+        ]
+      );
+      const updated = await this.get(existing.id);
+      if (!updated) throw new Error('Failed to update entity');
+      return updated;
+    }
+
+    // No existing entity — create new
+    return this.create(input);
+  }
+
+  /**
    * Create multiple entities in a transaction.
    */
   async createMany(inputs: EntityCreateInput[]): Promise<Entity[]> {

@@ -11,6 +11,7 @@ import { hashEntityContent, buildEmbeddingContent, hashContent } from './content
 export interface IncrementalEmbedResult {
   embedded: number;
   skipped: number;
+  errors?: number;
   total: number;
 }
 
@@ -335,6 +336,8 @@ export class EmbeddingManager {
 
     // Batch embed only changed entities
     const batchSize = options?.batchSize || 50;
+    let embedded = 0;
+    let errors = 0;
 
     for (let i = 0; i < needsEmbedding.length; i += batchSize) {
       const batch = needsEmbedding.slice(i, i + batchSize);
@@ -345,21 +348,36 @@ export class EmbeddingManager {
         hash: hashEntityContent(e)
       }));
 
-      const embeddings = await this.provider.embedBatch(
-        contents.map(c => c.content)
-      );
+      try {
+        const embeddings = await this.provider.embedBatch(
+          contents.map(c => c.content)
+        );
 
-      // Store with hashes
-      for (let j = 0; j < batch.length; j++) {
-        this.store(batch[j].id, embeddings[j], contents[j].hash);
+        // Store with hashes
+        for (let j = 0; j < batch.length; j++) {
+          this.store(batch[j].id, embeddings[j], contents[j].hash);
+        }
+        embedded += batch.length;
+      } catch {
+        // Batch failed (e.g. connection dropped) — skip and continue
+        errors += batch.length;
+      }
+
+      // Periodic save so progress survives crashes
+      if ((i + batchSize) % (batchSize * 10) === 0) {
+        this.db.save();
       }
 
       options?.onProgress?.(i + batch.length, needsEmbedding.length, skipped);
     }
 
+    // Final save
+    this.db.save();
+
     return {
-      embedded: needsEmbedding.length,
+      embedded,
       skipped,
+      errors,
       total: entities.length
     };
   }
