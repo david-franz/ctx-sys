@@ -16,6 +16,8 @@ export class DatabaseConnection {
   private db: SqlJsDatabase | null = null;
   private dbPath: string;
   private initialized: boolean = false;
+  private lastMtime: number = 0;
+  private sqlInstance: Awaited<ReturnType<typeof initSqlJs>> | null = null;
 
   constructor(dbPath: string) {
     this.dbPath = dbPath;
@@ -28,19 +30,20 @@ export class DatabaseConnection {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    const SQL = await initSqlJs();
+    this.sqlInstance = await initSqlJs();
 
     // Try to load existing database
     if (fs.existsSync(this.dbPath)) {
       const fileBuffer = fs.readFileSync(this.dbPath);
-      this.db = new SQL.Database(fileBuffer);
+      this.db = new this.sqlInstance.Database(fileBuffer);
+      this.lastMtime = fs.statSync(this.dbPath).mtimeMs;
     } else {
       // Ensure directory exists
       const dir = path.dirname(this.dbPath);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      this.db = new SQL.Database();
+      this.db = new this.sqlInstance.Database();
     }
 
     // Enable foreign keys
@@ -51,6 +54,21 @@ export class DatabaseConnection {
 
     // Create global schema
     this.exec(GLOBAL_SCHEMA);
+  }
+
+  /**
+   * Reload database from disk if modified by another process.
+   */
+  private reloadIfStale(): void {
+    if (!this.sqlInstance || !fs.existsSync(this.dbPath)) return;
+
+    const currentMtime = fs.statSync(this.dbPath).mtimeMs;
+    if (currentMtime > this.lastMtime) {
+      const fileBuffer = fs.readFileSync(this.dbPath);
+      this.db = new this.sqlInstance.Database(fileBuffer);
+      this.db.run('PRAGMA foreign_keys = ON');
+      this.lastMtime = currentMtime;
+    }
   }
 
   /**
@@ -88,13 +106,32 @@ export class DatabaseConnection {
     const changes = changesResult[0]?.values[0]?.[0] as number || 0;
     const lastInsertRowid = changesResult[0]?.values[0]?.[1] as number || 0;
 
+    // Auto-save for write operations
+    if (this.isWriteOperation(sql)) {
+      this.save();
+    }
+
     return { changes, lastInsertRowid };
+  }
+
+  /**
+   * Check if SQL is a write operation that should trigger auto-save.
+   */
+  private isWriteOperation(sql: string): boolean {
+    const normalized = sql.trim().toUpperCase();
+    return normalized.startsWith('INSERT') ||
+           normalized.startsWith('UPDATE') ||
+           normalized.startsWith('DELETE') ||
+           normalized.startsWith('CREATE') ||
+           normalized.startsWith('DROP') ||
+           normalized.startsWith('ALTER');
   }
 
   /**
    * Execute a query and return the first row.
    */
   get<T>(sql: string, params?: unknown[]): T | undefined {
+    this.reloadIfStale();
     const db = this.ensureInitialized();
 
     const stmt = db.prepare(sql);
@@ -122,6 +159,7 @@ export class DatabaseConnection {
    * Execute a query and return all rows.
    */
   all<T>(sql: string, params?: unknown[]): T[] {
+    this.reloadIfStale();
     const db = this.ensureInitialized();
 
     const stmt = db.prepare(sql);

@@ -52,7 +52,8 @@ export class TypeScriptExtractor extends BaseExtractor {
     filePath: string | undefined,
     context: string[]
   ): void {
-    const nameNode = this.findChild(node, 'type_identifier');
+    // Try type_identifier (TypeScript) or identifier (JavaScript)
+    const nameNode = this.findChild(node, 'type_identifier') || this.findChild(node, 'identifier');
     if (!nameNode) return;
 
     const name = nameNode.text;

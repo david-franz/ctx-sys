@@ -8,6 +8,8 @@ import { CodebaseIndexer, IndexOptions, IndexResult } from '../indexer';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { EntityStore } from '../entities';
+import { EmbeddingManager } from '../embeddings/manager';
+import { OllamaEmbeddingProvider } from '../embeddings/ollama';
 import { CLIOutput, defaultOutput } from './init';
 
 /**
@@ -24,6 +26,8 @@ export function createIndexCommand(output: CLIOutput = defaultOutput): Command {
     .option('--exclude <patterns>', 'Comma-separated glob patterns to exclude')
     .option('-q, --quiet', 'Suppress progress output', false)
     .option('-d, --db <path>', 'Custom database path')
+    .option('--embed', 'Generate embeddings for RAG (requires Ollama)', false)
+    .option('--embed-batch-size <n>', 'Batch size for embedding generation', '50')
     .action(async (directory: string, options) => {
       try {
         const projectPath = path.resolve(directory);
@@ -50,6 +54,8 @@ async function runIndex(
     exclude?: string;
     quiet?: boolean;
     db?: string;
+    embed?: boolean;
+    embedBatchSize?: string;
   },
   output: CLIOutput
 ): Promise<void> {
@@ -63,6 +69,10 @@ async function runIndex(
 
   // Set up entity store (use project name as ID)
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
+
+  // Ensure project tables exist
+  db.createProject(projectId);
+
   const entityStore = new EntityStore(db, projectId);
 
   // Create indexer
@@ -136,7 +146,49 @@ async function runIndex(
     }
   }
 
-  await db.close();
+  // Generate embeddings if requested
+  if (options.embed) {
+    if (!options.quiet) {
+      output.log('');
+      output.log('Generating embeddings...');
+    }
+
+    try {
+      const ollamaProvider = new OllamaEmbeddingProvider({
+        baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
+        model: config.defaults?.embeddings?.model || 'nomic-embed-text'
+      });
+      const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
+
+      const entities = await entityStore.list({ limit: 100000 });
+      const batchSize = parseInt(options.embedBatchSize || '50', 10);
+      let embeddingsGenerated = 0;
+
+      for (let i = 0; i < entities.length; i += batchSize) {
+        const batch = entities.slice(i, i + batchSize);
+        const toEmbed = batch.map((e) => ({
+          id: e.id,
+          content: `${e.name}: ${e.content || ''}`
+        }));
+
+        await embeddingManager.embedBatch(toEmbed);
+        embeddingsGenerated += toEmbed.length;
+
+        if (!options.quiet && (i + batchSize) % 500 === 0) {
+          output.log(`  Progress: ${embeddingsGenerated}/${entities.length} embeddings`);
+        }
+      }
+
+      if (!options.quiet) {
+        output.success(`Generated ${embeddingsGenerated} embeddings`);
+      }
+    } catch (err) {
+      output.error(`Embedding generation failed: ${err instanceof Error ? err.message : String(err)}`);
+      output.log('  Make sure Ollama is running: ollama serve');
+    }
+  }
+
+  db.close();
 }
 
 /**

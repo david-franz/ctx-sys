@@ -244,13 +244,42 @@ export class CoreService {
     // Update project last indexed timestamp
     await this.context.projectManager.update(projectId, { lastIndexedAt: new Date() });
 
+    let embeddingsGenerated = 0;
+    const embeddingErrors: Array<{ path: string; error: string }> = [];
+
+    // Generate embeddings if requested
+    if (options?.generateEmbeddings !== false) {
+      try {
+        const entityStore = this.context.getEntityStore(projectId);
+        const embeddingManager = this.context.getEmbeddingManager(projectId);
+
+        // Get all entities that need embeddings
+        const entities = await entityStore.list({ limit: 10000 });
+        const toEmbed = entities.map((e) => ({
+          id: e.id,
+          content: `${e.name}: ${e.content || ''}`
+        }));
+
+        if (toEmbed.length > 0) {
+          await embeddingManager.embedBatch(toEmbed);
+          embeddingsGenerated = toEmbed.length;
+        }
+      } catch (err) {
+        embeddingErrors.push({
+          path: 'embeddings',
+          error: `Embedding generation failed: ${err instanceof Error ? err.message : String(err)}`
+        });
+      }
+    }
+
     return {
       filesProcessed: result.added.length + result.modified.length + result.unchanged.length,
       entitiesCreated: result.added.length,
       entitiesUpdated: result.modified.length,
       relationshipsCreated: 0, // Would need to track from relationship extractor
-      errors: result.errors,
-      durationMs: Date.now() - startTime
+      errors: [...result.errors, ...embeddingErrors],
+      durationMs: Date.now() - startTime,
+      embeddingsGenerated
     };
   }
 

@@ -298,9 +298,10 @@ export class SessionManager {
       status: row.status as Session['status'],
       summary: row.summary || undefined,
       messageCount: row.message_count,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-      archivedAt: row.archived_at ? new Date(row.archived_at) : undefined
+      // Append 'Z' to indicate UTC (SQLite stores in UTC)
+      createdAt: new Date(row.created_at.replace(' ', 'T') + 'Z'),
+      updatedAt: new Date(row.updated_at.replace(' ', 'T') + 'Z'),
+      archivedAt: row.archived_at ? new Date(row.archived_at.replace(' ', 'T') + 'Z') : undefined
     };
   }
 }

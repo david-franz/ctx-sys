@@ -81,7 +81,15 @@ export class MultiStrategySearch {
    * Search using multiple strategies and fuse results.
    */
   async search(query: string, options?: MultiSearchOptions): Promise<SearchResult[]> {
-    const opts = { ...DEFAULT_OPTIONS, ...options };
+    // Merge options with defaults, filtering out undefined values
+    const opts: Required<MultiSearchOptions> = {
+      strategies: options?.strategies ?? DEFAULT_OPTIONS.strategies,
+      limit: options?.limit ?? DEFAULT_OPTIONS.limit,
+      entityTypes: options?.entityTypes ?? DEFAULT_OPTIONS.entityTypes,
+      weights: options?.weights ?? DEFAULT_OPTIONS.weights,
+      minScore: options?.minScore ?? DEFAULT_OPTIONS.minScore,
+      graphDepth: options?.graphDepth ?? DEFAULT_OPTIONS.graphDepth
+    };
     const parsed = this.queryParser.parse(query);
     const rawResults: RawResult[] = [];
 

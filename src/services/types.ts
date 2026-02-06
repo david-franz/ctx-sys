@@ -45,6 +45,8 @@ export interface IndexOptions {
   languages?: string[];
   summarize?: boolean;
   force?: boolean;
+  /** Generate embeddings for indexed entities (default: true, requires Ollama) */
+  generateEmbeddings?: boolean;
 }
 
 export interface IndexResult {
@@ -54,6 +56,8 @@ export interface IndexResult {
   relationshipsCreated: number;
   errors: Array<{ path: string; error: string }>;
   durationMs: number;
+  /** Number of embeddings generated (if generateEmbeddings was true) */
+  embeddingsGenerated?: number;
 }
 
 export interface GitSyncOptions {

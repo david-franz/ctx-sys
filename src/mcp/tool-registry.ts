@@ -671,7 +671,8 @@ export class ToolRegistry {
             role: m.role,
             content: m.content,
             sessionId: m.sessionId,
-            timestamp: m.createdAt.toISOString()
+            timestamp: m.createdAt.toLocaleString(),
+            timestampUtc: m.createdAt.toISOString()
           }))
         };
       }
@@ -797,7 +798,7 @@ export class ToolRegistry {
             name: s.name,
             status: s.status,
             messageCount: s.messageCount,
-            createdAt: s.createdAt.toISOString()
+            createdAt: s.createdAt.toLocaleString()
           }))
         };
       }
@@ -1634,8 +1635,20 @@ export class ToolRegistry {
       return project.id;
     }
 
+    // Try active project first
     const active = await this.coreService.getActiveProject();
-    if (!active) throw new Error('No active project. Use set_active_project first.');
-    return active.id;
+    if (active) return active.id;
+
+    // Auto-detect from current working directory
+    const cwd = process.cwd();
+    const projects = await this.coreService.listProjects();
+    const matching = projects.find(p => cwd.startsWith(p.path));
+    if (matching) {
+      // Auto-set as active for future calls
+      await this.coreService.setActiveProject(matching.id);
+      return matching.id;
+    }
+
+    throw new Error('No active project and could not auto-detect from working directory. Use set_active_project or create_project first.');
   }
 }

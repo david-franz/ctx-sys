@@ -65,12 +65,10 @@ export class EmbeddingManager {
       onProgress: options?.onProgress
     });
 
-    // Store all embeddings in a transaction
-    this.db.transaction(() => {
-      for (let i = 0; i < entities.length; i++) {
-        this.store(entities[i].id, embeddings[i]);
-      }
-    });
+    // Store embeddings (no transaction - we batch externally and auto-save handles persistence)
+    for (let i = 0; i < entities.length; i++) {
+      this.store(entities[i].id, embeddings[i]);
+    }
   }
 
   /**

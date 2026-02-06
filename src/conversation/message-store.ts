@@ -308,7 +308,8 @@ export class MessageStore {
       role: row.role as Message['role'],
       content: row.content,
       metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
-      createdAt: new Date(row.created_at)
+      // Append 'Z' to indicate UTC (SQLite stores in UTC)
+      createdAt: new Date(row.created_at.replace(' ', 'T') + 'Z')
     };
   }
 }
