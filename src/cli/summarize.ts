@@ -22,6 +22,8 @@ export function createSummarizeCommand(output: CLIOutput = defaultOutput): Comma
     .option('-f, --force', 'Regenerate all summaries')
     .option('-l, --limit <n>', 'Max entities to summarize', '100')
     .option('--provider <name>', 'LLM provider: ollama, openai, anthropic')
+    .option('--batch-size <n>', 'Entities per batch', '20')
+    .option('--concurrency <n>', 'Concurrent requests per batch', '5')
     .option('--dry-run', 'Show what would be summarized')
     .option('-d, --db <path>', 'Custom database path')
     .action(async (options) => {
@@ -85,6 +87,8 @@ async function generateSummaries(
     force?: boolean;
     limit?: string;
     provider?: string;
+    batchSize?: string;
+    concurrency?: string;
     dryRun?: boolean;
     db?: string;
   },
@@ -104,21 +108,20 @@ async function generateSummaries(
 
   // Find entities needing summaries
   let sql = `
-    SELECT e.id, e.name, e.type, c.content, e.file_path, e.content_hash
-    FROM ${prefix}_entities e
-    JOIN ${prefix}_entity_content c ON e.id = c.entity_id
-    WHERE 1=1
+    SELECT id, name, type, content, file_path as filePath, hash as contentHash
+    FROM ${prefix}_entities
+    WHERE content IS NOT NULL
   `;
 
   const params: unknown[] = [];
 
   if (options.type) {
-    sql += ' AND e.type = ?';
+    sql += ' AND type = ?';
     params.push(options.type);
   }
 
   if (!options.force) {
-    sql += ' AND e.summary IS NULL';
+    sql += ' AND summary IS NULL';
   }
 
   sql += ' LIMIT ?';
@@ -145,7 +148,13 @@ async function generateSummaries(
   }
 
   // Initialize LLM manager
-  const managerConfig: Record<string, unknown> = {};
+  const batchSize = parseInt(options.batchSize || '20', 10);
+  const concurrency = parseInt(options.concurrency || '5', 10);
+
+  const managerConfig: Record<string, unknown> = {
+    batchSize,
+    ollama: { concurrency }
+  };
   if (options.provider) {
     managerConfig.providers = [options.provider];
   }
@@ -159,7 +168,8 @@ async function generateSummaries(
     process.exit(1);
   }
 
-  output.log(`Using provider: ${provider.id}`);
+  output.log(`Using provider: ${provider.id} (model: ${provider.model})`);
+  output.log(`Batch size: ${batchSize}, Concurrency: ${concurrency}`);
   output.log(`Summarizing ${entities.length} entities...\n`);
 
   let completed = 0;
@@ -176,9 +186,14 @@ async function generateSummaries(
   completed = result.summarized;
   failed = result.failed;
 
-  // Update database with summaries
-  // Note: The manager doesn't persist summaries, so we'd need to modify
-  // the architecture to get the actual summaries. For now, just report.
+  // Persist summaries back to database
+  for (const [entityId, summary] of result.summaries) {
+    db.run(
+      `UPDATE ${prefix}_entities SET summary = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [summary, entityId]
+    );
+  }
+  db.save();
 
   output.log('\n');
   await db.close();
@@ -217,7 +232,7 @@ async function showSummarizeStatus(
       SUM(CASE WHEN summary IS NOT NULL THEN 1 ELSE 0 END) as with_summary,
       SUM(CASE WHEN summary IS NULL THEN 1 ELSE 0 END) as without_summary
     FROM ${prefix}_entities
-    WHERE content_hash IS NOT NULL
+    WHERE hash IS NOT NULL
   `);
 
   const byType = db.all<{ type: string; total: number; summarized: number }>(`
@@ -226,7 +241,7 @@ async function showSummarizeStatus(
       COUNT(*) as total,
       SUM(CASE WHEN summary IS NOT NULL THEN 1 ELSE 0 END) as summarized
     FROM ${prefix}_entities
-    WHERE content_hash IS NOT NULL
+    WHERE hash IS NOT NULL
     GROUP BY type
     ORDER BY total DESC
   `);

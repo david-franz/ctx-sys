@@ -59,6 +59,7 @@ export interface SummarizationProvider {
 export interface OllamaOptions {
   baseUrl?: string;
   model?: string;
+  concurrency?: number;
 }
 
 /**

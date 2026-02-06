@@ -51,6 +51,8 @@ export interface SummarizeResult {
   failed: number;
   provider: string | null;
   error?: string;
+  /** Map of entity ID → generated summary text */
+  summaries: Map<string, string>;
 }
 
 /**
@@ -87,7 +89,7 @@ export class LLMSummarizationManager implements LLMSummarizer {
 
   constructor(config: LLMManagerConfig = {}) {
     this.preferenceOrder = config.providers || ['ollama', 'openai', 'anthropic'];
-    this.batchSize = config.batchSize || 10;
+    this.batchSize = config.batchSize || 20;
     this.maxRetries = config.maxRetries || 3;
 
     // Initialize providers
@@ -200,7 +202,8 @@ export class LLMSummarizationManager implements LLMSummarizer {
         skipped: entities.length,
         failed: 0,
         provider: null,
-        error: 'No summarization provider available'
+        error: 'No summarization provider available',
+        summaries: new Map()
       };
     }
 
@@ -212,7 +215,8 @@ export class LLMSummarizationManager implements LLMSummarizer {
         summarized: 0,
         skipped: 0,
         failed: 0,
-        provider: provider.id
+        provider: provider.id,
+        summaries: new Map()
       };
     }
 
@@ -260,7 +264,8 @@ export class LLMSummarizationManager implements LLMSummarizer {
       summarized,
       skipped: 0,
       failed,
-      provider: provider.id
+      provider: provider.id,
+      summaries
     };
   }
 

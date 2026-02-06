@@ -18,10 +18,12 @@ export class OllamaSummarizationProvider implements SummarizationProvider {
 
   private baseUrl: string;
   private available: boolean | null = null;
+  private concurrency: number;
 
   constructor(options: OllamaOptions = {}) {
     this.baseUrl = options.baseUrl || 'http://localhost:11434';
-    this.model = options.model || 'qwen2.5-coder:7b';
+    this.model = options.model || 'qwen3:0.6b';
+    this.concurrency = options.concurrency || 5;
   }
 
   async isAvailable(): Promise<boolean> {
@@ -79,16 +81,15 @@ export class OllamaSummarizationProvider implements SummarizationProvider {
     }
 
     const data = await response.json() as { response: string };
-    return data.response.trim();
+    return this.cleanResponse(data.response);
   }
 
   async summarizeBatch(items: SummarizeItem[]): Promise<string[]> {
     // Ollama doesn't have native batch API, process with concurrency limit
     const results: string[] = [];
-    const concurrency = 3;
 
-    for (let i = 0; i < items.length; i += concurrency) {
-      const batch = items.slice(i, i + concurrency);
+    for (let i = 0; i < items.length; i += this.concurrency) {
+      const batch = items.slice(i, i + this.concurrency);
       const batchResults = await Promise.all(
         batch.map(item =>
           this.summarize(item.content, item.options).catch(() => '')
@@ -124,7 +125,8 @@ Focus on: its purpose, main exports, and how it fits in the codebase.`
     const typePrompt = typePrompts[options.entityType] ||
       `Summarize this ${options.entityType} in 1-2 sentences.`;
 
-    return `${typePrompt}
+    return `/no_think
+${typePrompt}
 
 Be concise and technical. Don't start with "This function..." - just describe what it does.
 
@@ -134,5 +136,16 @@ ${content.slice(0, 2000)}
 \`\`\`
 
 Summary:`;
+  }
+
+  /**
+   * Strip thinking tags and clean up the response.
+   */
+  private cleanResponse(text: string): string {
+    // Remove <think>...</think> blocks (Qwen3 thinking mode)
+    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+    // Remove any unclosed <think> block at the start
+    cleaned = cleaned.replace(/^<think>[\s\S]*$/, '');
+    return cleaned.trim();
   }
 }
