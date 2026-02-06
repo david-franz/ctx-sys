@@ -2,6 +2,27 @@ import { DatabaseConnection } from '../db/connection';
 import { sanitizeProjectId } from '../db/schema';
 import { generateId } from '../utils/id';
 import { EmbeddingProvider, SimilarityResult, EmbeddingRow } from './types';
+import { Entity } from '../entities';
+import { hashEntityContent, buildEmbeddingContent, hashContent } from './content-hasher';
+
+/**
+ * Result of incremental embedding operation.
+ */
+export interface IncrementalEmbedResult {
+  embedded: number;
+  skipped: number;
+  total: number;
+}
+
+/**
+ * Embedding statistics with hash information.
+ */
+export interface EmbeddingStats {
+  count: number;
+  modelId: string;
+  dimensions: number;
+  staleCount?: number;
+}
 
 /**
  * Manages embedding storage and similarity search for a project.
@@ -74,7 +95,7 @@ export class EmbeddingManager {
   /**
    * Store an embedding for an entity.
    */
-  private store(entityId: string, embedding: number[]): void {
+  private store(entityId: string, embedding: number[], contentHash?: string): void {
     const id = generateId();
 
     // Delete existing embedding for this entity/model
@@ -83,11 +104,11 @@ export class EmbeddingManager {
       [entityId, this.provider.modelId]
     );
 
-    // Insert new embedding (stored as JSON)
+    // Insert new embedding with optional content hash (stored as JSON)
     this.db.run(
-      `INSERT INTO ${this.vectorTable} (id, entity_id, model_id, embedding)
-       VALUES (?, ?, ?, ?)`,
-      [id, entityId, this.provider.modelId, JSON.stringify(embedding)]
+      `INSERT INTO ${this.vectorTable} (id, entity_id, model_id, embedding, content_hash)
+       VALUES (?, ?, ?, ?, ?)`,
+      [id, entityId, this.provider.modelId, JSON.stringify(embedding), contentHash || null]
     );
   }
 
@@ -233,5 +254,169 @@ export class EmbeddingManager {
       [entityId, this.provider.modelId]
     );
     return row ? JSON.parse(row.embedding) : null;
+  }
+
+  // ===== F10.2: Incremental Embedding Methods =====
+
+  /**
+   * Check if an entity needs re-embedding based on content hash.
+   */
+  needsEmbedding(entity: Entity): boolean {
+    const currentHash = hashEntityContent(entity);
+
+    const existing = this.db.get<{ content_hash: string | null }>(
+      `SELECT content_hash FROM ${this.vectorTable}
+       WHERE entity_id = ? AND model_id = ?`,
+      [entity.id, this.provider.modelId]
+    );
+
+    // No existing embedding
+    if (!existing) return true;
+
+    // Hash mismatch (content changed) or no hash stored
+    if (!existing.content_hash || existing.content_hash !== currentHash) return true;
+
+    return false;
+  }
+
+  /**
+   * Get all entities that need embedding (new or changed).
+   */
+  getEntitiesNeedingEmbedding(entities: Entity[]): Entity[] {
+    // Get all existing hashes in one query for efficiency
+    const existingHashes = new Map<string, string | null>();
+    const rows = this.db.all<{ entity_id: string; content_hash: string | null }>(
+      `SELECT entity_id, content_hash FROM ${this.vectorTable}
+       WHERE model_id = ?`,
+      [this.provider.modelId]
+    );
+
+    for (const row of rows) {
+      existingHashes.set(row.entity_id, row.content_hash);
+    }
+
+    // Check each entity
+    const result: Entity[] = [];
+    for (const entity of entities) {
+      const currentHash = hashEntityContent(entity);
+      const existingHash = existingHashes.get(entity.id);
+
+      // Need embedding if: no existing hash, or hash mismatch
+      if (existingHash === undefined || existingHash !== currentHash) {
+        result.push(entity);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Generate and store embeddings only for changed entities.
+   * F10.2: Dramatically reduces indexing time and API costs.
+   */
+  async embedIncremental(
+    entities: Entity[],
+    options?: {
+      batchSize?: number;
+      onProgress?: (completed: number, total: number, skipped: number) => void;
+    }
+  ): Promise<IncrementalEmbedResult> {
+    // Determine which entities need embedding
+    const needsEmbedding = this.getEntitiesNeedingEmbedding(entities);
+    const skipped = entities.length - needsEmbedding.length;
+
+    if (needsEmbedding.length === 0) {
+      return {
+        embedded: 0,
+        skipped,
+        total: entities.length
+      };
+    }
+
+    // Batch embed only changed entities
+    const batchSize = options?.batchSize || 50;
+
+    for (let i = 0; i < needsEmbedding.length; i += batchSize) {
+      const batch = needsEmbedding.slice(i, i + batchSize);
+
+      const contents = batch.map(e => ({
+        id: e.id,
+        content: buildEmbeddingContent(e),
+        hash: hashEntityContent(e)
+      }));
+
+      const embeddings = await this.provider.embedBatch(
+        contents.map(c => c.content)
+      );
+
+      // Store with hashes
+      for (let j = 0; j < batch.length; j++) {
+        this.store(batch[j].id, embeddings[j], contents[j].hash);
+      }
+
+      options?.onProgress?.(i + batch.length, needsEmbedding.length, skipped);
+    }
+
+    return {
+      embedded: needsEmbedding.length,
+      skipped,
+      total: entities.length
+    };
+  }
+
+  /**
+   * Embed a single entity with content hash tracking.
+   */
+  async embedWithHash(entity: Entity): Promise<void> {
+    const content = buildEmbeddingContent(entity);
+    const hash = hashEntityContent(entity);
+    const embedding = await this.provider.embed(content);
+    this.store(entity.id, embedding, hash);
+  }
+
+  /**
+   * Remove embeddings for deleted entities.
+   */
+  async cleanupOrphaned(validEntityIds: Set<string>): Promise<number> {
+    const allEmbeddings = this.db.all<{ entity_id: string }>(
+      `SELECT entity_id FROM ${this.vectorTable} WHERE model_id = ?`,
+      [this.provider.modelId]
+    );
+
+    let removed = 0;
+    for (const row of allEmbeddings) {
+      if (!validEntityIds.has(row.entity_id)) {
+        this.db.run(
+          `DELETE FROM ${this.vectorTable} WHERE entity_id = ? AND model_id = ?`,
+          [row.entity_id, this.provider.modelId]
+        );
+        removed++;
+      }
+    }
+
+    return removed;
+  }
+
+  /**
+   * Get detailed embedding statistics including stale count.
+   */
+  async getDetailedStats(): Promise<EmbeddingStats> {
+    const total = this.db.get<{ count: number }>(
+      `SELECT COUNT(*) as count FROM ${this.vectorTable} WHERE model_id = ?`,
+      [this.provider.modelId]
+    );
+
+    const stale = this.db.get<{ count: number }>(
+      `SELECT COUNT(*) as count FROM ${this.vectorTable}
+       WHERE model_id = ? AND content_hash IS NULL`,
+      [this.provider.modelId]
+    );
+
+    return {
+      count: total?.count || 0,
+      modelId: this.provider.modelId,
+      dimensions: this.provider.dimensions,
+      staleCount: stale?.count || 0
+    };
   }
 }

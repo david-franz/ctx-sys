@@ -100,11 +100,13 @@ CREATE INDEX IF NOT EXISTS idx_${prefix}_entities_qualified ON ${prefix}_entitie
 CREATE INDEX IF NOT EXISTS idx_${prefix}_entities_hash ON ${prefix}_entities(hash);
 
 -- Vector embeddings (stored as JSON since sql.js doesn't support sqlite-vec)
+-- F10.2: Added content_hash for incremental embedding support
 CREATE TABLE IF NOT EXISTS ${prefix}_vectors (
   id TEXT PRIMARY KEY,
   entity_id TEXT NOT NULL,
   model_id TEXT NOT NULL,
   embedding JSON NOT NULL,
+  content_hash TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (entity_id) REFERENCES ${prefix}_entities(id) ON DELETE CASCADE
 );
@@ -112,6 +114,7 @@ CREATE TABLE IF NOT EXISTS ${prefix}_vectors (
 CREATE INDEX IF NOT EXISTS idx_${prefix}_vectors_entity ON ${prefix}_vectors(entity_id);
 CREATE INDEX IF NOT EXISTS idx_${prefix}_vectors_model ON ${prefix}_vectors(model_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_${prefix}_vectors_entity_model ON ${prefix}_vectors(entity_id, model_id);
+CREATE INDEX IF NOT EXISTS idx_${prefix}_vectors_hash ON ${prefix}_vectors(entity_id, model_id, content_hash);
 
 -- Graph relationships
 CREATE TABLE IF NOT EXISTS ${prefix}_relationships (
