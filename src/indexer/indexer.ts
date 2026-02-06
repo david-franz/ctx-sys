@@ -207,7 +207,7 @@ export class CodebaseIndexer {
 
     // Store in entity store if available
     if (this.entityStore) {
-      await this.storeFileSummary(relativePath, summary);
+      await this.storeFileSummary(relativePath, summary, content);
     }
 
     return summary;
@@ -439,19 +439,22 @@ export class CodebaseIndexer {
 
   /**
    * Store a file summary in the entity store.
+   * F10.1: Now stores actual source code in content field, description in summary field.
    */
   private async storeFileSummary(
     filePath: string,
-    summary: FileSummary
+    summary: FileSummary,
+    sourceCode: string
   ): Promise<void> {
     if (!this.entityStore) return;
 
-    // Store file as an entity
+    // Store file as an entity with file overview as content
     await this.entityStore.create({
       type: 'file',
       name: path.basename(filePath),
       qualifiedName: filePath,
-      content: summary.description,
+      content: this.extractFileOverview(sourceCode, summary),
+      summary: summary.description,
       metadata: {
         language: summary.language,
         exports: summary.exports,
@@ -460,24 +463,113 @@ export class CodebaseIndexer {
       }
     });
 
-    // Store symbols as entities
+    // Store symbols as entities with actual code
     for (const symbol of summary.symbols) {
+      const code = this.extractSymbolCode(sourceCode, symbol);
       await this.entityStore.create({
         type: symbol.type as any,
         name: symbol.name,
         qualifiedName: symbol.qualifiedName,
-        content: symbol.description,
+        content: code,
+        summary: symbol.description,
+        filePath,
+        startLine: symbol.location.startLine,
+        endLine: symbol.location.endLine,
         metadata: {
           signature: symbol.signature,
           parameters: symbol.parameters,
           returnType: symbol.returnType,
-          visibility: symbol.visibility,
-          filePath,
-          startLine: symbol.location.startLine,
-          endLine: symbol.location.endLine
+          visibility: symbol.visibility
         }
       });
     }
+  }
+
+  /**
+   * Extract actual source code for a symbol.
+   * F10.1: Uses line numbers to extract code from source.
+   */
+  private extractSymbolCode(source: string, symbol: { location: { startLine: number; endLine: number }; type: string }): string {
+    const lines = source.split('\n');
+    const start = symbol.location.startLine - 1; // Convert to 0-indexed
+    const maxLines = this.getMaxLines(symbol.type);
+    const end = Math.min(symbol.location.endLine, start + maxLines);
+
+    let code = lines.slice(start, end).join('\n');
+
+    // Add truncation indicator if needed
+    if (symbol.location.endLine > end) {
+      code += '\n  // ... (truncated)';
+    }
+
+    return code;
+  }
+
+  /**
+   * Get maximum lines to store for an entity type.
+   * F10.1: Prevents storing excessively large code blocks.
+   */
+  private getMaxLines(type: string): number {
+    switch (type) {
+      case 'function': return 500;
+      case 'method': return 300;
+      case 'class': return 1000;
+      case 'interface': return 200;
+      case 'type': return 100;
+      default: return 200;
+    }
+  }
+
+  /**
+   * Extract a file overview including imports and export signatures.
+   * F10.1: Provides context for file-level entities.
+   */
+  private extractFileOverview(source: string, summary: FileSummary): string {
+    const lines = source.split('\n');
+    const parts: string[] = [];
+
+    // Include imports (typically at the top of the file)
+    const importEnd = this.findImportEnd(lines);
+    if (importEnd > 0) {
+      parts.push(lines.slice(0, importEnd).join('\n'));
+      parts.push('');
+    }
+
+    // Include exports summary
+    if (summary.exports.length > 0) {
+      parts.push(`// Exports: ${summary.exports.join(', ')}`);
+    }
+
+    // Include top-level signatures (not full bodies)
+    for (const symbol of summary.symbols.slice(0, 10)) {
+      if (symbol.signature) {
+        parts.push(symbol.signature);
+      }
+    }
+
+    return parts.join('\n');
+  }
+
+  /**
+   * Find where import statements end in a file.
+   */
+  private findImportEnd(lines: string[]): number {
+    let lastImportLine = 0;
+    for (let i = 0; i < Math.min(lines.length, 50); i++) {
+      const line = lines[i].trim();
+      if (line.startsWith('import ') || line.startsWith('from ') ||
+          line.startsWith('require(') || line.startsWith('const ') && line.includes('require(')) {
+        lastImportLine = i + 1;
+      }
+      // Stop if we hit a non-import, non-comment, non-empty line after imports
+      if (lastImportLine > 0 && line && !line.startsWith('import ') &&
+          !line.startsWith('from ') && !line.startsWith('//') &&
+          !line.startsWith('/*') && !line.startsWith('*') &&
+          !line.startsWith('require(') && !(line.startsWith('const ') && line.includes('require('))) {
+        break;
+      }
+    }
+    return lastImportLine;
   }
 
   /**
