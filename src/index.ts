@@ -336,3 +336,23 @@ export {
   AnalyticsReport,
   DEFAULT_ANALYTICS_CONFIG
 } from './analytics';
+
+// Git Hooks
+export {
+  HookInstaller,
+  HookHandler,
+  ImpactAnalyzer,
+  AnalyzeOptions,
+  ToolClient,
+  HookConfig,
+  HookEvent,
+  HookResult,
+  ImpactReport,
+  AffectedEntity,
+  AffectedDecision,
+  RelatedContext,
+  InstallResult,
+  HookExecution,
+  ChangedFiles,
+  DEFAULT_HOOK_CONFIG
+} from './hooks';

@@ -87,6 +87,66 @@ export const MIGRATIONS: Migration[] = [
       DROP TABLE IF EXISTS daily_stats;
       DROP TABLE IF EXISTS full_context_estimates;
     `
+  },
+  {
+    version: 3,
+    name: 'hooks_tables',
+    up: `
+      -- Track hook executions for debugging
+      CREATE TABLE IF NOT EXISTS hook_executions (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        hook_type TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        repository TEXT NOT NULL,
+        branch TEXT NOT NULL,
+        commit_hash TEXT,
+        duration_ms INTEGER,
+        success INTEGER NOT NULL,
+        files_indexed INTEGER DEFAULT 0,
+        entities_updated INTEGER DEFAULT 0,
+        message TEXT,
+        warnings_json TEXT,
+        errors_json TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_hook_executions_project ON hook_executions(project_id, timestamp DESC);
+      CREATE INDEX IF NOT EXISTS idx_hook_executions_type ON hook_executions(hook_type, success);
+
+      -- Store impact reports for PR reviews
+      CREATE TABLE IF NOT EXISTS impact_reports (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        generated_at TEXT NOT NULL,
+        base_branch TEXT NOT NULL,
+        target_branch TEXT NOT NULL,
+        commit_range TEXT,
+        files_added INTEGER DEFAULT 0,
+        files_modified INTEGER DEFAULT 0,
+        files_deleted INTEGER DEFAULT 0,
+        affected_entities INTEGER DEFAULT 0,
+        affected_decisions INTEGER DEFAULT 0,
+        risk_level TEXT,
+        reasons_json TEXT,
+        report_json TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_impact_reports_project ON impact_reports(project_id, generated_at DESC);
+
+      -- Track which files have been indexed from which commits
+      CREATE TABLE IF NOT EXISTS indexed_commits (
+        project_id TEXT NOT NULL,
+        commit_hash TEXT NOT NULL,
+        indexed_at TEXT NOT NULL,
+        file_count INTEGER NOT NULL,
+        PRIMARY KEY (project_id, commit_hash)
+      );
+    `,
+    down: `
+      DROP TABLE IF EXISTS hook_executions;
+      DROP TABLE IF EXISTS impact_reports;
+      DROP TABLE IF EXISTS indexed_commits;
+    `
   }
 ];
 
