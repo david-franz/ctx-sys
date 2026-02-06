@@ -15,3 +15,14 @@ export {
   PythonExtractor,
   GenericExtractor
 } from './extractors';
+export {
+  ExtractedRelationship,
+  ExtractedRelationshipType,
+  RelationshipExtractor,
+  ExtractionResult,
+  TypeScriptRelationshipExtractor,
+  JavaScriptRelationshipExtractor,
+  PythonRelationshipExtractor,
+  RelationshipExtractorRegistry,
+  defaultRegistry
+} from './relationships';
