@@ -8,3 +8,19 @@ export {
   SummarizationOptions,
   LLMSummarizer
 } from './types';
+export {
+  LLMSummarizationManager,
+  LLMManagerConfig,
+  SummarizeResult,
+  EntityForSummary,
+  SummarizationStats
+} from './llm-manager';
+export {
+  SummarizationProvider,
+  SummarizeOptions,
+  SummarizeItem,
+  OllamaSummarizationProvider,
+  OpenAISummarizationProvider,
+  AnthropicSummarizationProvider,
+  MockSummarizationProvider
+} from './providers';
