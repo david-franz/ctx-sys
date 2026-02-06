@@ -7,6 +7,11 @@
   "bin": {
     "ctx-sys": "./dist/cli/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/cli/index.js",
@@ -21,9 +26,12 @@
     "test:phase5": "NODE_OPTIONS='--experimental-vm-modules' jest tests/phase-5",
     "test:phase6": "NODE_OPTIONS='--experimental-vm-modules' jest tests/phase-6",
     "test:phase7": "NODE_OPTIONS='--experimental-vm-modules' jest tests/phase-7",
+    "test:phase8": "NODE_OPTIONS='--experimental-vm-modules' jest tests/phase-8",
+    "test:phase9": "NODE_OPTIONS='--experimental-vm-modules' jest tests/phase-9",
     "lint": "eslint src tests --ext .ts",
     "lint:fix": "eslint src tests --ext .ts --fix",
-    "clean": "rm -rf dist coverage"
+    "clean": "rm -rf dist coverage",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "context",
@@ -31,10 +39,25 @@
     "coding-assistant",
     "mcp",
     "embeddings",
-    "rag"
+    "rag",
+    "graph-rag",
+    "llm",
+    "context-management",
+    "developer-tools"
   ],
-  "author": "",
+  "author": "David Franz",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidfranz/ctx-sys.git"
+  },
+  "homepage": "https://ctx-sys.dev",
+  "bugs": {
+    "url": "https://github.com/davidfranz/ctx-sys/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
