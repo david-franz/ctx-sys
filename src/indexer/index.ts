@@ -1,5 +1,11 @@
 export { CodebaseIndexer } from './indexer';
 export {
+  StreamingFileProcessor,
+  IndexingState,
+  FileProcessResult,
+  StreamingOptions
+} from './streaming-processor';
+export {
   IndexedFile,
   IndexStats,
   IndexResult,
