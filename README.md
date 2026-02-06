@@ -87,6 +87,40 @@ The result: AI assistants that remember everything but only surface what matters
 └──────────────────────────────────────────────────────────────────┘
 ```
 
+## Current Status
+
+> **Alpha Release** - Core functionality works, but RAG enhancements are in progress.
+
+### What Works Now
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **CLI** | ✅ Working | `init`, `index`, `search`, `status`, `config` |
+| **MCP Server** | ✅ Working | All 30+ tools available for Claude/AI assistants |
+| **AST Parsing** | ✅ Working | TypeScript, JavaScript, Python via tree-sitter |
+| **Entity Storage** | ✅ Working | Functions, classes, methods extracted and stored |
+| **Embedding Search** | ✅ Working | Requires Ollama with `nomic-embed-text` |
+| **Multi-Strategy Search** | ✅ Working | Keyword + semantic with RRF fusion |
+| **Conversation Memory** | ✅ Working | Store/retrieve messages across sessions |
+| **Graph Traversal** | ✅ Working | Query relationships between entities |
+| **Database Persistence** | ✅ Working | SQLite with auto-save |
+
+### Current Limitations (Phase 10 will fix these)
+
+| Limitation | Impact | Planned Fix |
+|------------|--------|-------------|
+| **Descriptions only** | Entities store "function with 2 params", not actual code | F10.1: Store source code |
+| **File paths, not code** | `context_query` returns locations, you read files manually | F10.4: Smart context assembly |
+| **OOM on large codebases** | 10k+ files can crash during embedding | F10.3: Streaming/batching |
+| **Re-embeds everything** | Every index run re-embeds all entities | F10.2: Incremental embedding |
+| **Manual relationships** | Must use `link_entities` to create graph edges | F10.5: Auto-extraction |
+| **No semantic summaries** | Entities lack LLM-generated descriptions | F10.6: LLM summaries (Ollama/cloud) |
+| **Limited CLI** | Many features only via MCP, need to inspect DB directly | F10.7: CLI completeness |
+
+See [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) for the full roadmap.
+
+---
+
 ## Features
 
 ### Hybrid RAG Retrieval
@@ -350,6 +384,7 @@ providers:
 | **Embeddings (local)** | Ollama + nomic-embed-text | Quality local embeddings |
 | **Embeddings (cloud)** | OpenAI text-embedding-3-small | Fallback option |
 | **Summaries (local)** | Ollama + qwen2.5-coder | Code-aware summarization |
+| **Summaries (cloud)** | OpenAI gpt-4o-mini, Anthropic claude-3-haiku | Cloud fallback options |
 | **MCP Framework** | @modelcontextprotocol/sdk | Official protocol SDK |
 
 ## Use Cases

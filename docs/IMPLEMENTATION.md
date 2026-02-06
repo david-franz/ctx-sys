@@ -4,20 +4,22 @@ This document provides an overview of the implementation plan for ctx-sys, organ
 
 ## Overview
 
-ctx-sys is implemented in 9 phases, progressing from foundational infrastructure to advanced context management patterns and integrations:
+ctx-sys is implemented in 12 phases, progressing from foundational infrastructure to advanced context management patterns and integrations:
 
-| Phase | Focus | Features |
-|-------|-------|----------|
-| 1 | Foundation | Database, projects, entities, embeddings, MCP server |
-| 2 | Code Intelligence | AST parsing, summarization, indexing, relationships, git sync |
-| 3 | Conversation Memory | Messages, sessions, summarization, decision extraction |
-| 4 | Document Intelligence | Markdown parsing, requirements, code linking |
-| 5 | Graph RAG | Graph traversal, entity resolution, semantic links |
-| 6 | Advanced Retrieval | Query parsing, multi-strategy search, HyDE, gating, critique |
-| 7 | Configuration & Polish | Configuration, model abstraction, watch mode, CLI |
-| 8 | Agent Patterns | Checkpointing, hot/cold memory API, reflection, proactive context |
-| 9 | Integrations & Analytics | VS Code extension, token analytics, team knowledge, git hooks |
-| 10 | Productization | Website, SSO, Desktop App, Billing, Telemetry |
+| Phase | Focus | Features | Status |
+|-------|-------|----------|--------|
+| 1 | Foundation | Database, projects, entities, embeddings, MCP server | ✅ Complete |
+| 2 | Code Intelligence | AST parsing, summarization, indexing, relationships, git sync | ✅ Complete |
+| 3 | Conversation Memory | Messages, sessions, summarization, decision extraction | ✅ Complete |
+| 4 | Document Intelligence | Markdown parsing, requirements, code linking | ✅ Complete |
+| 5 | Graph RAG | Graph traversal, entity resolution, semantic links | ✅ Complete |
+| 6 | Advanced Retrieval | Query parsing, multi-strategy search, HyDE, gating, critique | ✅ Complete |
+| 7 | Configuration & Polish | Configuration, model abstraction, watch mode, CLI | ✅ Complete |
+| 8 | Agent Patterns | Checkpointing, hot/cold memory API, reflection, proactive context | ✅ Complete |
+| 9 | Analytics & Distribution | Token analytics, git hooks, support docs, website, npm | ✅ Complete |
+| **10** | **RAG Enhancements** | **Code content storage, scalable indexing, smart context, incremental embedding** | 🚧 In Progress |
+| 11 | Integration & Team | VS Code extension, auto context injection, team knowledge base | Planned |
+| 12 | Commercial & Enterprise | Auth & SSO, desktop app, licensing & billing, telemetry | Planned |
 
 ### Context Management Patterns
 
@@ -204,32 +206,62 @@ Analytics infrastructure, support portal, and public-facing web presence.
 | **F9.4** | Product Website | [F9.4-product-website.md](phase-9/F9.4-product-website.md) |
 | **F9.5** | NPM Distribution | [F9.5-npm-distribution.md](phase-9/F9.5-npm-distribution.md) |
 
-## Phase 10: Integration & Team
+## Phase 10: RAG Enhancements
 
-Deep IDE integration and team collaboration features.
+Critical improvements to make RAG actually useful - storing real code, handling large codebases, generating intelligent summaries, and returning usable context.
 
-| Feature | Description | Doc |
-|---------|-------------|-----|
-| **F10.1** | VS Code Extension | [F10.1-vscode-extension.md](phase-10/F10.1-vscode-extension.md) |
-| **F10.2** | Team Knowledge | [F10.2-team-knowledge-base.md](phase-10/F10.2-team-knowledge-base.md) |
-| **F10.3** | Auth & SSO | [F10.3-auth-sso.md](phase-10/F10.3-auth-sso.md) |
-
-## Phase 11: Commercial Desktop & Enterprise
-
-Standalone desktop application and enterprise monetization features.
-
-| Feature | Description | Doc |
-|---------|-------------|-----|
-| **F11.1** | Desktop App | [F11.1-desktop-app.md](phase-11/F11.1-desktop-app.md) |
-| **F11.2** | Licensing & Billing | [F11.2-licensing-billing.md](phase-11/F11.2-licensing-billing.md) |
-| **F11.3** | Telemetry | [F11.3-telemetry-analytics.md](phase-11/F11.3-telemetry-analytics.md) |
+| Feature | Description | Doc | Status |
+|---------|-------------|-----|--------|
+| **F10.0** | Core Service Layer | [F10.0-core-service.md](phase-10/F10.0-core-service.md) | ✅ Complete |
+| **F10.1** | Code Content Storage | [F10.1-code-content-storage.md](phase-10/F10.1-code-content-storage.md) | Planned |
+| **F10.2** | Incremental Embedding | [F10.2-incremental-embedding.md](phase-10/F10.2-incremental-embedding.md) | Planned |
+| **F10.3** | Scalable Indexing | [F10.3-scalable-indexing.md](phase-10/F10.3-scalable-indexing.md) | Planned |
+| **F10.4** | Smart Context Assembly | [F10.4-smart-context-assembly.md](phase-10/F10.4-smart-context-assembly.md) | Planned |
+| **F10.5** | Auto Relationship Extraction | [F10.5-auto-relationship-extraction.md](phase-10/F10.5-auto-relationship-extraction.md) | Planned |
+| **F10.6** | LLM-Generated Summaries | [F10.6-llm-summaries.md](phase-10/F10.6-llm-summaries.md) | Planned |
+| **F10.7** | CLI Completeness | [F10.7-cli-completeness.md](phase-10/F10.7-cli-completeness.md) | Planned |
 
 **Key Deliverables:**
-- Zero-config NPM package for easy try-out
+- Store actual source code in entities (not just descriptions)
+- Stream-based indexing that handles 100k+ entity codebases
+- Return usable code snippets from context_query (not just file paths)
+- Only re-embed changed entities (incremental updates)
+- Automatically extract call graphs and type relationships
+- LLM-generated summaries for semantic understanding (Ollama or cloud)
+- Full CLI access to all features (never need to inspect database directly)
+
+---
+
+## Phase 11: Integration & Team
+
+Deep IDE integration, automatic context injection, and team collaboration features.
+
+| Feature | Description | Doc |
+|---------|-------------|-----|
+| **F11.0** | VS Code Extension | [F11.0-vscode-extension.md](phase-11/F11.0-vscode-extension.md) |
+| **F11.1** | Automatic Context Injection | [F11.1-automatic-context-injection.md](phase-11/F11.1-automatic-context-injection.md) |
+| **F11.2** | Team Knowledge | [F11.2-team-knowledge-base.md](phase-11/F11.2-team-knowledge-base.md) |
+
+**Key Deliverables:**
 - Native VS Code extension for full IDE integration
-- Marketing website with product docs
-- Enterprise SSO (Google/GitHub/SAML)
+- Automatic context injection based on user activity and messages
 - Shared team knowledge base and decision tracking
+
+---
+
+## Phase 12: Commercial Desktop & Enterprise
+
+Authentication, standalone desktop application, and enterprise monetization features.
+
+| Feature | Description | Doc |
+|---------|-------------|-----|
+| **F12.0** | Auth & SSO | [F12.0-auth-sso.md](phase-12/F12.0-auth-sso.md) |
+| **F12.1** | Desktop App | [F12.1-desktop-app.md](phase-12/F12.1-desktop-app.md) |
+| **F12.2** | Licensing & Billing | [F12.2-licensing-billing.md](phase-12/F12.2-licensing-billing.md) |
+| **F12.3** | Telemetry | [F12.3-telemetry-analytics.md](phase-12/F12.3-telemetry-analytics.md) |
+
+**Key Deliverables:**
+- Enterprise SSO (Google/GitHub/SAML)
 - Production-ready desktop application
 - Licensing and billing integration
 - Telemetry for product usage insights
@@ -248,13 +280,13 @@ ctx-sys/
 │   ├── mcp/                   # MCP Server (F1.5)
 │   ├── ast/                   # AST Parsing (F2.1)
 │   ├── summarization/         # Summarization (F2.2)
-│   ├── indexing/              # Indexing (F2.3)
+│   ├── indexer/               # Indexing (F2.3, F10.2)
 │   ├── relationships/         # Relationships (F2.4)
 │   ├── git/                   # Git Sync (F2.5)
 │   ├── conversation/          # Conversations (F3.x)
 │   ├── documents/             # Documents (F4.x)
 │   ├── graph/                 # Graph RAG (F5.x)
-│   ├── retrieval/             # Retrieval (F6.x)
+│   ├── retrieval/             # Retrieval (F6.x, F10.3)
 │   ├── config/                # Config (F7.1)
 │   ├── models/                # Models (F7.2)
 │   ├── watch/                 # Watch (F7.3)
@@ -265,36 +297,18 @@ ctx-sys/
 │   │   ├── reflection.ts      # Lesson storage
 │   │   └── proactive.ts       # Proactive context
 │   ├── analytics/             # Token Analytics (F9.1)
-│   └── team/                  # Team Knowledge (F10.2)
-├── vscode-extension/          # VS Code Extension (F10.1)
+│   ├── core/                  # Core Service Layer (F10.0)
+│   │   └── service.ts         # Unified business logic API
+│   └── team/                  # Team Knowledge (F11.2)
+├── vscode-extension/          # VS Code Extension (F11.1)
 │   ├── src/
 │   ├── package.json
 │   └── README.md
 ├── tests/
 │   ├── helpers/
-│   ├── phase-1/
-│   ├── phase-2/
-│   ├── phase-3/
-│   ├── phase-4/
-│   ├── phase-5/
-│   ├── phase-6/
-│   ├── phase-7/
-│   ├── phase-8/
-│   ├── phase-9/
-│   ├── phase-10/
-│   └── phase-11/
+│   ├── phase-1/ ... phase-12/
 ├── docs/
-│   ├── phase-1/
-│   ├── phase-2/
-│   ├── phase-3/
-│   ├── phase-4/
-│   ├── phase-5/
-│   ├── phase-6/
-│   ├── phase-7/
-│   ├── phase-8/
-│   ├── phase-9/
-│   ├── phase-10/
-│   └── phase-11/
+│   ├── phase-1/ ... phase-12/
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -312,7 +326,7 @@ ctx-sys/
 | Embeddings (local) | Ollama (nomic-embed-text) |
 | Embeddings (cloud) | OpenAI (text-embedding-3-small) |
 | Summaries (local) | Ollama (qwen2.5-coder) |
-| Summaries (cloud) | OpenAI (gpt-4o-mini) |
+| Summaries (cloud) | OpenAI (gpt-4o-mini), Anthropic (claude-3-haiku) |
 | MCP | @modelcontextprotocol/sdk |
 | CLI | Commander.js |
 | File watching | chokidar |
@@ -334,16 +348,18 @@ ctx-sys/
 
 For maximum value delivery, the recommended implementation order is:
 
-1. **Phases 1-5** — Foundation (in order)
-2. **Phase 6.1-6.4** — Core retrieval
-3. **Phase 6.5-6.7** — Advanced retrieval patterns (HyDE, gating, critique)
-4. **Phase 9.1** — Token analytics (prove value early)
-5. **Phase 8.4** — Proactive context (key differentiator)
-6. **Phase 8.1-8.3** — Agent patterns (checkpointing, hot/cold, reflection)
-7. **Phase 7** — Configuration and polish
-8. **Phase 9** — Web & Support (NPM -> Website)
-9. **Phase 10** — Integration (VS Code -> Team -> Auth)
-10. **Phase 11** — Commercial (Desktop -> Billing -> Telemetry)
+1. **Phases 1-9** — Foundation through analytics ✅ Complete
+2. **Phase 10** — RAG Enhancements (current focus)
+   - F10.0 Core Service Layer ✅
+   - F10.1 Code Content Storage (store actual code, not descriptions)
+   - F10.2 Incremental Embedding (only embed changed entities)
+   - F10.3 Scalable Indexing (handle large codebases without OOM)
+   - F10.4 Smart Context Assembly (return usable code snippets)
+   - F10.5 Auto Relationship Extraction (populate graph automatically)
+   - F10.6 LLM Summaries (Ollama/OpenAI/Anthropic for semantic understanding)
+   - F10.7 CLI Completeness (full CLI access to all features)
+3. **Phase 11** — Integration (VS Code -> Auto-inject -> Team)
+4. **Phase 12** — Commercial (Auth/SSO -> Desktop -> Billing -> Telemetry)
 
 ---
 

@@ -18,6 +18,7 @@ export class DatabaseConnection {
   private initialized: boolean = false;
   private lastMtime: number = 0;
   private sqlInstance: Awaited<ReturnType<typeof initSqlJs>> | null = null;
+  private inTransaction: boolean = false;
 
   constructor(dbPath: string) {
     this.dbPath = dbPath;
@@ -86,7 +87,13 @@ export class DatabaseConnection {
    */
   exec(sql: string): void {
     const db = this.ensureInitialized();
-    db.run(sql);
+    // Use db.exec for multi-statement SQL (db.run only handles single statements)
+    db.exec(sql);
+
+    // Auto-save for write operations (but not inside a transaction)
+    if (this.isWriteOperation(sql) && !this.inTransaction) {
+      this.save();
+    }
   }
 
   /**
@@ -106,8 +113,8 @@ export class DatabaseConnection {
     const changes = changesResult[0]?.values[0]?.[0] as number || 0;
     const lastInsertRowid = changesResult[0]?.values[0]?.[1] as number || 0;
 
-    // Auto-save for write operations
-    if (this.isWriteOperation(sql)) {
+    // Auto-save for write operations (but not inside a transaction)
+    if (this.isWriteOperation(sql) && !this.inTransaction) {
       this.save();
     }
 
@@ -118,13 +125,21 @@ export class DatabaseConnection {
    * Check if SQL is a write operation that should trigger auto-save.
    */
   private isWriteOperation(sql: string): boolean {
-    const normalized = sql.trim().toUpperCase();
-    return normalized.startsWith('INSERT') ||
-           normalized.startsWith('UPDATE') ||
-           normalized.startsWith('DELETE') ||
-           normalized.startsWith('CREATE') ||
-           normalized.startsWith('DROP') ||
-           normalized.startsWith('ALTER');
+    // Skip comment lines to find the actual first statement
+    const lines = sql.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim().toUpperCase();
+      // Skip empty lines and comments
+      if (!trimmed || trimmed.startsWith('--')) continue;
+
+      return trimmed.startsWith('INSERT') ||
+             trimmed.startsWith('UPDATE') ||
+             trimmed.startsWith('DELETE') ||
+             trimmed.startsWith('CREATE') ||
+             trimmed.startsWith('DROP') ||
+             trimmed.startsWith('ALTER');
+    }
+    return false;
   }
 
   /**
@@ -189,13 +204,18 @@ export class DatabaseConnection {
   transaction<T>(fn: () => T): T {
     const db = this.ensureInitialized();
 
+    this.inTransaction = true;
     db.run('BEGIN TRANSACTION');
     try {
       const result = fn();
       db.run('COMMIT');
+      this.inTransaction = false;
+      // Save after transaction completes
+      this.save();
       return result;
     } catch (error) {
       db.run('ROLLBACK');
+      this.inTransaction = false;
       throw error;
     }
   }
