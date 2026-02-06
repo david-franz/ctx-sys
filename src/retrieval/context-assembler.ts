@@ -1,8 +1,11 @@
 /**
  * Context assembly for LLM consumption.
  * Formats search results into coherent context with source attribution.
+ * F10.4: Enhanced with file reading and smart context assembly.
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
 import { Entity } from '../entities';
 import { SearchResult } from './types';
 
@@ -59,6 +62,14 @@ export interface AssemblyOptions {
   prefix?: string;
   /** Suffix text to add after context */
   suffix?: string;
+  /** F10.4: Read source files directly instead of using stored content */
+  readFromSource?: boolean;
+  /** F10.4: Project root for resolving relative file paths */
+  projectRoot?: string;
+  /** F10.4: Lines of context before/after the entity */
+  contextLines?: number;
+  /** F10.4: Include file imports as additional context */
+  includeImports?: boolean;
 }
 
 /**
@@ -72,7 +83,11 @@ const DEFAULT_OPTIONS: Required<AssemblyOptions> = {
   groupByType: true,
   maxContentLength: 500,
   prefix: '',
-  suffix: ''
+  suffix: '',
+  readFromSource: false,
+  projectRoot: process.cwd(),
+  contextLines: 0,
+  includeImports: false
 };
 
 /**
@@ -85,8 +100,88 @@ export function estimateTokens(text: string): number {
 
 /**
  * Assembles search results into formatted context for LLM consumption.
+ * F10.4: Enhanced with file reading and smart context assembly.
  */
 export class ContextAssembler {
+  /** F10.4: File cache for efficient repeated reads */
+  private fileCache: Map<string, string[]> = new Map();
+
+  /**
+   * F10.4: Clear the file cache.
+   */
+  clearCache(): void {
+    this.fileCache.clear();
+  }
+
+  /**
+   * F10.4: Read and cache file lines.
+   */
+  private getFileLines(filePath: string, projectRoot: string): string[] | null {
+    const fullPath = path.isAbsolute(filePath)
+      ? filePath
+      : path.join(projectRoot, filePath);
+
+    if (this.fileCache.has(fullPath)) {
+      return this.fileCache.get(fullPath)!;
+    }
+
+    try {
+      const content = fs.readFileSync(fullPath, 'utf-8');
+      const lines = content.split('\n');
+      this.fileCache.set(fullPath, lines);
+      return lines;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * F10.4: Extract code from source file with context lines.
+   */
+  private extractCodeFromFile(
+    filePath: string,
+    startLine: number,
+    endLine: number | undefined,
+    contextLines: number,
+    projectRoot: string
+  ): string | null {
+    const lines = this.getFileLines(filePath, projectRoot);
+    if (!lines) return null;
+
+    const actualEndLine = endLine || startLine + 50;
+    const start = Math.max(0, startLine - 1 - contextLines);
+    const end = Math.min(lines.length, actualEndLine + contextLines);
+
+    return lines.slice(start, end).join('\n');
+  }
+
+  /**
+   * F10.4: Extract imports from source file.
+   */
+  private extractImportsFromFile(filePath: string, projectRoot: string): string | null {
+    const lines = this.getFileLines(filePath, projectRoot);
+    if (!lines) return null;
+
+    const imports: string[] = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('import ') ||
+          trimmed.startsWith('from ') ||
+          (trimmed.startsWith('const ') && trimmed.includes('require('))) {
+        imports.push(line);
+      } else if (imports.length > 0 && trimmed &&
+                 !trimmed.startsWith('import') &&
+                 !trimmed.startsWith('from') &&
+                 !trimmed.startsWith('//') &&
+                 !trimmed.startsWith('/*') &&
+                 !trimmed.startsWith('*')) {
+        break;
+      }
+    }
+
+    return imports.length > 0 ? imports.join('\n') : null;
+  }
+
   /**
    * Assemble context from search results.
    */
@@ -287,6 +382,7 @@ export class ContextAssembler {
 
   /**
    * Format entity as Markdown.
+   * F10.4: Enhanced with source file reading and imports.
    */
   private formatEntityMarkdown(entity: Entity, options: Required<AssemblyOptions>): string {
     const lines: string[] = [];
@@ -305,19 +401,55 @@ export class ContextAssembler {
       lines.push(entity.summary);
     }
 
-    // Code content if requested
-    if (options.includeCodeContent && entity.content) {
-      const language = this.detectLanguage(entity.filePath);
-      const content = entity.content.slice(0, options.maxContentLength);
-      const truncated = entity.content.length > options.maxContentLength;
-
-      lines.push('');
-      lines.push('```' + (language || ''));
-      lines.push(content);
-      if (truncated) {
-        lines.push('// ... (truncated)');
+    // F10.4: Include imports if requested
+    if (options.includeImports && entity.filePath) {
+      const imports = this.extractImportsFromFile(entity.filePath, options.projectRoot);
+      if (imports) {
+        lines.push('');
+        lines.push('**Imports:**');
+        lines.push('```');
+        lines.push(imports);
+        lines.push('```');
       }
-      lines.push('```');
+    }
+
+    // Code content if requested
+    if (options.includeCodeContent) {
+      let content: string | null = null;
+      let truncated = false;
+
+      // F10.4: Read from source file if enabled and we have file metadata
+      if (options.readFromSource && entity.filePath && entity.startLine) {
+        content = this.extractCodeFromFile(
+          entity.filePath,
+          entity.startLine,
+          entity.endLine,
+          options.contextLines,
+          options.projectRoot
+        );
+      }
+
+      // Fall back to stored content
+      if (!content && entity.content) {
+        content = entity.content;
+      }
+
+      if (content) {
+        // Apply max content length
+        if (content.length > options.maxContentLength) {
+          content = content.slice(0, options.maxContentLength);
+          truncated = true;
+        }
+
+        const language = this.detectLanguage(entity.filePath);
+        lines.push('');
+        lines.push('```' + (language || ''));
+        lines.push(content);
+        if (truncated) {
+          lines.push('// ... (truncated)');
+        }
+        lines.push('```');
+      }
     }
 
     return lines.join('\n');
