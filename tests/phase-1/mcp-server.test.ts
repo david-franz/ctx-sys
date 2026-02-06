@@ -118,16 +118,40 @@ describe('F1.5 MCP Server Scaffold', () => {
       expect(toolNames).toContain('search_entities');
     });
 
-    it('should have placeholder tools for future phases', () => {
+    it('should have all core tools implemented', () => {
       const registry = new ToolRegistry(context);
       const tools = registry.getToolDefinitions();
       const toolNames = tools.map(t => t.name);
 
+      // Retrieval tools
       expect(toolNames).toContain('context_query');
+
+      // Indexing tools
       expect(toolNames).toContain('index_codebase');
       expect(toolNames).toContain('index_document');
+      expect(toolNames).toContain('sync_from_git');
+      expect(toolNames).toContain('get_index_status');
+
+      // Conversation tools
       expect(toolNames).toContain('store_message');
+      expect(toolNames).toContain('get_history');
+      expect(toolNames).toContain('summarize_session');
+      expect(toolNames).toContain('list_sessions');
+
+      // Graph tools
       expect(toolNames).toContain('link_entities');
+      expect(toolNames).toContain('query_graph');
+      expect(toolNames).toContain('get_graph_stats');
+
+      // Agent tools
+      expect(toolNames).toContain('checkpoint_save');
+      expect(toolNames).toContain('checkpoint_load');
+      expect(toolNames).toContain('memory_spill');
+      expect(toolNames).toContain('reflection_store');
+
+      // Analytics tools
+      expect(toolNames).toContain('analytics_get_stats');
+      expect(toolNames).toContain('analytics_dashboard');
     });
 
     it('should check tool existence', () => {
@@ -243,12 +267,11 @@ describe('F1.5 MCP Server Scaffold', () => {
       ).rejects.toThrow('Unknown tool');
     });
 
-    it('should throw for placeholder tools', async () => {
+    it('should expose CoreService', () => {
       const registry = new ToolRegistry(context);
+      const coreService = registry.getCoreService();
 
-      await expect(
-        registry.execute('context_query', {})
-      ).rejects.toThrow('not yet implemented');
+      expect(coreService).toBeDefined();
     });
 
     it('should register custom tool', () => {
