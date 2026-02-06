@@ -23,6 +23,70 @@ export const MIGRATIONS: Migration[] = [
       DROP TABLE IF EXISTS embedding_models;
       DROP TABLE IF EXISTS projects;
     `
+  },
+  {
+    version: 2,
+    name: 'analytics_tables',
+    up: `
+      -- Query logs for detailed tracking
+      CREATE TABLE IF NOT EXISTS query_logs (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        session_id TEXT,
+        timestamp TEXT NOT NULL,
+        query TEXT,
+        query_type TEXT NOT NULL,
+        tokens_retrieved INTEGER NOT NULL,
+        tokens_estimated_full INTEGER NOT NULL,
+        tokens_saved INTEGER NOT NULL,
+        cost_actual_cents INTEGER,
+        cost_estimated_full_cents INTEGER,
+        cost_saved_cents INTEGER,
+        relevance_score REAL,
+        item_count INTEGER,
+        was_useful INTEGER,
+        latency_ms INTEGER,
+        strategies_json TEXT,
+        item_types_json TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_query_logs_project_time ON query_logs(project_id, timestamp DESC);
+      CREATE INDEX IF NOT EXISTS idx_query_logs_session ON query_logs(session_id, timestamp DESC);
+
+      -- Aggregated daily stats (for long-term storage)
+      CREATE TABLE IF NOT EXISTS daily_stats (
+        project_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        queries INTEGER NOT NULL DEFAULT 0,
+        tokens_retrieved INTEGER NOT NULL DEFAULT 0,
+        tokens_saved INTEGER NOT NULL DEFAULT 0,
+        cost_saved_cents INTEGER NOT NULL DEFAULT 0,
+        avg_relevance REAL,
+        useful_count INTEGER DEFAULT 0,
+        not_useful_count INTEGER DEFAULT 0,
+        PRIMARY KEY (project_id, date)
+      );
+
+      -- Full context estimates per project
+      CREATE TABLE IF NOT EXISTS full_context_estimates (
+        project_id TEXT PRIMARY KEY,
+        measured_at TEXT NOT NULL,
+        total_files INTEGER NOT NULL,
+        total_lines INTEGER NOT NULL,
+        total_tokens INTEGER NOT NULL,
+        code_tokens INTEGER,
+        doc_tokens INTEGER,
+        config_tokens INTEGER,
+        with_summaries INTEGER,
+        with_filtering INTEGER,
+        minimal INTEGER
+      );
+    `,
+    down: `
+      DROP TABLE IF EXISTS query_logs;
+      DROP TABLE IF EXISTS daily_stats;
+      DROP TABLE IF EXISTS full_context_estimates;
+    `
   }
 ];
 
