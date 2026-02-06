@@ -2,13 +2,13 @@ export default function Home() {
   return (
     <main>
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-white">
+      <section className="relative overflow-hidden bg-white dark:bg-gray-900">
         <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl">
               Stop Repeating Yourself
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600">
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
               ctx-sys is your intelligent context librarian. It gives AI coding assistants
               exactly the context they need - nothing more, nothing less.
               Save tokens, save money, get better results.
@@ -22,7 +22,7 @@ export default function Home() {
               </a>
               <a
                 href="/docs"
-                className="text-lg font-semibold text-gray-900 hover:text-indigo-600"
+                className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Read the docs &rarr;
               </a>
@@ -52,13 +52,13 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-24">
+      <section className="py-24 bg-white dark:bg-gray-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
               Intelligent Context for AI Coding
             </h2>
-            <p className="mt-4 text-lg text-gray-600">
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
               Everything you need to give AI assistants the right context.
             </p>
           </div>
@@ -92,10 +92,10 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="bg-gray-50 py-24">
+      <section className="bg-gray-50 dark:bg-gray-800 py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
               How It Works
             </h2>
           </div>
@@ -145,9 +145,9 @@ export default function Home() {
 
 function FeatureCard({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6">
-      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-      <p className="mt-2 text-gray-600">{description}</p>
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+      <p className="mt-2 text-gray-600 dark:text-gray-300">{description}</p>
     </div>
   );
 }
@@ -158,8 +158,8 @@ function StepCard({ step, title, description }: { step: string; title: string; d
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-xl font-bold text-white">
         {step}
       </div>
-      <h3 className="mt-4 text-lg font-semibold text-gray-900">{title}</h3>
-      <p className="mt-2 text-gray-600">{description}</p>
+      <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+      <p className="mt-2 text-gray-600 dark:text-gray-300">{description}</p>
     </div>
   );
 }
