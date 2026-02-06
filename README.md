@@ -89,35 +89,37 @@ The result: AI assistants that remember everything but only surface what matters
 
 ## Current Status
 
-> **Alpha Release** - Core functionality works, but RAG enhancements are in progress.
+> **Beta Release** - Core functionality and Phase 10 RAG enhancements are complete.
 
 ### What Works Now
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| **CLI** | ✅ Working | `init`, `index`, `search`, `status`, `config` |
-| **MCP Server** | ✅ Working | All 30+ tools available for Claude/AI assistants |
+| **CLI** | ✅ Working | 30+ commands for all operations |
+| **MCP Server** | ✅ Working | All tools available for Claude/AI assistants |
 | **AST Parsing** | ✅ Working | TypeScript, JavaScript, Python via tree-sitter |
-| **Entity Storage** | ✅ Working | Functions, classes, methods extracted and stored |
-| **Embedding Search** | ✅ Working | Requires Ollama with `nomic-embed-text` |
-| **Multi-Strategy Search** | ✅ Working | Keyword + semantic with RRF fusion |
+| **Entity Storage** | ✅ Working | Functions, classes, methods with full source code |
+| **Embedding Search** | ✅ Working | Incremental, hash-based with Ollama |
+| **Multi-Strategy Search** | ✅ Working | Keyword + semantic + graph with RRF fusion |
 | **Conversation Memory** | ✅ Working | Store/retrieve messages across sessions |
-| **Graph Traversal** | ✅ Working | Query relationships between entities |
-| **Database Persistence** | ✅ Working | SQLite with auto-save |
+| **Graph Traversal** | ✅ Working | Auto-extracted relationships |
+| **Database Persistence** | ✅ Working | SQLite with streaming batches |
+| **LLM Summaries** | ✅ Working | Ollama, OpenAI, or Anthropic providers |
+| **Smart Context** | ✅ Working | Assemble context with source code and token budgets |
 
-### Current Limitations (Phase 10 will fix these)
+### Phase 10 Enhancements (Completed)
 
-| Limitation | Impact | Planned Fix |
-|------------|--------|-------------|
-| **Descriptions only** | Entities store "function with 2 params", not actual code | F10.1: Store source code |
-| **File paths, not code** | `context_query` returns locations, you read files manually | F10.4: Smart context assembly |
-| **OOM on large codebases** | 10k+ files can crash during embedding | F10.3: Streaming/batching |
-| **Re-embeds everything** | Every index run re-embeds all entities | F10.2: Incremental embedding |
-| **Manual relationships** | Must use `link_entities` to create graph edges | F10.5: Auto-extraction |
-| **No semantic summaries** | Entities lack LLM-generated descriptions | F10.6: LLM summaries (Ollama/cloud) |
-| **Limited CLI** | Many features only via MCP, need to inspect DB directly | F10.7: CLI completeness |
+| Enhancement | Description |
+|-------------|-------------|
+| **F10.1: Code Content Storage** | Store actual source code, not just descriptions |
+| **F10.2: Incremental Embedding** | Hash-based change detection, skip unchanged entities |
+| **F10.3: Scalable Indexing** | Streaming batches for 100k+ entity codebases |
+| **F10.4: Smart Context Assembly** | Include source code in context with token budgets |
+| **F10.5: Auto Relationship Extraction** | Extract imports, calls, extends, implements from AST |
+| **F10.6: LLM Summaries** | Multi-provider summarization (Ollama/OpenAI/Anthropic) |
+| **F10.7: CLI Completeness** | 30+ commands covering all functionality |
 
-See [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) for the full roadmap.
+See [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) for architecture details.
 
 ---
 
@@ -188,6 +190,65 @@ ctx-sys serve
 
 # Or watch for changes and auto-index
 ctx-sys watch
+```
+
+## CLI Commands
+
+### Core Commands
+
+```bash
+ctx-sys init              # Initialize project configuration
+ctx-sys index             # Index codebase (with streaming for large projects)
+ctx-sys search <query>    # Search entities
+ctx-sys status            # Show indexing status
+ctx-sys serve             # Start MCP server
+ctx-sys watch             # Watch and auto-index on changes
+```
+
+### Entity Management
+
+```bash
+ctx-sys entities          # List all entities
+ctx-sys entity <id>       # Show entity details
+ctx-sys entity-stats      # Entity type statistics
+ctx-sys entity-delete     # Delete an entity
+```
+
+### Graph Operations
+
+```bash
+ctx-sys graph <entity>    # Traverse relationship graph
+ctx-sys graph-stats       # Graph statistics
+ctx-sys relationships     # List relationships
+ctx-sys link <src> <type> <tgt>  # Create relationship
+```
+
+### Embeddings & Summaries
+
+```bash
+ctx-sys embed             # Generate embeddings
+ctx-sys embed-status      # Embedding coverage status
+ctx-sys summarize         # Generate LLM summaries
+ctx-sys providers         # Show available LLM providers
+```
+
+### Sessions & Analytics
+
+```bash
+ctx-sys sessions          # List conversation sessions
+ctx-sys messages          # View session messages
+ctx-sys analytics         # View usage analytics
+ctx-sys dashboard         # Project dashboard
+```
+
+### Debug & Maintenance
+
+```bash
+ctx-sys health            # System health check
+ctx-sys inspect           # Inspect database tables
+ctx-sys query <sql>       # Execute SQL query
+ctx-sys export <file>     # Export project data
+ctx-sys import <file>     # Import project data
 ```
 
 ### With Claude Desktop
