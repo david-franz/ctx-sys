@@ -57,6 +57,14 @@ export interface UsageStats {
   totalCostSaved: number;
   savingsPercent: number;
 
+  // F10c.6: Multiple comparison baselines
+  /** Savings vs grep+read workflow (more realistic) */
+  savingsPercentVsGrep: number;
+  /** Estimated tokens for a grep+read workflow */
+  grepReadBaseline: number;
+  /** Quality-adjusted savings (savings * relevance) */
+  qualityAdjustedSavings: number;
+
   // Quality metrics
   averageRelevance: number;
   usefulnessRate: number | null;
@@ -192,6 +200,10 @@ export interface SummaryCard {
   tokensSaved: string; // Formatted with K/M suffix
   costSaved: string; // Formatted as currency
   savingsPercent: number;
+  /** F10c.6: Savings vs grep+read (more realistic) */
+  savingsPercentVsGrep: number;
+  /** F10c.6: Quality-adjusted savings (savings * relevance) */
+  qualityAdjustedSavings: number;
   avgRelevance: number;
   trend: 'up' | 'down' | 'stable';
   trendValue: number;

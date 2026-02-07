@@ -46,6 +46,8 @@ export class DashboardService {
         tokensSaved: this.formatTokens(currentStats.totalTokensSaved),
         costSaved: this.formatCurrency(currentStats.totalCostSaved),
         savingsPercent: Math.round(currentStats.savingsPercent),
+        savingsPercentVsGrep: Math.round(currentStats.savingsPercentVsGrep),
+        qualityAdjustedSavings: Math.round(currentStats.qualityAdjustedSavings * 10) / 10,
         avgRelevance: Math.round(currentStats.averageRelevance * 100) / 100,
         trend: trend.direction,
         trendValue: trend.value

@@ -238,23 +238,51 @@ export class QueryLogger {
 
     const usefulTotal = (stats?.useful_count || 0) + (stats?.not_useful_count || 0);
 
+    // F10c.6: Calculate grep+read baseline
+    // A typical grep+read workflow retrieves ~4 files per query, ~800 tokens per file
+    const totalQueries = stats?.total_queries || 0;
+    const typicalFilesPerQuery = 4;
+    const typicalTokensPerFile = 800;
+    const grepReadBaseline = totalQueries * typicalFilesPerQuery * typicalTokensPerFile;
+    const totalRetrieved = stats?.total_tokens_retrieved || 0;
+    const totalFull = stats?.total_tokens_full || 0;
+
+    // Savings vs grep+read (honest comparison)
+    const savingsVsGrep = grepReadBaseline > 0
+      ? Math.max(0, ((grepReadBaseline - totalRetrieved) / grepReadBaseline) * 100)
+      : 0;
+
+    // Quality-adjusted savings: weight savings by relevance
+    const avgRelevance = stats?.avg_relevance || 0;
+    const tokensSaved = stats?.total_tokens_saved || 0;
+    const effectiveSavings = tokensSaved * avgRelevance;
+    const totalContext = tokensSaved + totalRetrieved;
+    const qualityAdjustedSavings = totalContext > 0
+      ? (effectiveSavings / totalContext) * 100
+      : 0;
+
     return {
       period,
       startDate,
       endDate,
 
-      totalQueries: stats?.total_queries || 0,
-      totalTokensRetrieved: stats?.total_tokens_retrieved || 0,
-      totalTokensSaved: stats?.total_tokens_saved || 0,
-      totalTokensEstimatedFull: stats?.total_tokens_full || 0,
+      totalQueries,
+      totalTokensRetrieved: totalRetrieved,
+      totalTokensSaved: tokensSaved,
+      totalTokensEstimatedFull: totalFull,
 
       totalCostActual: (stats?.total_cost_actual || 0) / 100,
       totalCostSaved: (stats?.total_cost_saved || 0) / 100,
-      savingsPercent: stats?.total_tokens_full
-        ? ((stats.total_tokens_saved / stats.total_tokens_full) * 100)
+      savingsPercent: totalFull
+        ? ((tokensSaved / totalFull) * 100)
         : 0,
 
-      averageRelevance: stats?.avg_relevance || 0,
+      // F10c.6: Realistic baselines
+      savingsPercentVsGrep: savingsVsGrep,
+      grepReadBaseline,
+      qualityAdjustedSavings,
+
+      averageRelevance: avgRelevance,
       usefulnessRate: usefulTotal > 0
         ? ((stats?.useful_count || 0) / usefulTotal) * 100
         : null,
