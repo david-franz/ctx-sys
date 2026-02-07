@@ -406,21 +406,46 @@ export class CoreService {
 
   async searchDecisions(projectId: string, query: string, options?: DecisionSearchOptions): Promise<Decision[]> {
     const messageStore = this.getMessageStore(projectId);
-    const messages = await messageStore.search(query, { limit: options?.limit || 10 });
+    const limit = options?.limit || 10;
+    const seen = new Set<string>();
+    const decisions: Decision[] = [];
 
-    // Filter messages that look like decisions
-    const decisionKeywords = ['decided', 'decision', 'agreed', 'will use', 'chose', 'choosing'];
-    const decisions: Decision[] = messages
-      .filter(m => decisionKeywords.some(kw => m.content.toLowerCase().includes(kw)))
-      .map(m => ({
-        id: m.id,
-        sessionId: m.sessionId,
-        messageId: m.id,
-        description: m.content,
-        context: '',
-        relatedEntities: [],
-        createdAt: m.createdAt
-      }));
+    const toDecision = (m: Message): Decision => ({
+      id: m.id,
+      sessionId: m.sessionId,
+      messageId: m.id,
+      description: m.content,
+      context: (m.metadata?.context as string) || '',
+      relatedEntities: (m.metadata?.relatedEntities as string[]) || [],
+      createdAt: m.createdAt
+    });
+
+    // Strategy 1: Messages with decision metadata
+    const allMessages = messageStore.getRecent(500);
+    for (const m of allMessages) {
+      if (m.metadata?.type === 'decision') {
+        if (!query || m.content.toLowerCase().includes(query.toLowerCase())) {
+          if (!seen.has(m.id)) {
+            seen.add(m.id);
+            decisions.push(toDecision(m));
+          }
+        }
+      }
+      if (decisions.length >= limit) return decisions;
+    }
+
+    // Strategy 2: Keyword-based detection in search results
+    if (query) {
+      const searchResults = messageStore.search(query, { limit: limit * 3 });
+      const decisionKeywords = ['decided', 'decision', 'agreed', 'will use', 'chose', 'choosing'];
+      for (const m of searchResults) {
+        if (!seen.has(m.id) && decisionKeywords.some(kw => m.content.toLowerCase().includes(kw))) {
+          seen.add(m.id);
+          decisions.push(toDecision(m));
+          if (decisions.length >= limit) break;
+        }
+      }
+    }
 
     return decisions;
   }
