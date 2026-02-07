@@ -2,7 +2,7 @@ export { MarkdownParser } from './markdown-parser';
 export { RequirementExtractor } from './requirement-extractor';
 export { DocumentLinker } from './document-linker';
 export { DocumentIndexer } from './document-indexer';
-export type { DocumentIndexOptions, DocumentIndexResult } from './document-indexer';
+export type { DocumentIndexOptions, DocumentIndexResult, DirectoryIndexOptions, DirectoryIndexResult } from './document-indexer';
 export {
   MarkdownDocument,
   MarkdownSection,

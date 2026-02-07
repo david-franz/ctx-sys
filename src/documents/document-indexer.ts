@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import YAML from 'yaml';
+import picomatch from 'picomatch';
 import { EntityStore, Entity } from '../entities';
 import { EntityType } from '../entities/types';
 import { RelationshipStore } from '../graph/relationship-store';
@@ -21,6 +22,23 @@ export interface DocumentIndexOptions {
   extractEntities?: boolean;
   extractRelationships?: boolean;
   generateEmbeddings?: boolean;
+}
+
+export interface DirectoryIndexOptions extends DocumentIndexOptions {
+  /** File extensions to include (default: .md, .mdx, .yaml, .yml, .json, .toml, .txt) */
+  extensions?: string[];
+  /** Glob patterns to exclude (default: node_modules, .git, dist, build) */
+  exclude?: string[];
+  /** Whether to recurse into subdirectories (default: true) */
+  recursive?: boolean;
+}
+
+export interface DirectoryIndexResult {
+  filesProcessed: number;
+  filesSkipped: number;
+  totalEntities: number;
+  totalRelationships: number;
+  errors: string[];
 }
 
 export interface DocumentIndexResult {
@@ -467,5 +485,96 @@ export class DocumentIndexer {
       crossDocLinks: 0,
       embeddingsGenerated: 0,
     };
+  }
+
+  /**
+   * F10.13: Index all documents in a directory recursively.
+   * Supports change detection via hash — unchanged files are skipped.
+   */
+  async indexDirectory(
+    dirPath: string,
+    options: DirectoryIndexOptions = {}
+  ): Promise<DirectoryIndexResult> {
+    const defaultExtensions = Object.keys(EXTENSION_MAP);
+    const extensions = options.extensions || defaultExtensions;
+    const exclude = options.exclude || [
+      'node_modules/**', '.git/**', 'dist/**', 'build/**',
+      'coverage/**', '__pycache__/**',
+    ];
+    const recursive = options.recursive !== false;
+
+    const absoluteDir = path.resolve(dirPath);
+    const isExcluded = picomatch(exclude, { dot: true });
+    const files = this.collectFiles(absoluteDir, absoluteDir, extensions, isExcluded, recursive);
+
+    const result: DirectoryIndexResult = {
+      filesProcessed: 0,
+      filesSkipped: 0,
+      totalEntities: 0,
+      totalRelationships: 0,
+      errors: [],
+    };
+
+    for (const file of files) {
+      try {
+        const indexResult = await this.indexFile(file, options);
+        if (indexResult.skipped) {
+          result.filesSkipped++;
+        } else {
+          result.filesProcessed++;
+          result.totalEntities += indexResult.entitiesCreated;
+          result.totalRelationships += indexResult.relationshipsCreated;
+        }
+      } catch (err) {
+        result.errors.push(`${file}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Collect files matching extensions, excluding patterns.
+   */
+  private collectFiles(
+    dir: string,
+    rootDir: string,
+    extensions: string[],
+    isExcluded: (path: string) => boolean,
+    recursive: boolean
+  ): string[] {
+    const files: string[] = [];
+
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return files;
+    }
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      const relativePath = path.relative(rootDir, fullPath);
+
+      if (isExcluded(relativePath) || isExcluded(entry.name)) continue;
+
+      if (entry.isDirectory() && recursive) {
+        files.push(...this.collectFiles(fullPath, rootDir, extensions, isExcluded, recursive));
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (extensions.includes(ext)) {
+          files.push(fullPath);
+        }
+      }
+    }
+
+    return files;
+  }
+
+  /**
+   * Get the supported document extensions.
+   */
+  static getSupportedExtensions(): string[] {
+    return Object.keys(EXTENSION_MAP);
   }
 }
