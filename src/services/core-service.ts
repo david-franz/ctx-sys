@@ -827,15 +827,80 @@ export class CoreService {
   }
 
   async getImpactReport(projectId: string, baseBranch: string, targetBranch: string): Promise<ImpactReport> {
-    // Would use ImpactAnalyzer in production
+    const projectPath = await this.getProjectPath(projectId);
+    const entityStore = this.context.getEntityStore(projectId);
+
+    // Get changed files from git diff
+    const { execSync } = await import('child_process');
+    let changedFiles: string[];
+    try {
+      const diff = execSync(
+        `git diff --name-only ${baseBranch}...${targetBranch}`,
+        { cwd: projectPath, encoding: 'utf-8' }
+      );
+      changedFiles = diff.trim().split('\n').filter(Boolean);
+    } catch {
+      // Fallback: try two-dot diff (works when branches share no merge base)
+      try {
+        const diff = execSync(
+          `git diff --name-only ${baseBranch} ${targetBranch}`,
+          { cwd: projectPath, encoding: 'utf-8' }
+        );
+        changedFiles = diff.trim().split('\n').filter(Boolean);
+      } catch {
+        changedFiles = [];
+      }
+    }
+
+    // Find affected entities by matching file paths
+    const affectedEntities: Array<{ id: string; name: string; type: string }> = [];
+    for (const file of changedFiles) {
+      const entities = await entityStore.getByFile(file);
+      for (const entity of entities) {
+        affectedEntities.push({
+          id: entity.id,
+          name: entity.name,
+          type: entity.type,
+        });
+      }
+    }
+
+    // Determine risk level based on scope
+    const riskLevel = changedFiles.length > 20 ? 'high'
+      : changedFiles.length > 5 ? 'medium'
+      : 'low';
+
+    // Generate suggestions
+    const suggestions = this.generateImpactSuggestions(changedFiles, affectedEntities);
+
     return {
-      riskLevel: 'low',
-      filesChanged: 0,
-      entitiesAffected: 0,
+      riskLevel,
+      filesChanged: changedFiles.length,
+      entitiesAffected: affectedEntities.length,
       decisionsAffected: 0,
-      suggestions: [],
-      affectedEntities: []
+      suggestions,
+      affectedEntities
     };
+  }
+
+  private generateImpactSuggestions(
+    files: string[],
+    entities: Array<{ type: string }>
+  ): string[] {
+    const suggestions: string[] = [];
+    if (files.some(f => f.includes('test'))) {
+      suggestions.push('Test files modified - ensure test suite passes');
+    }
+    if (files.some(f => f.endsWith('.sql') || f.includes('migration'))) {
+      suggestions.push('Database changes detected - review migration strategy');
+    }
+    if (entities.filter(e => e.type === 'class').length > 3) {
+      suggestions.push('Multiple class changes - consider integration testing');
+    }
+    if (files.some(f => f.includes('package.json') || f.includes('tsconfig'))) {
+      suggestions.push('Configuration files changed - verify build compatibility');
+    }
+    return suggestions;
   }
 
   // ─────────────────────────────────────────────────────────
