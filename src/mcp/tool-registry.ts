@@ -1572,13 +1572,13 @@ export class ToolRegistry {
           throw new Error('No repository path specified');
         }
 
-        await this.coreService.installHooks(projectId, repoPath, {
+        const installed = await this.coreService.installHooks(projectId, repoPath, {
           hooks: hooks as any
         });
 
         return {
           success: true,
-          installed: hooks || ['post-commit']
+          installed
         };
       }
     );
