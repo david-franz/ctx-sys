@@ -761,15 +761,19 @@ export class CoreService {
   async resolveEntityId(projectId: string, nameOrId: string): Promise<string> {
     const entityStore = this.context.getEntityStore(projectId);
 
-    // Try as ID first
+    // 1. Try as UUID
     const byId = await entityStore.get(nameOrId);
     if (byId) return byId.id;
 
-    // Try as qualified name
-    const byName = await entityStore.getByQualifiedName(nameOrId);
-    if (byName) return byName.id;
+    // 2. Try as qualified name (exact match)
+    const byQualified = await entityStore.getByQualifiedName(nameOrId);
+    if (byQualified) return byQualified.id;
 
-    // Try as name search
+    // 3. Try exact name match (prevents wrong entity from fuzzy search)
+    const byExactName = await entityStore.getByName(nameOrId);
+    if (byExactName) return byExactName.id;
+
+    // 4. Fuzzy search as last resort
     const searchResults = await entityStore.search(nameOrId, { limit: 1 });
     if (searchResults.length > 0) return searchResults[0].id;
 
