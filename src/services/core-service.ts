@@ -13,6 +13,7 @@ import { RelationshipStore, GraphTraversal } from '../graph';
 import { DocumentIndexer } from '../documents/document-indexer';
 import { MultiStrategySearch, ContextAssembler, SearchResult } from '../retrieval';
 import { CheckpointManager, Checkpoint, AgentState, SaveOptions } from '../agent/checkpoints';
+import { MemoryTierManager } from '../agent/memory-tier';
 import { QueryLogger } from '../analytics/query-logger';
 import {
   CreateEntityInput,
@@ -60,9 +61,20 @@ export class CoreService {
   private graphTraversals: Map<string, GraphTraversal> = new Map();
   private searchServices: Map<string, MultiStrategySearch> = new Map();
   private checkpointManagers: Map<string, CheckpointManager> = new Map();
+  private memoryManagers: Map<string, MemoryTierManager> = new Map();
   private queryLoggers: Map<string, QueryLogger> = new Map();
 
   constructor(private context: AppContext) {}
+
+  private getMemoryManager(projectId: string): MemoryTierManager {
+    if (!this.memoryManagers.has(projectId)) {
+      this.memoryManagers.set(projectId, new MemoryTierManager(
+        this.context.db,
+        projectId
+      ));
+    }
+    return this.memoryManagers.get(projectId)!;
+  }
 
   // ─────────────────────────────────────────────────────────
   // SERVICE ACCESSORS (Lazy initialization)
@@ -660,20 +672,40 @@ export class CoreService {
     await checkpointManager.delete(checkpointId);
   }
 
-  // Simplified memory operations (would need full MemoryTierManager in production)
   async spillMemory(projectId: string, sessionId: string, options?: SpillOptions): Promise<SpillResult> {
-    // Placeholder - would implement with MemoryTierManager
-    return { spilledCount: 0, tokensFreed: 0 };
+    const manager = this.getMemoryManager(projectId);
+    const result = await manager.spillToWarm(sessionId, {
+      count: options?.threshold ? Math.ceil(options.threshold / 100) : 4
+    });
+    return {
+      spilledCount: result.spilledCount,
+      tokensFreed: result.spilledCount * 100 // estimate
+    };
   }
 
   async recallMemory(projectId: string, sessionId: string, query: string): Promise<RecallResult> {
-    // Placeholder - would implement with MemoryTierManager
-    return { items: [], tokensRecalled: 0 };
+    const manager = this.getMemoryManager(projectId);
+    const result = await manager.recall(sessionId, query);
+    return {
+      items: result.items.map(item => ({
+        id: item.id,
+        content: item.content,
+        type: item.type,
+        relevance: item.relevanceScore
+      })),
+      tokensRecalled: result.items.reduce((sum, item) => sum + item.tokenCount, 0)
+    };
   }
 
   async getMemoryStatus(projectId: string, sessionId: string): Promise<MemoryStatus> {
-    // Placeholder - would implement with MemoryTierManager
-    return { hotCount: 0, coldCount: 0, hotTokens: 0, coldTokens: 0 };
+    const manager = this.getMemoryManager(projectId);
+    const status = await manager.getStatus(sessionId);
+    return {
+      hotCount: status.hot.items,
+      coldCount: status.cold.items + status.warm.items,
+      hotTokens: status.hot.tokens,
+      coldTokens: status.cold.tokens + status.warm.tokens
+    };
   }
 
   // Simplified reflection operations (would need full ReflectionStore in production)
@@ -820,6 +852,7 @@ export class CoreService {
     this.graphTraversals.delete(projectId);
     this.searchServices.delete(projectId);
     this.checkpointManagers.delete(projectId);
+    this.memoryManagers.delete(projectId);
     this.queryLoggers.delete(projectId);
     this.context.clearProjectCache(projectId);
   }
