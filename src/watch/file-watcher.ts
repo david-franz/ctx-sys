@@ -49,6 +49,7 @@ export const DEFAULT_WATCH_CONFIG: Required<Omit<WatchConfig, 'root'>> = {
   exclude: [
     'node_modules/**',
     '.git/**',
+    '.ctx-sys/**',
     'dist/**',
     'build/**',
     'coverage/**',

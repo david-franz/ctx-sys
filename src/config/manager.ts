@@ -409,7 +409,7 @@ export class ConfigManager {
       indexing: {
         mode: 'incremental',
         watch: false,
-        ignore: ['node_modules', '.git', 'dist', 'build']
+        ignore: ['node_modules', '.git', '.ctx-sys', 'dist', 'build']
       },
       summarization: {
         enabled: true,
@@ -460,7 +460,7 @@ export const DEFAULT_PROJECT_CONFIG_FILE: ProjectConfigFile = {
   indexing: {
     mode: 'incremental',
     watch: false,
-    ignore: ['node_modules', '.git', 'dist', 'build']
+    ignore: ['node_modules', '.git', '.ctx-sys', 'dist', 'build']
   },
   summarization: {
     enabled: true,

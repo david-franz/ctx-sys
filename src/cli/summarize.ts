@@ -20,7 +20,7 @@ export function createSummarizeCommand(output: CLIOutput = defaultOutput): Comma
     .option('-p, --project <path>', 'Project directory', '.')
     .option('-t, --type <type>', 'Only summarize entities of this type')
     .option('-f, --force', 'Regenerate all summaries')
-    .option('-l, --limit <n>', 'Max entities to summarize', '100')
+    .option('-l, --limit <n>', 'Max entities to summarize (default: all)')
     .option('--provider <name>', 'LLM provider: ollama, openai, anthropic')
     .option('--batch-size <n>', 'Entities per batch', '20')
     .option('--concurrency <n>', 'Concurrent requests per batch', '5')
@@ -104,7 +104,7 @@ async function generateSummaries(
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
   const prefix = sanitizeProjectId(projectId);
 
-  const limit = parseInt(options.limit || '100', 10);
+  const limit = options.limit ? parseInt(options.limit, 10) : undefined;
 
   // Find entities needing summaries
   let sql = `
@@ -124,8 +124,10 @@ async function generateSummaries(
     sql += ' AND summary IS NULL';
   }
 
-  sql += ' LIMIT ?';
-  params.push(limit);
+  if (limit) {
+    sql += ' LIMIT ?';
+    params.push(limit);
+  }
 
   const entities = db.all<EntityForSummary>(sql, params);
 

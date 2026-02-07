@@ -122,7 +122,7 @@ async function generateEmbeddings(
            emb.content_hash as embedding_hash
     FROM ${prefix}_entities e
     LEFT JOIN ${prefix}_vectors emb ON e.id = emb.entity_id
-    WHERE e.hash IS NOT NULL
+    WHERE 1=1
   `;
 
   const params: unknown[] = [];
@@ -134,7 +134,7 @@ async function generateEmbeddings(
 
   if (!options.force) {
     // Only entities without embeddings or with stale embeddings
-    sql += ' AND (emb.id IS NULL OR emb.content_hash != e.hash)';
+    sql += ' AND (emb.id IS NULL OR (e.hash IS NOT NULL AND emb.content_hash != e.hash))';
   }
 
   if (options.limit) {
@@ -194,14 +194,14 @@ async function showEmbeddingStatus(
 
   const stats = db.get<EmbeddingStats>(`
     SELECT
-      (SELECT COUNT(*) FROM ${prefix}_entities WHERE hash IS NOT NULL) as total_entities,
-      (SELECT COUNT(*) FROM ${prefix}_vectors) as embedded,
+      (SELECT COUNT(*) FROM ${prefix}_entities) as total_entities,
+      (SELECT COUNT(*) FROM ${prefix}_vectors emb
+       WHERE EXISTS (SELECT 1 FROM ${prefix}_entities e WHERE e.id = emb.entity_id)) as embedded,
       (SELECT COUNT(*) FROM ${prefix}_entities e
-       WHERE e.hash IS NOT NULL
-       AND NOT EXISTS (SELECT 1 FROM ${prefix}_vectors emb WHERE emb.entity_id = e.id)) as pending,
+       WHERE NOT EXISTS (SELECT 1 FROM ${prefix}_vectors emb WHERE emb.entity_id = e.id)) as pending,
       (SELECT COUNT(*) FROM ${prefix}_vectors emb
        JOIN ${prefix}_entities e ON emb.entity_id = e.id
-       WHERE emb.content_hash != e.hash) as stale
+       WHERE e.hash IS NOT NULL AND emb.content_hash != e.hash) as stale
   `);
 
   const byType = db.all<{ type: string; count: number; embedded: number }>(`
@@ -211,7 +211,6 @@ async function showEmbeddingStatus(
       SUM(CASE WHEN emb.id IS NOT NULL THEN 1 ELSE 0 END) as embedded
     FROM ${prefix}_entities e
     LEFT JOIN ${prefix}_vectors emb ON e.id = emb.entity_id
-    WHERE e.hash IS NOT NULL
     GROUP BY e.type
     ORDER BY count DESC
   `);
