@@ -312,8 +312,23 @@ export class EntityStore {
       return exactResults.slice(0, limit);
     }
 
+    // Priority 1.5: Qualified name suffix match (e.g., "EmbeddingManager" matches "src/embeddings/manager.ts::EmbeddingManager")
+    const seenExact = new Set(exactResults.map(e => e.id));
+    const qualifiedResults = this.searchQualifiedName(query, options);
+    for (const r of qualifiedResults) {
+      if (!seenExact.has(r.id)) {
+        exactResults.push(r);
+        seenExact.add(r.id);
+      }
+    }
+    if (exactResults.length >= limit) {
+      return exactResults.slice(0, limit);
+    }
+
     // Priority 2: Try FTS5
     const seenIds = new Set(exactResults.map(e => e.id));
+    // Merge the already-seen qualified name IDs
+    for (const id of seenExact) seenIds.add(id);
     try {
       const ftsResults = this.searchFTS5(query, options);
       for (const r of ftsResults) {
@@ -342,7 +357,7 @@ export class EntityStore {
    * Exact name match search (highest priority).
    */
   private searchExactName(query: string, options?: EntitySearchOptions): Entity[] {
-    let sql = `SELECT * FROM ${this.tableName} WHERE name = ?`;
+    let sql = `SELECT * FROM ${this.tableName} WHERE name = ? COLLATE NOCASE`;
     const params: unknown[] = [query];
 
     if (options?.type) {
@@ -355,6 +370,24 @@ export class EntityStore {
     if (options?.filePath) {
       sql += ' AND file_path = ?';
       params.push(options.filePath);
+    }
+
+    const rows = this.db.all<EntityRow>(sql, params);
+    return rows.map(row => this.rowToEntity(row));
+  }
+
+  /**
+   * Qualified name suffix match (e.g., query "Foo" matches "src/bar.ts::Foo").
+   */
+  private searchQualifiedName(query: string, options?: EntitySearchOptions): Entity[] {
+    let sql = `SELECT * FROM ${this.tableName} WHERE qualified_name LIKE ? COLLATE NOCASE`;
+    const params: unknown[] = [`%::${query}`];
+
+    if (options?.type) {
+      const types = Array.isArray(options.type) ? options.type : [options.type];
+      const placeholders = types.map(() => '?').join(', ');
+      sql += ` AND type IN (${placeholders})`;
+      params.push(...types);
     }
 
     const rows = this.db.all<EntityRow>(sql, params);
