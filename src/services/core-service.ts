@@ -702,10 +702,15 @@ export class CoreService {
       .slice(0, options?.limit || 10);
   }
 
-  async searchReflections(projectId: string, query: string): Promise<any[]> {
+  async searchReflections(projectId: string, query: string, options?: { type?: string; outcome?: string }): Promise<any[]> {
     const messageStore = this.getMessageStore(projectId);
-    const messages = await messageStore.search(query);
-    return messages.filter(m => m.metadata?.type === 'reflection');
+    const messages = messageStore.search(query, { limit: 100 });
+    return messages.filter(m => {
+      if (m.metadata?.type !== 'reflection') return false;
+      if (options?.type && m.metadata?.reflectionType !== options.type) return false;
+      if (options?.outcome && m.metadata?.outcome !== options.outcome) return false;
+      return true;
+    });
   }
 
   // ─────────────────────────────────────────────────────────

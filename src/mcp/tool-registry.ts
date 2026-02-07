@@ -1401,7 +1401,7 @@ export class ToolRegistry {
         }
       },
       async (args) => {
-        const { query, project } = args as {
+        const { query, type, outcome, project } = args as {
           query: string;
           type?: string;
           outcome?: string;
@@ -1409,7 +1409,7 @@ export class ToolRegistry {
         };
 
         const projectId = await this.resolveProjectId(project);
-        const reflections = await this.coreService.searchReflections(projectId, query);
+        const reflections = await this.coreService.searchReflections(projectId, query, { type, outcome });
 
         return {
           success: true,
