@@ -4,8 +4,8 @@
  * The database uses:
  * - Global tables for cross-project data
  * - Per-project tables (prefixed) for isolation
- * - LIKE-based search (sql.js doesn't support FTS5)
- * - JSON columns for vector storage (since sql.js doesn't support sqlite-vec)
+ * - FTS5 full-text search with BM25 ranking (F10.10)
+ * - JSON columns for vector storage
  */
 
 export const GLOBAL_SCHEMA = `
@@ -271,8 +271,28 @@ CREATE TABLE IF NOT EXISTS ${prefix}_context_suggestions (
 CREATE INDEX IF NOT EXISTS idx_${prefix}_suggestions_session ON ${prefix}_context_suggestions(session_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_${prefix}_suggestions_status ON ${prefix}_context_suggestions(status);
 
--- Note: Full-text search is implemented via LIKE queries since sql.js doesn't support FTS5
--- In production with native SQLite, FTS5 can be added for better performance
+-- FTS5 full-text search index (F10.10: enabled by better-sqlite3)
+CREATE VIRTUAL TABLE IF NOT EXISTS ${prefix}_entities_fts USING fts5(
+  name, content, summary,
+  content=${prefix}_entities,
+  content_rowid=rowid
+);
+
+-- Triggers to keep FTS5 in sync with entity table
+CREATE TRIGGER IF NOT EXISTS ${prefix}_entities_ai AFTER INSERT ON ${prefix}_entities BEGIN
+  INSERT INTO ${prefix}_entities_fts(rowid, name, content, summary)
+  VALUES (new.rowid, new.name, new.content, new.summary);
+END;
+CREATE TRIGGER IF NOT EXISTS ${prefix}_entities_ad AFTER DELETE ON ${prefix}_entities BEGIN
+  INSERT INTO ${prefix}_entities_fts(${prefix}_entities_fts, rowid, name, content, summary)
+  VALUES ('delete', old.rowid, old.name, old.content, old.summary);
+END;
+CREATE TRIGGER IF NOT EXISTS ${prefix}_entities_au AFTER UPDATE ON ${prefix}_entities BEGIN
+  INSERT INTO ${prefix}_entities_fts(${prefix}_entities_fts, rowid, name, content, summary)
+  VALUES ('delete', old.rowid, old.name, old.content, old.summary);
+  INSERT INTO ${prefix}_entities_fts(rowid, name, content, summary)
+  VALUES (new.rowid, new.name, new.content, new.summary);
+END
 `;
 }
 
@@ -283,6 +303,10 @@ export function dropProjectTables(projectId: string): string {
   const prefix = sanitizeProjectId(projectId);
 
   return `
+DROP TRIGGER IF EXISTS ${prefix}_entities_ai;
+DROP TRIGGER IF EXISTS ${prefix}_entities_ad;
+DROP TRIGGER IF EXISTS ${prefix}_entities_au;
+DROP TABLE IF EXISTS ${prefix}_entities_fts;
 DROP TABLE IF EXISTS ${prefix}_context_suggestions;
 DROP TABLE IF EXISTS ${prefix}_context_subscriptions;
 DROP TABLE IF EXISTS ${prefix}_reflections;

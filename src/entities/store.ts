@@ -294,9 +294,67 @@ export class EntityStore {
   }
 
   /**
-   * Search entities using LIKE-based text matching.
+   * Search entities using FTS5 full-text search with BM25 ranking.
+   * F10.10: Falls back to LIKE if FTS5 table doesn't exist.
    */
   async search(query: string, options?: EntitySearchOptions): Promise<Entity[]> {
+    // Try FTS5 first
+    try {
+      return this.searchFTS5(query, options);
+    } catch {
+      // Fall back to LIKE-based search
+      return this.searchLike(query, options);
+    }
+  }
+
+  /**
+   * FTS5-based search with BM25 ranking.
+   */
+  private searchFTS5(query: string, options?: EntitySearchOptions): Entity[] {
+    const ftsTable = `${this.projectPrefix}_entities_fts`;
+    // Escape special FTS5 characters and add prefix matching
+    const ftsQuery = query.replace(/['"]/g, '').split(/\s+/).map(t => `"${t}"*`).join(' OR ');
+
+    let sql = `
+      SELECT e.*, rank
+      FROM ${ftsTable} fts
+      JOIN ${this.tableName} e ON e.rowid = fts.rowid
+      WHERE ${ftsTable} MATCH ?
+    `;
+    const params: unknown[] = [ftsQuery];
+
+    if (options?.type) {
+      const types = Array.isArray(options.type) ? options.type : [options.type];
+      const placeholders = types.map(() => '?').join(', ');
+      sql += ` AND e.type IN (${placeholders})`;
+      params.push(...types);
+    }
+
+    if (options?.filePath) {
+      sql += ' AND e.file_path = ?';
+      params.push(options.filePath);
+    }
+
+    sql += ' ORDER BY rank';
+
+    if (options?.limit) {
+      sql += ' LIMIT ?';
+      params.push(options.limit);
+    }
+
+    if (options?.offset) {
+      sql += ' OFFSET ?';
+      params.push(options.offset);
+    }
+
+    const rows = this.db.all<EntityRow>(sql, params);
+    return rows.map(row => this.rowToEntity(row));
+  }
+
+  /**
+   * LIKE-based fallback search.
+   */
+  private searchLike(query: string, options?: EntitySearchOptions): Entity[] {
     const searchPattern = `%${query}%`;
     let sql = `
       SELECT * FROM ${this.tableName}

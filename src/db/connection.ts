@@ -1,4 +1,4 @@
-import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
+import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
 import { GLOBAL_SCHEMA, createProjectTables, dropProjectTables } from './schema';
@@ -9,16 +9,13 @@ export interface RunResult {
 }
 
 /**
- * Database connection wrapper for sql.js.
- * Provides a synchronous-style API similar to better-sqlite3.
+ * Database connection wrapper using better-sqlite3.
+ * F10.10: Migrated from sql.js to enable FTS5 and native extensions.
  */
 export class DatabaseConnection {
-  private db: SqlJsDatabase | null = null;
+  private db: Database.Database | null = null;
   private dbPath: string;
   private initialized: boolean = false;
-  private lastMtime: number = 0;
-  private sqlInstance: Awaited<ReturnType<typeof initSqlJs>> | null = null;
-  private inTransaction: boolean = false;
 
   constructor(dbPath: string) {
     this.dbPath = dbPath;
@@ -26,31 +23,22 @@ export class DatabaseConnection {
 
   /**
    * Initialize the database connection.
-   * Loads existing database from file or creates a new one.
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    this.sqlInstance = await initSqlJs();
-
-    // Try to load existing database
-    if (fs.existsSync(this.dbPath)) {
-      const fileBuffer = fs.readFileSync(this.dbPath);
-      this.db = new this.sqlInstance.Database(fileBuffer);
-      this.lastMtime = fs.statSync(this.dbPath).mtimeMs;
-    } else {
-      // Ensure directory exists
-      const dir = path.dirname(this.dbPath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      this.db = new this.sqlInstance.Database();
+    // Ensure directory exists
+    const dir = path.dirname(this.dbPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
 
-    // Enable foreign keys
-    this.db.run('PRAGMA foreign_keys = ON');
+    this.db = new Database(this.dbPath);
 
-    // Mark as initialized before creating schema (so exec() works)
+    // Enable foreign keys and WAL mode for better performance
+    this.db.pragma('foreign_keys = ON');
+    this.db.pragma('journal_mode = WAL');
+
     this.initialized = true;
 
     // Create global schema
@@ -58,24 +46,9 @@ export class DatabaseConnection {
   }
 
   /**
-   * Reload database from disk if modified by another process.
-   */
-  private reloadIfStale(): void {
-    if (!this.sqlInstance || !fs.existsSync(this.dbPath)) return;
-
-    const currentMtime = fs.statSync(this.dbPath).mtimeMs;
-    if (currentMtime > this.lastMtime) {
-      const fileBuffer = fs.readFileSync(this.dbPath);
-      this.db = new this.sqlInstance.Database(fileBuffer);
-      this.db.run('PRAGMA foreign_keys = ON');
-      this.lastMtime = currentMtime;
-    }
-  }
-
-  /**
    * Ensure database is initialized before operations.
    */
-  private ensureInitialized(): SqlJsDatabase {
+  private ensureInitialized(): Database.Database {
     if (!this.db || !this.initialized) {
       throw new Error('Database not initialized. Call initialize() first.');
     }
@@ -87,13 +60,7 @@ export class DatabaseConnection {
    */
   exec(sql: string): void {
     const db = this.ensureInitialized();
-    // Use db.exec for multi-statement SQL (db.run only handles single statements)
     db.exec(sql);
-
-    // Auto-save for write operations (but not inside a transaction)
-    if (this.isWriteOperation(sql) && !this.inTransaction) {
-      this.save();
-    }
   }
 
   /**
@@ -101,101 +68,32 @@ export class DatabaseConnection {
    */
   run(sql: string, params?: unknown[]): RunResult {
     const db = this.ensureInitialized();
-
-    if (params && params.length > 0) {
-      db.run(sql, params as (string | number | null | Uint8Array)[]);
-    } else {
-      db.run(sql);
-    }
-
-    // Get changes and last insert rowid
-    const changesResult = db.exec('SELECT changes() as changes, last_insert_rowid() as lastId');
-    const changes = changesResult[0]?.values[0]?.[0] as number || 0;
-    const lastInsertRowid = changesResult[0]?.values[0]?.[1] as number || 0;
-
-    // Auto-save for write operations (but not inside a transaction)
-    if (this.isWriteOperation(sql) && !this.inTransaction) {
-      this.save();
-    }
-
-    return { changes, lastInsertRowid };
-  }
-
-  /**
-   * Check if SQL is a write operation that should trigger auto-save.
-   */
-  private isWriteOperation(sql: string): boolean {
-    // Skip comment lines to find the actual first statement
-    const lines = sql.split('\n');
-    for (const line of lines) {
-      const trimmed = line.trim().toUpperCase();
-      // Skip empty lines and comments
-      if (!trimmed || trimmed.startsWith('--')) continue;
-
-      return trimmed.startsWith('INSERT') ||
-             trimmed.startsWith('UPDATE') ||
-             trimmed.startsWith('DELETE') ||
-             trimmed.startsWith('CREATE') ||
-             trimmed.startsWith('DROP') ||
-             trimmed.startsWith('ALTER');
-    }
-    return false;
+    const stmt = db.prepare(sql);
+    const result = params && params.length > 0 ? stmt.run(...params) : stmt.run();
+    return {
+      changes: result.changes,
+      lastInsertRowid: Number(result.lastInsertRowid),
+    };
   }
 
   /**
    * Execute a query and return the first row.
    */
   get<T>(sql: string, params?: unknown[]): T | undefined {
-    this.reloadIfStale();
     const db = this.ensureInitialized();
-
     const stmt = db.prepare(sql);
-    if (params && params.length > 0) {
-      stmt.bind(params as (string | number | null | Uint8Array)[]);
-    }
-
-    if (stmt.step()) {
-      const columns = stmt.getColumnNames();
-      const values = stmt.get();
-      stmt.free();
-
-      const row: Record<string, unknown> = {};
-      columns.forEach((col: string, i: number) => {
-        row[col] = values[i];
-      });
-      return row as T;
-    }
-
-    stmt.free();
-    return undefined;
+    const row = params && params.length > 0 ? stmt.get(...params) : stmt.get();
+    return row as T | undefined;
   }
 
   /**
    * Execute a query and return all rows.
    */
   all<T>(sql: string, params?: unknown[]): T[] {
-    this.reloadIfStale();
     const db = this.ensureInitialized();
-
     const stmt = db.prepare(sql);
-    if (params && params.length > 0) {
-      stmt.bind(params as (string | number | null | Uint8Array)[]);
-    }
-
-    const results: T[] = [];
-    const columns = stmt.getColumnNames();
-
-    while (stmt.step()) {
-      const values = stmt.get();
-      const row: Record<string, unknown> = {};
-      columns.forEach((col: string, i: number) => {
-        row[col] = values[i];
-      });
-      results.push(row as T);
-    }
-
-    stmt.free();
-    return results;
+    const rows = params && params.length > 0 ? stmt.all(...params) : stmt.all();
+    return rows as T[];
   }
 
   /**
@@ -203,21 +101,8 @@ export class DatabaseConnection {
    */
   transaction<T>(fn: () => T): T {
     const db = this.ensureInitialized();
-
-    this.inTransaction = true;
-    db.run('BEGIN TRANSACTION');
-    try {
-      const result = fn();
-      db.run('COMMIT');
-      this.inTransaction = false;
-      // Save after transaction completes
-      this.save();
-      return result;
-    } catch (error) {
-      db.run('ROLLBACK');
-      this.inTransaction = false;
-      throw error;
-    }
+    const trx = db.transaction(() => fn());
+    return trx();
   }
 
   /**
@@ -236,12 +121,12 @@ export class DatabaseConnection {
 
   /**
    * Save database to file.
+   * With better-sqlite3 in WAL mode, data is auto-persisted.
+   * This method triggers a WAL checkpoint for safety.
    */
   save(): void {
     const db = this.ensureInitialized();
-    const data = db.export();
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(this.dbPath, buffer);
+    db.pragma('wal_checkpoint(TRUNCATE)');
   }
 
   /**
@@ -249,7 +134,6 @@ export class DatabaseConnection {
    */
   close(): void {
     if (this.db && this.initialized) {
-      this.save();
       this.db.close();
       this.db = null;
       this.initialized = false;
