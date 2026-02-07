@@ -93,20 +93,27 @@ export class MultiStrategySearch {
       graphDepth: options?.graphDepth ?? DEFAULT_OPTIONS.graphDepth
     };
     const parsed = this.queryParser.parse(query);
+
+    // F10c.5: Auto-tune strategy weights based on query characteristics
+    opts.weights = this.adaptWeights(parsed, opts.weights);
+
+    // F10c.5: Auto-enable graph when entities are mentioned
+    const strategies = this.selectStrategies(parsed, opts.strategies);
+
     const rawResults: RawResult[] = [];
 
     // Execute enabled strategies in parallel
     const searchPromises: Promise<RawResult[]>[] = [];
 
-    if (opts.strategies.includes('keyword')) {
+    if (strategies.includes('keyword')) {
       searchPromises.push(this.keywordSearch(parsed, opts));
     }
 
-    if (opts.strategies.includes('semantic')) {
+    if (strategies.includes('semantic')) {
       searchPromises.push(this.semanticSearch(parsed, opts));
     }
 
-    if (opts.strategies.includes('graph') && this.graphTraversal) {
+    if (strategies.includes('graph') && this.graphTraversal) {
       searchPromises.push(this.graphSearch(parsed, opts));
     }
 
@@ -426,6 +433,60 @@ export class MultiStrategySearch {
     // Fall back to search
     const searchResults = await this.entityStore.search(mention.text, { limit: 1 });
     return searchResults[0] ?? null;
+  }
+
+  /**
+   * F10c.5: Adapt strategy weights based on query characteristics.
+   */
+  private adaptWeights(parsed: ParsedQuery, baseWeights: StrategyWeights): StrategyWeights {
+    const weights = { ...baseWeights };
+
+    // Entity mention detected → boost keyword and graph
+    if (parsed.entityMentions.length > 0) {
+      weights.keyword = (weights.keyword || 0.6) * 1.5;
+      weights.graph = (weights.graph || 0.8) * 1.3;
+    }
+
+    // Short query (1-2 words) with entity mention → likely a name lookup
+    if (parsed.keywords.length <= 2 && parsed.entityMentions.length > 0) {
+      weights.keyword = (weights.keyword || 0.6) * 2.0;
+      weights.semantic = (weights.semantic || 1.0) * 0.5;
+    }
+
+    // Question format → boost semantic
+    if (/^(how|what|why|where|when|which)/i.test(parsed.normalizedQuery)) {
+      weights.semantic = (weights.semantic || 1.0) * 1.5;
+      weights.keyword = (weights.keyword || 0.6) * 0.7;
+    }
+
+    // File path pattern → pure keyword
+    if (/\.(ts|js|py|go|rs|java)$/.test(parsed.normalizedQuery)) {
+      weights.keyword = 3.0;
+      weights.semantic = 0.2;
+    }
+
+    return weights;
+  }
+
+  /**
+   * F10c.5: Auto-select strategies based on query characteristics.
+   */
+  private selectStrategies(
+    parsed: ParsedQuery,
+    requestedStrategies: SearchStrategy[]
+  ): SearchStrategy[] {
+    const strategies = [...requestedStrategies];
+
+    // Auto-enable graph when entities are mentioned and graph is available
+    if (
+      parsed.entityMentions.length > 0 &&
+      this.graphTraversal &&
+      !strategies.includes('graph')
+    ) {
+      strategies.push('graph');
+    }
+
+    return strategies;
   }
 
   /**
