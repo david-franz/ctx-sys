@@ -11,7 +11,7 @@ Modern AI coding assistants are limited by context windows. Long conversations l
 - **Graph RAG** - Understand code structure and relationships, not just text similarity
 - **Local-first** - Your code never leaves your machine. Use Ollama for embeddings and summarization
 - **Multi-source retrieval** - Search code, docs, and conversation history together
-- **Token efficiency** - Save 60-80% on token costs by retrieving only what matters
+- **Token efficiency** - Retrieve only what matters, minimizing context window usage
 
 ### Key Benefits
 
@@ -54,7 +54,7 @@ The result: AI assistants that remember everything but only surface what matters
 │  │                      Tool Interface                         │  │
 │  │  • context_query     • index_codebase    • store_message   │  │
 │  │  • sync_from_git     • query_graph       • get_history     │  │
-│  │  • analytics_stats   • checkpoint_save   • hooks_install   │  │
+│  │  • search_entities   • checkpoint_save   • hooks_install   │  │
 │  └────────────────────────────────────────────────────────────┘  │
 └─────────────────────────┬────────────────────────────────────────┘
                           │
@@ -69,8 +69,8 @@ The result: AI assistants that remember everything but only surface what matters
 │  │  Generator   │  │  Extractor   │  │  & Ranking             │  │
 │  └──────────────┘  └──────────────┘  └────────────────────────┘  │
 │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐  │
-│  │   Impact     │  │   Analytics  │  │  Proactive Context     │  │
-│  │  Analyzer    │  │   Tracker    │  │  Subscription          │  │
+│  │   Impact     │  │  Heuristic   │  │  Proactive Context     │  │
+│  │  Analyzer    │  │  Reranker    │  │  Subscription          │  │
 │  └──────────────┘  └──────────────┘  └────────────────────────┘  │
 └─────────────────────────┬────────────────────────────────────────┘
                           │
@@ -81,15 +81,15 @@ The result: AI assistants that remember everything but only surface what matters
 │  │  (+ AST)    │ │ (+ FTS5)    │ │   (edges)   │ │ (sessions) │  │
 │  └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘  │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐  │
-│  │ Checkpoints │ │  Analytics  │ │Hook History │ │ Reflections│  │
-│  │  (agent)    │ │  (queries)  │ │  (git ops)  │ │ (lessons)  │  │
+│  │ Checkpoints │ │   Memory    │ │Hook History │ │ Reflections│  │
+│  │  (agent)    │ │  (hot/cold) │ │  (git ops)  │ │ (lessons)  │  │
 │  └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
 ## Current Status
 
-> **Beta Release** - Core functionality, Phase 10 RAG enhancements, Phase 10b MCP tool fixes, and Phase 10c retrieval quality improvements are complete.
+> **Beta Release** - Core functionality complete through Phase 10d. All critical bugs fixed, analytics removed, CLI/MCP unified.
 
 ### What Works Now
 
@@ -163,6 +163,19 @@ Improvements to search quality, document RAG, and analytics honesty:
 | **F10c.6** | Realistic analytics baselines (grep+read comparison) | Done |
 | **F10c.7** | Query expansion with bidirectional synonyms | Done |
 | **F10c.8** | Code-aware context assembly (signatures over bodies) | Done |
+
+### Phase 10d: Bug Fixes & Cleanup (Complete)
+
+Full end-to-end system testing revealed critical issues. Analytics removed, core tools fixed.
+
+| Fix | Issue | Status |
+|-----|-------|--------|
+| **F10d.1** | Remove dishonest analytics system entirely | Done |
+| **F10d.2** | Unify CLI/MCP database (were using different DBs) | Done |
+| **F10d.3** | Fix context_query returning empty results | Done |
+| **F10d.4** | Fix reflection_query multi-word search | Done |
+| **F10d.5** | Wire embed CLI to actually generate embeddings | Done |
+| **F10d.6** | Fix search_entities case-insensitive exact matching | Done |
 
 ---
 
@@ -275,13 +288,11 @@ ctx-sys summarize         # Generate LLM summaries
 ctx-sys providers         # Show available LLM providers
 ```
 
-### Sessions & Analytics
+### Sessions
 
 ```bash
 ctx-sys sessions          # List conversation sessions
 ctx-sys messages          # View session messages
-ctx-sys analytics         # View usage analytics
-ctx-sys dashboard         # Project dashboard
 ```
 
 ### Debug & Maintenance
@@ -412,20 +423,6 @@ query_graph({
   relationships?: string[], // Filter by type
   direction?: 'in' | 'out' | 'both'
 })
-```
-
-### Analytics
-
-```typescript
-analytics_get_stats({
-  projectId: string,
-  period: 'day' | 'week' | 'month' | 'all'
-}) → {
-  tokensSaved: number,
-  costSaved: number,
-  savingsPercent: number,
-  averageRelevance: number
-}
 ```
 
 ## Configuration

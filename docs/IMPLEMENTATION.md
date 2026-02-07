@@ -18,7 +18,7 @@ ctx-sys is implemented in 12 phases, progressing from foundational infrastructur
 | 8 | Agent Patterns | Checkpointing, hot/cold memory API, reflection, proactive context | ✅ Complete |
 | 9 | Analytics & Distribution | Token analytics, git hooks, support docs, website, npm | ✅ Complete |
 | 10 | RAG Enhancements | Code content, scalable indexing, LLM summaries, robustness, Graph RAG | ✅ Complete |
-| 10b | MCP Tool Fixes | Fix 15 bugs/stubs discovered during systematic MCP testing | 🔧 In Progress |
+| 10b | MCP Tool Fixes | Fix 15 bugs/stubs discovered during systematic MCP testing | ✅ Complete |
 | 11 | Integration & Team | VS Code extension, auto context injection, team knowledge base | Planned |
 | 12 | Commercial & Enterprise | Auth & SSO, desktop app, licensing & billing, telemetry | Planned |
 
@@ -278,14 +278,14 @@ Focused on improving search result quality, document RAG, and analytics honesty.
 
 | Feature | Description | Doc | Status |
 |---------|-------------|-----|--------|
-| **F10c.1** | FTS5 CamelCase/PascalCase Tokenizer | [F10c.1-fts5-camelcase-tokenizer.md](phase-10c/F10c.1-fts5-camelcase-tokenizer.md) | 🔧 Pending |
-| **F10c.2** | Embedding Model Quality & Prefixes | [F10c.2-embedding-model-quality.md](phase-10c/F10c.2-embedding-model-quality.md) | 🔧 Pending |
-| **F10c.3** | Hybrid Reranking Pipeline | [F10c.3-hybrid-reranking.md](phase-10c/F10c.3-hybrid-reranking.md) | 🔧 Pending |
-| **F10c.4** | Document Chunking Improvements | [F10c.4-document-chunking.md](phase-10c/F10c.4-document-chunking.md) | 🔧 Pending |
-| **F10c.5** | Search Strategy Auto-Tuning | [F10c.5-search-auto-tuning.md](phase-10c/F10c.5-search-auto-tuning.md) | 🔧 Pending |
-| **F10c.6** | Realistic Analytics Baselines | [F10c.6-analytics-baseline.md](phase-10c/F10c.6-analytics-baseline.md) | 🔧 Pending |
-| **F10c.7** | Query Understanding & Expansion | [F10c.7-query-expansion.md](phase-10c/F10c.7-query-expansion.md) | 🔧 Pending |
-| **F10c.8** | Code-Aware Context Assembly | [F10c.8-code-aware-assembly.md](phase-10c/F10c.8-code-aware-assembly.md) | 🔧 Pending |
+| **F10c.1** | FTS5 CamelCase/PascalCase Tokenizer | [F10c.1-fts5-camelcase-tokenizer.md](phase-10c/F10c.1-fts5-camelcase-tokenizer.md) | ✅ Done |
+| **F10c.2** | Embedding Model Quality & Prefixes | [F10c.2-embedding-model-quality.md](phase-10c/F10c.2-embedding-model-quality.md) | ✅ Done |
+| **F10c.3** | Hybrid Reranking Pipeline | [F10c.3-hybrid-reranking.md](phase-10c/F10c.3-hybrid-reranking.md) | ✅ Done |
+| **F10c.4** | Document Chunking Improvements | [F10c.4-document-chunking.md](phase-10c/F10c.4-document-chunking.md) | ✅ Done |
+| **F10c.5** | Search Strategy Auto-Tuning | [F10c.5-search-auto-tuning.md](phase-10c/F10c.5-search-auto-tuning.md) | ✅ Done |
+| **F10c.6** | Realistic Analytics Baselines | [F10c.6-analytics-baseline.md](phase-10c/F10c.6-analytics-baseline.md) | ✅ Done |
+| **F10c.7** | Query Understanding & Expansion | [F10c.7-query-expansion.md](phase-10c/F10c.7-query-expansion.md) | ✅ Done |
+| **F10c.8** | Code-Aware Context Assembly | [F10c.8-code-aware-assembly.md](phase-10c/F10c.8-code-aware-assembly.md) | ✅ Done |
 
 **Key Deliverables:**
 - Fix FTS5 to split PascalCase/camelCase/snake_case identifiers for better code search
@@ -296,6 +296,21 @@ Focused on improving search result quality, document RAG, and analytics honesty.
 - Replace misleading full-context baseline with realistic grep+read comparison
 - Expand queries with domain-specific synonyms (database → sqlite, storage, etc.)
 - Show class signatures instead of truncated raw code in context assembly
+
+---
+
+## Phase 10d: Bug Fixes & Cleanup (Complete)
+
+Full system testing (CLI + MCP) revealed that the core `context_query` tool was broken, CLI and MCP used different databases, and analytics produced dishonest metrics. This phase removes analytics and fixes critical issues.
+
+| Feature | Description | Doc | Status |
+|---------|-------------|-----|--------|
+| **F10d.1** | Remove Analytics System | [F10d.1-remove-analytics.md](phase-10d/F10d.1-remove-analytics.md) | ✅ Done |
+| **F10d.2** | Unify CLI/MCP Database Path | [F10d.2-unify-database.md](phase-10d/F10d.2-unify-database.md) | ✅ Done |
+| **F10d.3** | Fix context_query Empty Results | [F10d.3-fix-context-query.md](phase-10d/F10d.3-fix-context-query.md) | ✅ Done |
+| **F10d.4** | Fix reflection_query Search | [F10d.4-fix-reflection-query.md](phase-10d/F10d.4-fix-reflection-query.md) | ✅ Done |
+| **F10d.5** | Fix embed CLI Stub | [F10d.5-fix-embed-cli.md](phase-10d/F10d.5-fix-embed-cli.md) | ✅ Done |
+| **F10d.6** | Fix search_entities Ranking | [F10d.6-fix-search-ranking.md](phase-10d/F10d.6-fix-search-ranking.md) | ✅ Done |
 
 ---
 
@@ -363,7 +378,6 @@ ctx-sys/
 │   │   ├── memory-tier.ts     # Hot/cold memory API
 │   │   ├── reflection.ts      # Lesson storage
 │   │   └── proactive.ts       # Proactive context
-│   ├── analytics/             # Token Analytics (F9.1)
 │   ├── core/                  # Core Service Layer (F10.0)
 │   │   └── service.ts         # Unified business logic API
 │   └── team/                  # Team Knowledge (F11.2)
@@ -429,4 +443,4 @@ For maximum value delivery, the recommended implementation order is:
 2. Each feature doc contains full implementation details
 3. Run tests after completing each feature
 4. Proceed to next phase once current phase is complete
-5. Consider implementing Phase 9.1 (analytics) early to measure impact
+5. See Phase 10d for critical bug fixes applied after system testing
