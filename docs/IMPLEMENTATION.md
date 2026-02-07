@@ -248,37 +248,54 @@ Critical improvements to make RAG production-quality — storing real code, hand
 
 ---
 
-## Phase 10b: MCP Tool Fixes
+## Phase 10b: MCP Tool Fixes (Complete)
 
-Systematic testing of all 33 MCP tools revealed 10 bugs and 5 placeholder stubs. This phase fixes all of them.
+Systematic testing of all 33 MCP tools revealed 10 bugs and 5 placeholder stubs. All 15 fixed.
 
 | Feature | Description | Doc | Status |
 |---------|-------------|-----|--------|
-| **F10b.1** | Fix context_query Empty Results | [F10b.1-context-query-fix.md](phase-10b/F10b.1-context-query-fix.md) | 🔧 Pending |
-| **F10b.2** | Fix search_entities Type Filter | [F10b.2-search-entities-type-filter.md](phase-10b/F10b.2-search-entities-type-filter.md) | 🔧 Pending |
-| **F10b.3** | Fix link_entities Name Resolution | [F10b.3-link-entities-resolution.md](phase-10b/F10b.3-link-entities-resolution.md) | 🔧 Pending |
-| **F10b.4** | Fix get_graph_stats Node Counting | [F10b.4-graph-stats-nodes.md](phase-10b/F10b.4-graph-stats-nodes.md) | 🔧 Pending |
-| **F10b.5** | Fix search_decisions Returns 0 | [F10b.5-search-decisions-fix.md](phase-10b/F10b.5-search-decisions-fix.md) | 🔧 Pending |
-| **F10b.6** | Fix store_message Auto-Create Session | [F10b.6-store-message-auto-session.md](phase-10b/F10b.6-store-message-auto-session.md) | 🔧 Pending |
-| **F10b.7** | Fix summarize_session LLM Integration | [F10b.7-summarize-session-llm.md](phase-10b/F10b.7-summarize-session-llm.md) | 🔧 Pending |
-| **F10b.8** | Fix checkpoint_save Step Numbering | [F10b.8-checkpoint-save-step.md](phase-10b/F10b.8-checkpoint-save-step.md) | 🔧 Pending |
-| **F10b.9** | Fix checkpoint_load State Nesting | [F10b.9-checkpoint-load-nesting.md](phase-10b/F10b.9-checkpoint-load-nesting.md) | 🔧 Pending |
-| **F10b.10** | Fix reflection_query Search + Filters | [F10b.10-reflection-query-fix.md](phase-10b/F10b.10-reflection-query-fix.md) | 🔧 Pending |
-| **F10b.11** | Fix Analytics Inflated Token Savings | [F10b.11-analytics-inflated-stats.md](phase-10b/F10b.11-analytics-inflated-stats.md) | 🔧 Pending |
-| **F10b.12** | Wire Memory Tier Tools | [F10b.12-memory-tier-wiring.md](phase-10b/F10b.12-memory-tier-wiring.md) | 🔧 Pending |
-| **F10b.13** | Implement hooks_install | [F10b.13-hooks-install.md](phase-10b/F10b.13-hooks-install.md) | 🔧 Pending |
-| **F10b.14** | Implement hooks_impact_report | [F10b.14-hooks-impact-report.md](phase-10b/F10b.14-hooks-impact-report.md) | 🔧 Pending |
-| **F10b.15** | Fix analytics_dashboard topEntities | [F10b.15-dashboard-top-entities.md](phase-10b/F10b.15-dashboard-top-entities.md) | 🔧 Pending |
+| **F10b.1** | Fix context_query Empty Results | [F10b.1-context-query-fix.md](phase-10b/F10b.1-context-query-fix.md) | ✅ Done |
+| **F10b.2** | Fix search_entities Type Filter | [F10b.2-search-entities-type-filter.md](phase-10b/F10b.2-search-entities-type-filter.md) | ✅ Done |
+| **F10b.3** | Fix link_entities Name Resolution | [F10b.3-link-entities-resolution.md](phase-10b/F10b.3-link-entities-resolution.md) | ✅ Done |
+| **F10b.4** | Fix get_graph_stats Node Counting | [F10b.4-graph-stats-nodes.md](phase-10b/F10b.4-graph-stats-nodes.md) | ✅ Done |
+| **F10b.5** | Fix search_decisions Returns 0 | [F10b.5-search-decisions-fix.md](phase-10b/F10b.5-search-decisions-fix.md) | ✅ Done |
+| **F10b.6** | Fix store_message Auto-Create Session | [F10b.6-store-message-auto-session.md](phase-10b/F10b.6-store-message-auto-session.md) | ✅ Done |
+| **F10b.7** | Fix summarize_session LLM Integration | [F10b.7-summarize-session-llm.md](phase-10b/F10b.7-summarize-session-llm.md) | ✅ Done |
+| **F10b.8** | Fix checkpoint_save Step Numbering | [F10b.8-checkpoint-save-step.md](phase-10b/F10b.8-checkpoint-save-step.md) | ✅ Done |
+| **F10b.9** | Fix checkpoint_load State Nesting | [F10b.9-checkpoint-load-nesting.md](phase-10b/F10b.9-checkpoint-load-nesting.md) | ✅ Done |
+| **F10b.10** | Fix reflection_query Search + Filters | [F10b.10-reflection-query-fix.md](phase-10b/F10b.10-reflection-query-fix.md) | ✅ Done |
+| **F10b.11** | Fix Analytics Inflated Token Savings | [F10b.11-analytics-inflated-stats.md](phase-10b/F10b.11-analytics-inflated-stats.md) | ✅ Done |
+| **F10b.12** | Wire Memory Tier Tools | [F10b.12-memory-tier-wiring.md](phase-10b/F10b.12-memory-tier-wiring.md) | ✅ Done |
+| **F10b.13** | Implement hooks_install | [F10b.13-hooks-install.md](phase-10b/F10b.13-hooks-install.md) | ✅ Done |
+| **F10b.14** | Implement hooks_impact_report | [F10b.14-hooks-impact-report.md](phase-10b/F10b.14-hooks-impact-report.md) | ✅ Done |
+| **F10b.15** | Fix analytics_dashboard topEntities | [F10b.15-dashboard-top-entities.md](phase-10b/F10b.15-dashboard-top-entities.md) | ✅ Done |
+
+---
+
+## Phase 10c: Retrieval Quality Improvements
+
+Focused on improving search result quality, document RAG, and analytics honesty. Identified through comprehensive MCP testing and evaluation of the system's retrieval pipeline.
+
+| Feature | Description | Doc | Status |
+|---------|-------------|-----|--------|
+| **F10c.1** | FTS5 CamelCase/PascalCase Tokenizer | [F10c.1-fts5-camelcase-tokenizer.md](phase-10c/F10c.1-fts5-camelcase-tokenizer.md) | 🔧 Pending |
+| **F10c.2** | Embedding Model Quality & Prefixes | [F10c.2-embedding-model-quality.md](phase-10c/F10c.2-embedding-model-quality.md) | 🔧 Pending |
+| **F10c.3** | Hybrid Reranking Pipeline | [F10c.3-hybrid-reranking.md](phase-10c/F10c.3-hybrid-reranking.md) | 🔧 Pending |
+| **F10c.4** | Document Chunking Improvements | [F10c.4-document-chunking.md](phase-10c/F10c.4-document-chunking.md) | 🔧 Pending |
+| **F10c.5** | Search Strategy Auto-Tuning | [F10c.5-search-auto-tuning.md](phase-10c/F10c.5-search-auto-tuning.md) | 🔧 Pending |
+| **F10c.6** | Realistic Analytics Baselines | [F10c.6-analytics-baseline.md](phase-10c/F10c.6-analytics-baseline.md) | 🔧 Pending |
+| **F10c.7** | Query Understanding & Expansion | [F10c.7-query-expansion.md](phase-10c/F10c.7-query-expansion.md) | 🔧 Pending |
+| **F10c.8** | Code-Aware Context Assembly | [F10c.8-code-aware-assembly.md](phase-10c/F10c.8-code-aware-assembly.md) | 🔧 Pending |
 
 **Key Deliverables:**
-- Fix critical context_query returning empty results (core RAG pipeline via MCP)
-- Fix entity name resolution for link_entities and search_entities
-- Wire existing MemoryTierManager into CoreService (replace placeholder stubs)
-- Implement actual git hook installation and impact analysis
-- Fix analytics to not inflate token savings for failed queries
-- Fix checkpoint state wrapping/unwrapping and step numbering
-- Add session auto-creation for store_message
-- Improve reflection search from LIKE-only to token-based matching
+- Fix FTS5 to split PascalCase/camelCase/snake_case identifiers for better code search
+- Add model-specific prompt prefixes (search_query/search_document) for nomic-embed-text
+- Implement heuristic reranking to boost exact name matches and penalize stubs
+- Add size-constrained document chunking with overlap between chunks
+- Auto-tune search strategy weights based on query type (name vs conceptual)
+- Replace misleading full-context baseline with realistic grep+read comparison
+- Expand queries with domain-specific synonyms (database → sqlite, storage, etc.)
+- Show class signatures instead of truncated raw code in context assembly
 
 ---
 

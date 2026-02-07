@@ -89,7 +89,7 @@ The result: AI assistants that remember everything but only surface what matters
 
 ## Current Status
 
-> **Beta Release** - Core functionality and Phase 10 RAG enhancements are complete. Phase 10b MCP tool fixes in progress.
+> **Beta Release** - Core functionality, Phase 10 RAG enhancements, and Phase 10b MCP tool fixes are complete. Phase 10c retrieval quality improvements planned.
 
 ### What Works Now
 
@@ -128,27 +128,41 @@ The result: AI assistants that remember everything but only surface what matters
 
 See [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) for architecture details.
 
-### Phase 10b: MCP Tool Fixes (In Progress)
+### Phase 10b: MCP Tool Fixes (Complete)
 
-Systematic testing of all 33 MCP tools revealed 15 issues — 10 bugs and 5 placeholder stubs:
+Systematic testing of all 33 MCP tools revealed 15 issues — 10 bugs and 5 placeholder stubs. All fixed.
 
-| Fix | Issue | Severity |
-|-----|-------|----------|
-| **F10b.1** | context_query returns empty results | Critical |
-| **F10b.2** | search_entities type filter misses exact matches | Medium |
-| **F10b.3** | link_entities resolves names to wrong entities | High |
-| **F10b.4** | get_graph_stats reports 0 nodes with 54 edges | High |
-| **F10b.5** | search_decisions ignores decision metadata | High |
-| **F10b.6** | store_message FK error on new sessions | Medium |
-| **F10b.7** | summarize_session uses naive truncation | Low |
-| **F10b.8** | checkpoint_save step number always 0 | Low |
-| **F10b.9** | checkpoint_load wraps state in extra nesting | Low |
-| **F10b.10** | reflection_query LIKE-only, ignores filters | Medium |
-| **F10b.11** | Analytics inflates savings for failed queries | High |
-| **F10b.12** | Memory tier tools are hardcoded stubs | High |
-| **F10b.13** | hooks_install is a silent no-op | Medium |
-| **F10b.14** | hooks_impact_report returns hardcoded empty | Medium |
-| **F10b.15** | analytics_dashboard topEntities always empty | Medium |
+| Fix | Issue | Status |
+|-----|-------|--------|
+| **F10b.1** | context_query returns empty results (3 root causes) | Done |
+| **F10b.2** | search_entities type filter misses exact matches | Done |
+| **F10b.3** | link_entities resolves names to wrong entities | Done |
+| **F10b.4** | get_graph_stats reports 0 nodes with 54 edges | Done |
+| **F10b.5** | search_decisions ignores decision metadata | Done |
+| **F10b.6** | store_message FK error on new sessions | Done |
+| **F10b.7** | summarize_session wired to LLM providers | Done |
+| **F10b.8-9** | checkpoint step numbering + state nesting | Done |
+| **F10b.10** | reflection_query type/outcome filters | Done |
+| **F10b.11** | Analytics inflated savings for empty results | Done |
+| **F10b.12** | Memory tier tools wired to MemoryTierManager | Done |
+| **F10b.13** | hooks_install writes actual git hooks | Done |
+| **F10b.14** | hooks_impact_report git diff analysis | Done |
+| **F10b.15** | analytics_dashboard entity type breakdown | Done |
+
+### Phase 10c: Retrieval Quality Improvements (Planned)
+
+Improvements to search quality, document RAG, and analytics honesty:
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| **F10c.1** | FTS5 camelCase/PascalCase tokenizer | Critical |
+| **F10c.2** | Embedding model quality & prompt prefixes | High |
+| **F10c.3** | Hybrid reranking pipeline | High |
+| **F10c.4** | Document chunking with size constraints + overlap | High |
+| **F10c.5** | Search strategy auto-tuning by query type | Medium |
+| **F10c.6** | Realistic analytics baselines (grep+read comparison) | Medium |
+| **F10c.7** | Query understanding & synonym expansion | Medium |
+| **F10c.8** | Code-aware context assembly (signatures over bodies) | Medium |
 
 ---
 
