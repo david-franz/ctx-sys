@@ -1,0 +1,471 @@
+/**
+ * F10.9: Universal Document Indexer.
+ * Indexes any document type (markdown, YAML, JSON, TOML, plain text)
+ * into the entity/relationship graph.
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
+import YAML from 'yaml';
+import { EntityStore, Entity } from '../entities';
+import { EntityType } from '../entities/types';
+import { RelationshipStore } from '../graph/relationship-store';
+import { GraphRelationshipType } from '../graph/types';
+import { MarkdownParser } from './markdown-parser';
+import { RequirementExtractor } from './requirement-extractor';
+import { DocumentLinker } from './document-linker';
+import { MarkdownDocument, MarkdownSection } from './types';
+
+export interface DocumentIndexOptions {
+  extractEntities?: boolean;
+  extractRelationships?: boolean;
+  generateEmbeddings?: boolean;
+}
+
+export interface DocumentIndexResult {
+  documentId: string;
+  entitiesCreated: number;
+  relationshipsCreated: number;
+  crossDocLinks: number;
+  embeddingsGenerated: number;
+  skipped?: boolean;
+}
+
+type DocumentType = 'markdown' | 'yaml' | 'json' | 'toml' | 'text';
+
+const EXTENSION_MAP: Record<string, DocumentType> = {
+  '.md': 'markdown',
+  '.mdx': 'markdown',
+  '.yaml': 'yaml',
+  '.yml': 'yaml',
+  '.json': 'json',
+  '.toml': 'toml',
+  '.txt': 'text',
+  '.log': 'text',
+};
+
+export class DocumentIndexer {
+  private markdownParser: MarkdownParser;
+  private requirementExtractor: RequirementExtractor;
+  private documentLinker: DocumentLinker;
+
+  constructor(
+    private entityStore: EntityStore,
+    private relationshipStore: RelationshipStore
+  ) {
+    this.markdownParser = new MarkdownParser();
+    this.requirementExtractor = new RequirementExtractor();
+    this.documentLinker = new DocumentLinker(entityStore);
+  }
+
+  async indexFile(filePath: string, options: DocumentIndexOptions = {}): Promise<DocumentIndexResult> {
+    const absolutePath = path.resolve(filePath);
+    const content = await fs.promises.readFile(absolutePath, 'utf-8');
+    const hash = crypto.createHash('md5').update(content).digest('hex');
+
+    // Check if unchanged
+    const existing = await this.entityStore.getByQualifiedName(absolutePath);
+    if (existing && (existing.metadata as any)?.hash === hash) {
+      return {
+        documentId: existing.id,
+        entitiesCreated: 0,
+        relationshipsCreated: 0,
+        crossDocLinks: 0,
+        embeddingsGenerated: 0,
+        skipped: true,
+      };
+    }
+
+    const ext = path.extname(absolutePath).toLowerCase();
+    const docType = EXTENSION_MAP[ext] || 'text';
+
+    switch (docType) {
+      case 'markdown':
+        return this.indexMarkdown(absolutePath, content, hash, options);
+      case 'yaml':
+        return this.indexYaml(absolutePath, content, hash);
+      case 'json':
+        return this.indexJson(absolutePath, content, hash);
+      case 'toml':
+        return this.indexToml(absolutePath, content, hash);
+      default:
+        return this.indexPlainText(absolutePath, content, hash);
+    }
+  }
+
+  private async indexMarkdown(
+    filePath: string,
+    content: string,
+    hash: string,
+    options: DocumentIndexOptions
+  ): Promise<DocumentIndexResult> {
+    let entitiesCreated = 0;
+    let relationshipsCreated = 0;
+    let crossDocLinks = 0;
+
+    const doc = this.markdownParser.parseContent(content, filePath);
+
+    // Create top-level document entity
+    const docEntity = await this.entityStore.upsert({
+      type: 'document',
+      name: path.basename(filePath),
+      qualifiedName: filePath,
+      content,
+      summary: doc.title || path.basename(filePath),
+      filePath,
+      metadata: { hash, docType: 'markdown', frontmatter: doc.frontmatter },
+    });
+    entitiesCreated++;
+
+    // Create section entities with CONTAINS hierarchy
+    const sectionEntities: Map<string, Entity> = new Map();
+
+    for (const section of doc.sections) {
+      if (section.level === 0) continue; // skip preamble for hierarchy
+
+      const sectionEntity = await this.entityStore.upsert({
+        type: 'section',
+        name: section.title,
+        qualifiedName: `${filePath}::${section.id}`,
+        content: section.content.trim(),
+        summary: section.title,
+        filePath,
+        startLine: section.startLine,
+        endLine: section.endLine,
+        metadata: { level: section.level, sectionId: section.id },
+      });
+      sectionEntities.set(section.id, sectionEntity);
+      entitiesCreated++;
+
+      // Build hierarchy: parent section or document
+      const parentEntity = section.parent
+        ? sectionEntities.get(section.parent)
+        : docEntity;
+
+      if (parentEntity) {
+        await this.relationshipStore.upsert({
+          sourceId: parentEntity.id,
+          targetId: sectionEntity.id,
+          relationship: 'CONTAINS',
+        });
+        relationshipsCreated++;
+      }
+    }
+
+    // Extract requirements
+    const requirements = this.requirementExtractor.extractFromDocument(doc);
+    for (const req of requirements) {
+      const reqEntity = await this.entityStore.upsert({
+        type: 'requirement',
+        name: req.title,
+        qualifiedName: `${filePath}::req::${req.id}`,
+        content: req.description,
+        summary: `[${req.priority || 'unset'}] ${req.title}`,
+        filePath,
+        metadata: {
+          priority: req.priority,
+          status: req.status,
+          reqType: req.type,
+          acceptanceCriteria: req.acceptanceCriteria,
+        },
+      });
+      entitiesCreated++;
+
+      // Link requirement to parent section or document
+      const parentSection = req.source.section
+        ? sectionEntities.get(req.source.section)
+        : null;
+      const parent = parentSection || docEntity;
+
+      await this.relationshipStore.upsert({
+        sourceId: parent.id,
+        targetId: reqEntity.id,
+        relationship: 'CONTAINS',
+      });
+      relationshipsCreated++;
+    }
+
+    // Resolve code references → DOCUMENTS relationships
+    const codeRefs = this.documentLinker.findCodeReferences(doc);
+    for (const ref of codeRefs) {
+      if (ref.inCodeBlock) continue;
+      const resolved = await this.documentLinker.resolveReference(ref.text);
+      if (resolved) {
+        await this.relationshipStore.upsert({
+          sourceId: docEntity.id,
+          targetId: resolved.id,
+          relationship: 'DOCUMENTS',
+        });
+        relationshipsCreated++;
+        crossDocLinks++;
+      }
+    }
+
+    // Internal links → RELATES_TO relationships
+    const internalLinks = this.markdownParser.getInternalLinks(doc);
+    for (const link of internalLinks) {
+      const linkPath = path.resolve(path.dirname(filePath), link.url);
+      const linkedDoc = await this.entityStore.getByQualifiedName(linkPath);
+      if (linkedDoc) {
+        await this.relationshipStore.upsert({
+          sourceId: docEntity.id,
+          targetId: linkedDoc.id,
+          relationship: 'RELATES_TO',
+        });
+        relationshipsCreated++;
+        crossDocLinks++;
+      }
+    }
+
+    return {
+      documentId: docEntity.id,
+      entitiesCreated,
+      relationshipsCreated,
+      crossDocLinks,
+      embeddingsGenerated: 0,
+    };
+  }
+
+  private async indexYaml(
+    filePath: string,
+    content: string,
+    hash: string
+  ): Promise<DocumentIndexResult> {
+    let entitiesCreated = 0;
+    let relationshipsCreated = 0;
+    let crossDocLinks = 0;
+
+    let parsed: any;
+    try {
+      parsed = YAML.parse(content);
+    } catch {
+      return this.indexPlainText(filePath, content, hash);
+    }
+
+    if (typeof parsed !== 'object' || parsed === null) {
+      return this.indexPlainText(filePath, content, hash);
+    }
+
+    const docEntity = await this.entityStore.upsert({
+      type: 'document',
+      name: path.basename(filePath),
+      qualifiedName: filePath,
+      content,
+      summary: `YAML config: ${path.basename(filePath)}`,
+      filePath,
+      metadata: { hash, docType: 'yaml' },
+    });
+    entitiesCreated++;
+
+    // Extract top-level keys as entities
+    for (const [key, value] of Object.entries(parsed)) {
+      const entityType: EntityType = typeof value === 'object' ? 'component' : 'variable';
+      const entityContent = typeof value === 'object'
+        ? JSON.stringify(value, null, 2)
+        : String(value);
+
+      const keyEntity = await this.entityStore.upsert({
+        type: entityType,
+        name: key,
+        qualifiedName: `${filePath}::${key}`,
+        content: entityContent,
+        summary: `${key}: ${typeof value === 'object' ? 'object' : String(value).slice(0, 100)}`,
+        filePath,
+        metadata: { valueType: typeof value },
+      });
+      entitiesCreated++;
+
+      await this.relationshipStore.upsert({
+        sourceId: docEntity.id,
+        targetId: keyEntity.id,
+        relationship: 'CONTAINS',
+      });
+      relationshipsCreated++;
+
+      // Try to match key name against existing code entities
+      const matchedEntity = await this.entityStore.getByName(key);
+      if (matchedEntity && matchedEntity.id !== keyEntity.id) {
+        await this.relationshipStore.upsert({
+          sourceId: keyEntity.id,
+          targetId: matchedEntity.id,
+          relationship: 'CONFIGURES',
+        });
+        relationshipsCreated++;
+        crossDocLinks++;
+      }
+    }
+
+    return { documentId: docEntity.id, entitiesCreated, relationshipsCreated, crossDocLinks, embeddingsGenerated: 0 };
+  }
+
+  private async indexJson(
+    filePath: string,
+    content: string,
+    hash: string
+  ): Promise<DocumentIndexResult> {
+    let entitiesCreated = 0;
+    let relationshipsCreated = 0;
+    let crossDocLinks = 0;
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      return this.indexPlainText(filePath, content, hash);
+    }
+
+    if (typeof parsed !== 'object' || parsed === null) {
+      return this.indexPlainText(filePath, content, hash);
+    }
+
+    const fileName = path.basename(filePath);
+    const docEntity = await this.entityStore.upsert({
+      type: 'document',
+      name: fileName,
+      qualifiedName: filePath,
+      content,
+      summary: `JSON: ${fileName}`,
+      filePath,
+      metadata: { hash, docType: 'json' },
+    });
+    entitiesCreated++;
+
+    // Special handling for package.json
+    if (fileName === 'package.json') {
+      const deps = { ...parsed.dependencies, ...parsed.devDependencies };
+      for (const [name] of Object.entries(deps || {})) {
+        const techEntity = await this.entityStore.upsert({
+          type: 'technology',
+          name,
+          qualifiedName: `${filePath}::dep::${name}`,
+          summary: `npm package: ${name}`,
+        });
+        entitiesCreated++;
+
+        await this.relationshipStore.upsert({
+          sourceId: docEntity.id,
+          targetId: techEntity.id,
+          relationship: 'CONTAINS',
+        });
+        relationshipsCreated++;
+      }
+
+      // Scripts as tasks
+      for (const [name, script] of Object.entries(parsed.scripts || {})) {
+        const taskEntity = await this.entityStore.upsert({
+          type: 'task',
+          name,
+          qualifiedName: `${filePath}::script::${name}`,
+          content: String(script),
+          summary: `npm script: ${name}`,
+        });
+        entitiesCreated++;
+
+        await this.relationshipStore.upsert({
+          sourceId: docEntity.id,
+          targetId: taskEntity.id,
+          relationship: 'CONTAINS',
+        });
+        relationshipsCreated++;
+      }
+    } else {
+      // Generic JSON: top-level keys as entities
+      for (const [key, value] of Object.entries(parsed)) {
+        const entityType: EntityType = typeof value === 'object' ? 'component' : 'variable';
+        const keyEntity = await this.entityStore.upsert({
+          type: entityType,
+          name: key,
+          qualifiedName: `${filePath}::${key}`,
+          content: typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value),
+          summary: `${key}: ${typeof value === 'object' ? 'object' : String(value).slice(0, 100)}`,
+          filePath,
+        });
+        entitiesCreated++;
+
+        await this.relationshipStore.upsert({
+          sourceId: docEntity.id,
+          targetId: keyEntity.id,
+          relationship: 'CONTAINS',
+        });
+        relationshipsCreated++;
+      }
+    }
+
+    return { documentId: docEntity.id, entitiesCreated, relationshipsCreated, crossDocLinks, embeddingsGenerated: 0 };
+  }
+
+  private async indexToml(
+    filePath: string,
+    content: string,
+    hash: string
+  ): Promise<DocumentIndexResult> {
+    let entitiesCreated = 0;
+    let relationshipsCreated = 0;
+
+    let parsed: any;
+    try {
+      const smolToml = await import('smol-toml');
+      parsed = smolToml.parse(content);
+    } catch {
+      return this.indexPlainText(filePath, content, hash);
+    }
+
+    const docEntity = await this.entityStore.upsert({
+      type: 'document',
+      name: path.basename(filePath),
+      qualifiedName: filePath,
+      content,
+      summary: `TOML config: ${path.basename(filePath)}`,
+      filePath,
+      metadata: { hash, docType: 'toml' },
+    });
+    entitiesCreated++;
+
+    for (const [key, value] of Object.entries(parsed)) {
+      const entityType: EntityType = typeof value === 'object' ? 'component' : 'variable';
+      const keyEntity = await this.entityStore.upsert({
+        type: entityType,
+        name: key,
+        qualifiedName: `${filePath}::${key}`,
+        content: typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value),
+        summary: `${key}: ${typeof value === 'object' ? 'section' : String(value).slice(0, 100)}`,
+        filePath,
+      });
+      entitiesCreated++;
+
+      await this.relationshipStore.upsert({
+        sourceId: docEntity.id,
+        targetId: keyEntity.id,
+        relationship: 'CONTAINS',
+      });
+      relationshipsCreated++;
+    }
+
+    return { documentId: docEntity.id, entitiesCreated, relationshipsCreated, crossDocLinks: 0, embeddingsGenerated: 0 };
+  }
+
+  private async indexPlainText(
+    filePath: string,
+    content: string,
+    hash: string
+  ): Promise<DocumentIndexResult> {
+    const docEntity = await this.entityStore.upsert({
+      type: 'document',
+      name: path.basename(filePath),
+      qualifiedName: filePath,
+      content,
+      summary: `Document: ${path.basename(filePath)}`,
+      filePath,
+      metadata: { hash, docType: 'text' },
+    });
+
+    return {
+      documentId: docEntity.id,
+      entitiesCreated: 1,
+      relationshipsCreated: 0,
+      crossDocLinks: 0,
+      embeddingsGenerated: 0,
+    };
+  }
+}

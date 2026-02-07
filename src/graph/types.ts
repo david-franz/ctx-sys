@@ -14,7 +14,10 @@ export type GraphRelationshipType =
   | 'DEPENDS_ON'    // General dependency
   | 'DEFINED_IN'    // Requirement defined in document
   | 'USES'          // Symbol uses another
-  | 'REFERENCES';   // Generic reference
+  | 'REFERENCES'    // Generic reference
+  | 'DOCUMENTS'     // Documentation describes code entity
+  | 'CONFIGURES'    // Config file configures a component
+  | 'TESTS';        // Test file tests a component
 
 /**
  * A stored relationship between two entities.

@@ -10,6 +10,7 @@ import { CodebaseIndexer } from '../indexer';
 import { SessionManager, MessageStore, MessageInput } from '../conversation';
 import { Session, Message, Decision } from '../conversation/types';
 import { RelationshipStore, GraphTraversal } from '../graph';
+import { DocumentIndexer } from '../documents/document-indexer';
 import { MultiStrategySearch, ContextAssembler, SearchResult } from '../retrieval';
 import { CheckpointManager, Checkpoint, AgentState, SaveOptions } from '../agent/checkpoints';
 import { QueryLogger } from '../analytics/query-logger';
@@ -717,23 +718,21 @@ export class CoreService {
   // DOCUMENTS (Simplified)
   // ─────────────────────────────────────────────────────────
 
-  async indexDocument(projectId: string, path: string, options?: DocumentIndexOptions): Promise<DocumentResult> {
-    // Would use MarkdownParser and RequirementExtractor in production
+  async indexDocument(projectId: string, filePath: string, options?: DocumentIndexOptions): Promise<DocumentResult> {
     const entityStore = this.context.getEntityStore(projectId);
+    const relationshipStore = this.getRelationshipStore(projectId);
+    const indexer = new DocumentIndexer(entityStore, relationshipStore);
 
-    // Create a document entity
-    const entity = await entityStore.create({
-      type: 'document',
-      name: path.split('/').pop() || path,
-      qualifiedName: path,
-      filePath: path
+    const result = await indexer.indexFile(filePath, {
+      extractEntities: options?.extractRequirements,
+      extractRelationships: options?.linkToCode,
     });
 
     return {
-      entityId: entity.id,
-      sectionsCreated: 0,
+      entityId: result.documentId,
+      sectionsCreated: result.entitiesCreated - 1,
       requirementsExtracted: 0,
-      codeLinksCreated: 0
+      codeLinksCreated: result.crossDocLinks,
     };
   }
 

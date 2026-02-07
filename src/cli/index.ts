@@ -51,6 +51,10 @@ import {
 // Analytics commands (F10.7)
 import { createAnalyticsCommand, createDashboardCommand } from './analytics';
 
+// Document indexing commands (F10.9)
+import { createDocIndexCommand } from './doc-index-cmd';
+import { createExtractRelCommand } from './extract-rel-cmd';
+
 // Debug commands (F10.7)
 import {
   createInspectCommand,
@@ -105,6 +109,10 @@ program.addCommand(createProvidersCommand());
 // Analytics commands
 program.addCommand(createAnalyticsCommand());
 program.addCommand(createDashboardCommand());
+
+// Document indexing commands
+program.addCommand(createDocIndexCommand());
+program.addCommand(createExtractRelCommand());
 
 // Debug commands
 program.addCommand(createInspectCommand());
