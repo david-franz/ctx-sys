@@ -89,7 +89,7 @@ The result: AI assistants that remember everything but only surface what matters
 
 ## Current Status
 
-> **Beta Release** - Core functionality and Phase 10 RAG enhancements are complete.
+> **Beta Release** - Core functionality and Phase 10 RAG enhancements are complete. Phase 10b MCP tool fixes in progress.
 
 ### What Works Now
 
@@ -127,6 +127,28 @@ The result: AI assistants that remember everything but only surface what matters
 | **F10.14: Embedding Quality** | Overlapping chunks prevent silent truncation of long entities |
 
 See [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) for architecture details.
+
+### Phase 10b: MCP Tool Fixes (In Progress)
+
+Systematic testing of all 33 MCP tools revealed 15 issues — 10 bugs and 5 placeholder stubs:
+
+| Fix | Issue | Severity |
+|-----|-------|----------|
+| **F10b.1** | context_query returns empty results | Critical |
+| **F10b.2** | search_entities type filter misses exact matches | Medium |
+| **F10b.3** | link_entities resolves names to wrong entities | High |
+| **F10b.4** | get_graph_stats reports 0 nodes with 54 edges | High |
+| **F10b.5** | search_decisions ignores decision metadata | High |
+| **F10b.6** | store_message FK error on new sessions | Medium |
+| **F10b.7** | summarize_session uses naive truncation | Low |
+| **F10b.8** | checkpoint_save step number always 0 | Low |
+| **F10b.9** | checkpoint_load wraps state in extra nesting | Low |
+| **F10b.10** | reflection_query LIKE-only, ignores filters | Medium |
+| **F10b.11** | Analytics inflates savings for failed queries | High |
+| **F10b.12** | Memory tier tools are hardcoded stubs | High |
+| **F10b.13** | hooks_install is a silent no-op | Medium |
+| **F10b.14** | hooks_impact_report returns hardcoded empty | Medium |
+| **F10b.15** | analytics_dashboard topEntities always empty | Medium |
 
 ---
 

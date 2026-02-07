@@ -18,6 +18,7 @@ ctx-sys is implemented in 12 phases, progressing from foundational infrastructur
 | 8 | Agent Patterns | Checkpointing, hot/cold memory API, reflection, proactive context | ✅ Complete |
 | 9 | Analytics & Distribution | Token analytics, git hooks, support docs, website, npm | ✅ Complete |
 | 10 | RAG Enhancements | Code content, scalable indexing, LLM summaries, robustness, Graph RAG | ✅ Complete |
+| 10b | MCP Tool Fixes | Fix 15 bugs/stubs discovered during systematic MCP testing | 🔧 In Progress |
 | 11 | Integration & Team | VS Code extension, auto context injection, team knowledge base | Planned |
 | 12 | Commercial & Enterprise | Auth & SSO, desktop app, licensing & billing, telemetry | Planned |
 
@@ -244,6 +245,40 @@ Critical improvements to make RAG production-quality — storing real code, hand
 - ✅ Query decomposition for multi-part questions + LLM re-ranking pipeline
 - ✅ Incremental document updates with hash-based change detection + directory indexing
 - ✅ Overlapping chunk embeddings for long entities — smart boundary detection
+
+---
+
+## Phase 10b: MCP Tool Fixes
+
+Systematic testing of all 33 MCP tools revealed 10 bugs and 5 placeholder stubs. This phase fixes all of them.
+
+| Feature | Description | Doc | Status |
+|---------|-------------|-----|--------|
+| **F10b.1** | Fix context_query Empty Results | [F10b.1-context-query-fix.md](phase-10b/F10b.1-context-query-fix.md) | 🔧 Pending |
+| **F10b.2** | Fix search_entities Type Filter | [F10b.2-search-entities-type-filter.md](phase-10b/F10b.2-search-entities-type-filter.md) | 🔧 Pending |
+| **F10b.3** | Fix link_entities Name Resolution | [F10b.3-link-entities-resolution.md](phase-10b/F10b.3-link-entities-resolution.md) | 🔧 Pending |
+| **F10b.4** | Fix get_graph_stats Node Counting | [F10b.4-graph-stats-nodes.md](phase-10b/F10b.4-graph-stats-nodes.md) | 🔧 Pending |
+| **F10b.5** | Fix search_decisions Returns 0 | [F10b.5-search-decisions-fix.md](phase-10b/F10b.5-search-decisions-fix.md) | 🔧 Pending |
+| **F10b.6** | Fix store_message Auto-Create Session | [F10b.6-store-message-auto-session.md](phase-10b/F10b.6-store-message-auto-session.md) | 🔧 Pending |
+| **F10b.7** | Fix summarize_session LLM Integration | [F10b.7-summarize-session-llm.md](phase-10b/F10b.7-summarize-session-llm.md) | 🔧 Pending |
+| **F10b.8** | Fix checkpoint_save Step Numbering | [F10b.8-checkpoint-save-step.md](phase-10b/F10b.8-checkpoint-save-step.md) | 🔧 Pending |
+| **F10b.9** | Fix checkpoint_load State Nesting | [F10b.9-checkpoint-load-nesting.md](phase-10b/F10b.9-checkpoint-load-nesting.md) | 🔧 Pending |
+| **F10b.10** | Fix reflection_query Search + Filters | [F10b.10-reflection-query-fix.md](phase-10b/F10b.10-reflection-query-fix.md) | 🔧 Pending |
+| **F10b.11** | Fix Analytics Inflated Token Savings | [F10b.11-analytics-inflated-stats.md](phase-10b/F10b.11-analytics-inflated-stats.md) | 🔧 Pending |
+| **F10b.12** | Wire Memory Tier Tools | [F10b.12-memory-tier-wiring.md](phase-10b/F10b.12-memory-tier-wiring.md) | 🔧 Pending |
+| **F10b.13** | Implement hooks_install | [F10b.13-hooks-install.md](phase-10b/F10b.13-hooks-install.md) | 🔧 Pending |
+| **F10b.14** | Implement hooks_impact_report | [F10b.14-hooks-impact-report.md](phase-10b/F10b.14-hooks-impact-report.md) | 🔧 Pending |
+| **F10b.15** | Fix analytics_dashboard topEntities | [F10b.15-dashboard-top-entities.md](phase-10b/F10b.15-dashboard-top-entities.md) | 🔧 Pending |
+
+**Key Deliverables:**
+- Fix critical context_query returning empty results (core RAG pipeline via MCP)
+- Fix entity name resolution for link_entities and search_entities
+- Wire existing MemoryTierManager into CoreService (replace placeholder stubs)
+- Implement actual git hook installation and impact analysis
+- Fix analytics to not inflate token savings for failed queries
+- Fix checkpoint state wrapping/unwrapping and step numbering
+- Add session auto-creation for store_message
+- Improve reflection search from LIKE-only to token-based matching
 
 ---
 
