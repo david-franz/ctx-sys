@@ -303,16 +303,61 @@ export class EntityStore {
       return this.searchAll(options);
     }
 
-    // Try FTS5 first
+    const limit = options?.limit || 20;
+
+    // Priority 1: Exact name match (always check first)
+    const exactResults = this.searchExactName(query, options);
+    if (exactResults.length >= limit) {
+      return exactResults.slice(0, limit);
+    }
+
+    // Priority 2: Try FTS5
+    const seenIds = new Set(exactResults.map(e => e.id));
     try {
-      const results = this.searchFTS5(query, options);
-      if (results.length > 0) return results;
+      const ftsResults = this.searchFTS5(query, options);
+      for (const r of ftsResults) {
+        if (!seenIds.has(r.id)) {
+          exactResults.push(r);
+          seenIds.add(r.id);
+        }
+      }
+      if (exactResults.length > 0) return exactResults.slice(0, limit);
     } catch {
       // FTS5 failed, continue to LIKE fallback
     }
 
-    // Fall back to LIKE-based search (handles substring matching)
-    return this.searchLike(query, options);
+    // Priority 3: LIKE-based search (handles substring matching)
+    const likeResults = this.searchLike(query, options);
+    for (const r of likeResults) {
+      if (!seenIds.has(r.id)) {
+        exactResults.push(r);
+        seenIds.add(r.id);
+      }
+    }
+    return exactResults.slice(0, limit);
+  }
+
+  /**
+   * Exact name match search (highest priority).
+   */
+  private searchExactName(query: string, options?: EntitySearchOptions): Entity[] {
+    let sql = `SELECT * FROM ${this.tableName} WHERE name = ?`;
+    const params: unknown[] = [query];
+
+    if (options?.type) {
+      const types = Array.isArray(options.type) ? options.type : [options.type];
+      const placeholders = types.map(() => '?').join(', ');
+      sql += ` AND type IN (${placeholders})`;
+      params.push(...types);
+    }
+
+    if (options?.filePath) {
+      sql += ' AND file_path = ?';
+      params.push(options.filePath);
+    }
+
+    const rows = this.db.all<EntityRow>(sql, params);
+    return rows.map(row => this.rowToEntity(row));
   }
 
   /**
