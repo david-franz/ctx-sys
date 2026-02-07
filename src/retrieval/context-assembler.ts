@@ -73,6 +73,23 @@ export interface AssemblyOptions {
 }
 
 /**
+ * F10c.8: Entity-type-aware content budgets.
+ * Different entity types deserve different token budgets.
+ */
+const TYPE_BUDGETS: Record<string, number> = {
+  class: 800,
+  interface: 600,
+  function: 400,
+  method: 300,
+  file: 200,
+  document: 1000,
+  section: 800,
+  requirement: 600,
+  concept: 500,
+};
+const DEFAULT_TYPE_BUDGET = 500;
+
+/**
  * Default assembly options.
  */
 const DEFAULT_OPTIONS: Required<AssemblyOptions> = {
@@ -435,16 +452,18 @@ export class ContextAssembler {
       }
 
       if (content) {
-        // Apply max content length
-        if (content.length > options.maxContentLength) {
-          content = content.slice(0, options.maxContentLength);
-          truncated = true;
-        }
+        // F10c.8: Use type-specific budget instead of flat maxContentLength
+        const budget = TYPE_BUDGETS[entity.type] || DEFAULT_TYPE_BUDGET;
+        const effectiveBudget = Math.max(budget, options.maxContentLength);
+
+        // F10c.8: Smart code extraction based on entity type
+        const extracted = extractCodeSummary(content, entity.type, effectiveBudget);
+        truncated = extracted.length < content.length;
 
         const language = this.detectLanguage(entity.filePath);
         lines.push('');
         lines.push('```' + (language || ''));
-        lines.push(content);
+        lines.push(extracted);
         if (truncated) {
           lines.push('// ... (truncated)');
         }
@@ -612,4 +631,104 @@ ${this.escapeXml(content)}
 
     return summary;
   }
+}
+
+/**
+ * F10c.8: Extract the most meaningful parts of code based on entity type.
+ */
+function extractCodeSummary(content: string, entityType: string, budget: number): string {
+  if (content.length <= budget) return content;
+
+  const lines = content.split('\n');
+
+  switch (entityType) {
+    case 'class':
+    case 'interface':
+      return extractClassSummary(lines, budget);
+    case 'function':
+    case 'method':
+      return extractFunctionSummary(lines, budget);
+    default:
+      return content.slice(0, budget);
+  }
+}
+
+/**
+ * Extract class/interface: doc comment, declaration, constructor, public method signatures.
+ */
+function extractClassSummary(lines: string[], budget: number): string {
+  const parts: string[] = [];
+
+  // 1. Doc comment
+  let i = 0;
+  if (lines[0]?.trim().startsWith('/**')) {
+    while (i < lines.length && !lines[i].includes('*/')) {
+      parts.push(lines[i]);
+      i++;
+    }
+    if (i < lines.length) {
+      parts.push(lines[i]); // closing */
+      i++;
+    }
+  }
+
+  // 2. Class/interface declaration line
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (/^(export\s+)?(abstract\s+)?(class|interface)\s/.test(line)) {
+      parts.push(lines[i]);
+      break;
+    }
+    i++;
+  }
+
+  // 3. Constructor signature
+  for (let j = i; j < lines.length; j++) {
+    if (lines[j].trim().startsWith('constructor(')) {
+      parts.push('  ' + lines[j].trim());
+      if (!lines[j].includes(')')) {
+        while (j < lines.length - 1 && !lines[j].includes(')')) {
+          j++;
+          parts.push('  ' + lines[j].trim());
+        }
+      }
+      break;
+    }
+  }
+
+  // 4. Public method signatures (without bodies)
+  for (let j = i; j < lines.length; j++) {
+    const line = lines[j].trim();
+    if (line.match(/^(async\s+)?(public\s+)?[\w]+\s*\(/) &&
+        !line.startsWith('private') &&
+        !line.startsWith('constructor')) {
+      parts.push('  ' + line.replace(/\{.*$/, '').trim());
+    }
+  }
+
+  const result = parts.join('\n');
+  return result.length <= budget ? result : result.slice(0, budget) + '\n  // ...';
+}
+
+/**
+ * Extract function/method: doc comment + signature (not body).
+ */
+function extractFunctionSummary(lines: string[], budget: number): string {
+  const parts: string[] = [];
+
+  let foundSignature = false;
+  for (const line of lines) {
+    parts.push(line);
+    if (line.includes('{') && !line.trim().startsWith('*')) {
+      foundSignature = true;
+      break;
+    }
+    if (parts.join('\n').length > budget) break;
+  }
+
+  if (foundSignature) {
+    parts[parts.length - 1] = parts[parts.length - 1].replace(/\{.*$/, '{ // ... }');
+  }
+
+  return parts.join('\n').slice(0, budget);
 }
