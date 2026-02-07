@@ -784,8 +784,33 @@ export class CoreService {
         tokensSaved: log.tokensSaved,
         timestamp: log.timestamp
       })),
-      topEntities: [] // Would need to aggregate from logs
+      topEntities: await this.getTopEntities(projectId)
     };
+  }
+
+  private async getTopEntities(projectId: string): Promise<Array<{ entityId: string; name: string; usageCount: number }>> {
+    const entityStore = this.context.getEntityStore(projectId);
+
+    // Get entity counts by type to find the most populated types
+    const types = ['class', 'function', 'interface', 'file', 'module', 'concept', 'document'] as const;
+    const topEntities: Array<{ entityId: string; name: string; usageCount: number }> = [];
+
+    for (const type of types) {
+      const count = await entityStore.count(type as any);
+      if (count > 0) {
+        const entities = await entityStore.list({ type: type as any, limit: 3 });
+        for (const entity of entities) {
+          topEntities.push({
+            entityId: entity.id,
+            name: `${entity.name} (${type})`,
+            usageCount: count
+          });
+        }
+      }
+      if (topEntities.length >= 10) break;
+    }
+
+    return topEntities.slice(0, 10);
   }
 
   async recordFeedback(projectId: string, queryLogId: string, wasUseful: boolean): Promise<void> {
