@@ -30,11 +30,52 @@ body {
   background: linear-gradient(135deg, rgb(6, 182, 212) 0%, rgb(34, 211, 238) 100%);
 }
 
-/* Smooth transitions */
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Smooth transitions (exclude scroll-related properties) */
 * {
   transition-property: color, background-color, border-color;
   transition-duration: 150ms;
   transition-timing-function: ease;
+}
+
+/* Lead paragraph after h1 */
+.prose h1 + p {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  color: rgb(100, 116, 139);
+}
+.dark .prose h1 + p {
+  color: rgb(148, 163, 184);
+}
+
+/* Tables within prose */
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.prose thead th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 2px solid rgb(226, 232, 240);
+  color: rgb(51, 65, 85);
+}
+.dark .prose thead th {
+  border-bottom-color: rgb(51, 65, 85);
+  color: rgb(226, 232, 240);
+}
+.prose tbody td {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid rgb(241, 245, 249);
+  vertical-align: top;
+}
+.dark .prose tbody td {
+  border-bottom-color: rgb(30, 41, 59);
 }
 
 /* Better scrollbar for dark mode */
