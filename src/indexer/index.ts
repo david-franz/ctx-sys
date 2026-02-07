@@ -1,4 +1,5 @@
 export { CodebaseIndexer } from './indexer';
+export { loadGitignorePatterns, parseGitignore } from './gitignore';
 export {
   StreamingFileProcessor,
   IndexingState,

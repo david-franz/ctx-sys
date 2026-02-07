@@ -8,6 +8,7 @@ import * as path from 'path';
 import picomatch from 'picomatch';
 import { ASTParser, ParseResult } from '../ast';
 import { SymbolSummarizer, FileSummary } from '../summarization';
+import { loadGitignorePatterns } from './gitignore';
 
 /**
  * State for resumable indexing.
@@ -192,7 +193,8 @@ export class StreamingFileProcessor {
    * Discover all files to index.
    */
   private async discoverFiles(): Promise<string[]> {
-    const exclude = [...DEFAULT_EXCLUDE, ...(this.options.exclude || [])];
+    const gitignorePatterns = loadGitignorePatterns(this.projectRoot);
+    const exclude = [...DEFAULT_EXCLUDE, ...gitignorePatterns, ...(this.options.exclude || [])];
     const files: string[] = [];
 
     await this.walkDirectory(this.projectRoot, files, exclude);

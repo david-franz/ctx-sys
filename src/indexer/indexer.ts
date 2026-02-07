@@ -14,6 +14,7 @@ import {
   IndexEntry,
   FileStatus
 } from './types';
+import { loadGitignorePatterns } from './gitignore';
 
 /**
  * Default patterns to exclude from indexing.
@@ -342,7 +343,8 @@ export class CodebaseIndexer {
    */
   private async discoverFiles(options: IndexOptions): Promise<string[]> {
     const include = options.include || ['**/*'];
-    const exclude = [...DEFAULT_EXCLUDE, ...(options.exclude || [])];
+    const gitignorePatterns = loadGitignorePatterns(this.projectRoot);
+    const exclude = [...DEFAULT_EXCLUDE, ...gitignorePatterns, ...(options.exclude || [])];
 
     const files: string[] = [];
     await this.walkDirectory(this.projectRoot, files, exclude);
