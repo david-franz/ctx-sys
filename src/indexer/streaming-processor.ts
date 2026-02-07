@@ -5,6 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import picomatch from 'picomatch';
 import { ASTParser, ParseResult } from '../ast';
 import { SymbolSummarizer, FileSummary } from '../summarization';
 
@@ -233,24 +234,11 @@ export class StreamingFileProcessor {
 
   /**
    * Check if a path should be excluded.
+   * Uses picomatch for robust glob matching.
    */
   private shouldExclude(relativePath: string, name: string, patterns: string[]): boolean {
-    for (const pattern of patterns) {
-      // Direct name match
-      if (name === pattern) return true;
-
-      // Glob-like pattern matching
-      if (pattern.includes('*')) {
-        const regex = new RegExp(
-          '^' + pattern.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$'
-        );
-        if (regex.test(name) || regex.test(relativePath)) return true;
-      }
-
-      // Path contains pattern
-      if (relativePath.includes(pattern)) return true;
-    }
-    return false;
+    const isMatch = picomatch(patterns, { dot: true });
+    return isMatch(relativePath) || isMatch(name);
   }
 
   /**

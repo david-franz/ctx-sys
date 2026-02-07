@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import picomatch from 'picomatch';
 import { ASTParser, ParseResult } from '../ast';
 import { SymbolSummarizer, FileSummary } from '../summarization';
 import { EntityStore, Entity } from '../entities';
@@ -211,7 +212,11 @@ export class CodebaseIndexer {
 
     // Store in entity store if available
     if (this.entityStore) {
-      await this.storeFileSummary(relativePath, summary, content);
+      // Use AST import data to determine where imports end
+      const importEndLine = parseResult.imports.length > 0
+        ? Math.max(...parseResult.imports.map(i => i.startLine))
+        : 0;
+      await this.storeFileSummary(relativePath, summary, content, importEndLine);
     }
 
     return summary;
@@ -375,59 +380,11 @@ export class CodebaseIndexer {
 
   /**
    * Check if a path matches any of the patterns.
+   * Uses picomatch for robust glob matching.
    */
   private matchesPattern(filePath: string, patterns: string[]): boolean {
-    for (const pattern of patterns) {
-      if (this.simpleGlobMatch(filePath, pattern)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Simple glob matching (supports * and **).
-   */
-  private simpleGlobMatch(filePath: string, pattern: string): boolean {
-    // Handle directory patterns like "node_modules/**" — match the dir itself
-    // and anything nested (e.g. "website/node_modules")
-    if (pattern.endsWith('/**')) {
-      const dirName = pattern.slice(0, -3);
-      if (
-        filePath === dirName ||
-        filePath.startsWith(dirName + '/') ||
-        filePath.endsWith('/' + dirName) ||
-        filePath.includes('/' + dirName + '/')
-      ) {
-        return true;
-      }
-    }
-
-    // Handle bare directory/file name patterns like "node_modules" or ".git"
-    // Match at any depth: "node_modules", "foo/node_modules", "foo/node_modules/bar"
-    if (!pattern.includes('*') && !pattern.includes('?') && !pattern.includes('/')) {
-      const segments = filePath.split('/');
-      if (segments.includes(pattern)) {
-        return true;
-      }
-    }
-
-    // Handle bare patterns with path separators (e.g. "src/generated")
-    if (!pattern.includes('*') && !pattern.includes('?') && pattern.includes('/')) {
-      if (filePath === pattern || filePath.startsWith(pattern + '/')) {
-        return true;
-      }
-    }
-
-    // Convert glob to regex for wildcard patterns
-    const regexStr = pattern
-      .replace(/\./g, '\\.')
-      .replace(/\*\*/g, '{{DOUBLESTAR}}')
-      .replace(/\*/g, '[^/]*')
-      .replace(/{{DOUBLESTAR}}/g, '.*');
-
-    const regex = new RegExp(`^${regexStr}$`);
-    return regex.test(filePath);
+    const isMatch = picomatch(patterns, { dot: true });
+    return isMatch(filePath);
   }
 
   /**
@@ -478,7 +435,8 @@ export class CodebaseIndexer {
   private async storeFileSummary(
     filePath: string,
     summary: FileSummary,
-    sourceCode: string
+    sourceCode: string,
+    importEndLine: number = 0
   ): Promise<void> {
     if (!this.entityStore) return;
 
@@ -487,7 +445,7 @@ export class CodebaseIndexer {
       type: 'file',
       name: path.basename(filePath),
       qualifiedName: filePath,
-      content: this.extractFileOverview(sourceCode, summary),
+      content: this.extractFileOverview(sourceCode, summary, importEndLine),
       summary: summary.description,
       metadata: {
         language: summary.language,
@@ -609,16 +567,15 @@ export class CodebaseIndexer {
 
   /**
    * Extract a file overview including imports and export signatures.
-   * F10.1: Provides context for file-level entities.
+   * Uses AST-derived import end line instead of regex scanning.
    */
-  private extractFileOverview(source: string, summary: FileSummary): string {
+  private extractFileOverview(source: string, summary: FileSummary, importEndLine: number = 0): string {
     const lines = source.split('\n');
     const parts: string[] = [];
 
-    // Include imports (typically at the top of the file)
-    const importEnd = this.findImportEnd(lines);
-    if (importEnd > 0) {
-      parts.push(lines.slice(0, importEnd).join('\n'));
+    // Include imports using AST-derived end line
+    if (importEndLine > 0) {
+      parts.push(lines.slice(0, importEndLine).join('\n'));
       parts.push('');
     }
 
@@ -635,28 +592,6 @@ export class CodebaseIndexer {
     }
 
     return parts.join('\n');
-  }
-
-  /**
-   * Find where import statements end in a file.
-   */
-  private findImportEnd(lines: string[]): number {
-    let lastImportLine = 0;
-    for (let i = 0; i < Math.min(lines.length, 50); i++) {
-      const line = lines[i].trim();
-      if (line.startsWith('import ') || line.startsWith('from ') ||
-          line.startsWith('require(') || line.startsWith('const ') && line.includes('require(')) {
-        lastImportLine = i + 1;
-      }
-      // Stop if we hit a non-import, non-comment, non-empty line after imports
-      if (lastImportLine > 0 && line && !line.startsWith('import ') &&
-          !line.startsWith('from ') && !line.startsWith('//') &&
-          !line.startsWith('/*') && !line.startsWith('*') &&
-          !line.startsWith('require(') && !(line.startsWith('const ') && line.includes('require('))) {
-        break;
-      }
-    }
-    return lastImportLine;
   }
 
   /**

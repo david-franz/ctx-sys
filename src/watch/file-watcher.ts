@@ -6,6 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { EventEmitter } from 'events';
+import picomatch from 'picomatch';
 import { CodebaseIndexer, IndexResult } from '../indexer';
 
 /**
@@ -190,25 +191,18 @@ export class FileWatcher extends EventEmitter {
 
   /**
    * Check if a file path should be watched.
+   * Uses picomatch for robust glob matching.
    */
   shouldWatch(filePath: string): boolean {
     const relativePath = path.relative(this.config.root, filePath);
 
-    // Check exclusions first
-    for (const pattern of this.config.exclude) {
-      if (this.matchGlob(relativePath, pattern)) {
-        return false;
-      }
+    const isExcluded = picomatch(this.config.exclude, { dot: true });
+    if (isExcluded(relativePath)) {
+      return false;
     }
 
-    // Check inclusions
-    for (const pattern of this.config.include) {
-      if (this.matchGlob(relativePath, pattern)) {
-        return true;
-      }
-    }
-
-    return false;
+    const isIncluded = picomatch(this.config.include, { dot: true });
+    return isIncluded(relativePath);
   }
 
   /**
@@ -373,54 +367,6 @@ export class FileWatcher extends EventEmitter {
     }
   }
 
-  /**
-   * Simple glob matching (supports * and **).
-   * ** matches zero or more path segments
-   * * matches any characters except /
-   */
-  private matchGlob(filePath: string, pattern: string): boolean {
-    // Normalize separators
-    const normalizedPath = filePath.replace(/\\/g, '/');
-    const normalizedPattern = pattern.replace(/\\/g, '/');
-
-    // Build regex from glob pattern
-    // The key insight is that **/ can match zero or more directories
-    // So src/**/* should match src/file.ts (** matches nothing, * matches file.ts)
-    // And src/**/*.ts should match src/deep/file.ts
-
-    let regexStr = '';
-    let i = 0;
-    while (i < normalizedPattern.length) {
-      if (normalizedPattern.slice(i, i + 3) === '**/') {
-        // ** followed by / - matches zero or more directories
-        regexStr += '(?:.*/)?';
-        i += 3;
-      } else if (normalizedPattern.slice(i, i + 2) === '**') {
-        // ** at end or not followed by / - matches everything
-        regexStr += '.*';
-        i += 2;
-      } else if (normalizedPattern[i] === '*') {
-        // Single * - matches anything except /
-        regexStr += '[^/]*';
-        i += 1;
-      } else if (normalizedPattern[i] === '.') {
-        // Escape dot
-        regexStr += '\\.';
-        i += 1;
-      } else if (normalizedPattern[i] === '?') {
-        // ? matches single character except /
-        regexStr += '[^/]';
-        i += 1;
-      } else {
-        // Regular character
-        regexStr += normalizedPattern[i];
-        i += 1;
-      }
-    }
-
-    const regex = new RegExp(`^${regexStr}$`);
-    return regex.test(normalizedPath);
-  }
 }
 
 /**

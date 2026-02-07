@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import YAML from 'yaml';
 import {
   MarkdownDocument,
   MarkdownSection,
@@ -178,68 +179,16 @@ export class MarkdownParser {
   }
 
   /**
-   * Parse YAML-like frontmatter.
+   * Parse YAML frontmatter using the yaml package.
    */
   private parseFrontmatter(lines: string[]): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-    let currentKey: string | null = null;
-    let currentArray: string[] | null = null;
-
-    for (const line of lines) {
-      // Array item
-      if (line.match(/^\s+-\s+/)) {
-        const value = line.replace(/^\s+-\s+/, '').trim();
-        if (currentArray) {
-          currentArray.push(value);
-        }
-        continue;
-      }
-
-      // Key-value pair
-      const kvMatch = line.match(/^(\w+):\s*(.*)$/);
-      if (kvMatch) {
-        // Save previous array if any
-        if (currentKey && currentArray) {
-          result[currentKey] = currentArray;
-        }
-
-        currentKey = kvMatch[1];
-        const value = kvMatch[2].trim();
-
-        if (value === '') {
-          // Start of array or nested object
-          currentArray = [];
-        } else {
-          currentArray = null;
-          // Parse value
-          result[currentKey] = this.parseValue(value);
-        }
-      }
+    try {
+      const yamlStr = lines.join('\n');
+      const parsed = YAML.parse(yamlStr);
+      return typeof parsed === 'object' && parsed !== null ? parsed : {};
+    } catch {
+      return {};
     }
-
-    // Save last array if any
-    if (currentKey && currentArray) {
-      result[currentKey] = currentArray;
-    }
-
-    return result;
-  }
-
-  /**
-   * Parse a YAML value.
-   */
-  private parseValue(value: string): unknown {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    if (value === 'null') return null;
-    const num = Number(value);
-    if (!isNaN(num)) return num;
-    // Remove quotes if present
-    if ((value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))) {
-      return value.slice(1, -1);
-    }
-    return value;
   }
 
   /**
