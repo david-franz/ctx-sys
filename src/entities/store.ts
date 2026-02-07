@@ -2,6 +2,7 @@ import { DatabaseConnection } from '../db/connection';
 import { sanitizeProjectId } from '../db/schema';
 import { generateId } from '../utils/id';
 import { hashContent } from '../utils/hash';
+import { splitIdentifier } from '../utils/identifier-splitter';
 import {
   Entity,
   EntityType,
@@ -400,8 +401,19 @@ export class EntityStore {
    */
   private searchFTS5(query: string, options?: EntitySearchOptions): Entity[] {
     const ftsTable = `${this.projectPrefix}_entities_fts`;
-    // Escape special FTS5 characters and add prefix matching
-    const ftsQuery = query.replace(/['"]/g, '').split(/\s+/).map(t => `"${t}"*`).join(' OR ');
+    // Expand compound identifiers (PascalCase, camelCase, snake_case) into search tokens
+    const rawTerms = query.replace(/['"]/g, '').split(/\s+/);
+    const expandedTerms = new Set<string>();
+    for (const term of rawTerms) {
+      // Add original term
+      expandedTerms.add(term);
+      // Add split parts (e.g., "EntityStore" → "Entity", "Store")
+      const parts = splitIdentifier(term).split(/\s+/);
+      for (const part of parts) {
+        if (part.length > 1) expandedTerms.add(part);
+      }
+    }
+    const ftsQuery = [...expandedTerms].map(t => `"${t}"*`).join(' OR ');
 
     let sql = `
       SELECT e.*, rank
