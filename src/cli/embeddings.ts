@@ -9,6 +9,9 @@ import { DatabaseConnection } from '../db/connection';
 import { formatTable, formatBytes, colors } from './formatters';
 import { sanitizeProjectId } from '../db/schema';
 import { CLIOutput, defaultOutput } from './init';
+import { EntityStore } from '../entities';
+import { EmbeddingManager } from '../embeddings/manager';
+import { OllamaEmbeddingProvider } from '../embeddings/ollama';
 
 interface EmbeddingRow {
   entity_id: string;
@@ -150,14 +153,14 @@ async function generateEmbeddings(
     embedding_hash: string | null;
   }>(sql, params);
 
-  await db.close();
-
   if (entities.length === 0) {
+    await db.close();
     output.log('All entities are up to date.');
     return;
   }
 
   if (options.dryRun) {
+    await db.close();
     output.log(colors.bold('Would embed:\n'));
     output.log(formatTable(entities, [
       { header: 'Type', key: 'type', width: 12 },
@@ -168,10 +171,44 @@ async function generateEmbeddings(
     return;
   }
 
-  // For now, just report what would be done
-  // Actual embedding generation would use the EmbeddingService
-  output.log(`Found ${entities.length} entities needing embeddings.`);
-  output.log('Use ctx-sys index to generate embeddings during indexing.');
+  output.log(`Found ${entities.length} entities needing embeddings. Generating...`);
+
+  try {
+    const ollamaProvider = new OllamaEmbeddingProvider({
+      baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
+      model: config.defaults?.embeddings?.model || 'nomic-embed-text'
+    });
+    const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
+    const entityStore = new EntityStore(db, projectId);
+
+    // Load full entity objects for embedding
+    const fullEntities = [];
+    for (const e of entities) {
+      const entity = await entityStore.get(e.id);
+      if (entity) fullEntities.push(entity);
+    }
+
+    const result = await embeddingManager.embedIncremental(fullEntities, {
+      batchSize: 50,
+      onProgress: (completed, total, skipped) => {
+        if (completed % 50 === 0) {
+          output.log(`  Progress: ${completed}/${total} embedded (${skipped} unchanged)`);
+        }
+      }
+    });
+
+    let msg = `Embedded ${result.embedded}, skipped ${result.skipped} unchanged`;
+    if (result.errors) msg += `, ${result.errors} failed`;
+    msg += ` (${result.total} total)`;
+    output.log(colors.bold(msg));
+
+    db.save();
+  } catch (err) {
+    output.error(`Embedding failed: ${err instanceof Error ? err.message : String(err)}`);
+    output.log('Make sure Ollama is running with nomic-embed-text model.');
+  } finally {
+    await db.close();
+  }
 }
 
 async function showEmbeddingStatus(
