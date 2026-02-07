@@ -134,9 +134,12 @@ async function runSearch(
         type: options.type as EntityType | undefined
       });
 
+      // FTS5 results are already ranked by BM25; assign decreasing
+      // scores that reflect rank order but don't look artificially linear
+      const total = entities.length;
       results = entities.map((entity, index) => ({
         entity,
-        score: 1 - (index / entities.length)
+        score: total <= 1 ? 1 : Math.pow(0.85, index)
       }));
     }
 

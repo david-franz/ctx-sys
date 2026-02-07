@@ -22,10 +22,13 @@ import { loadGitignorePatterns } from './gitignore';
 const DEFAULT_EXCLUDE = [
   'node_modules/**',
   '.git/**',
+  '.ctx-sys/**',
   'dist/**',
   'build/**',
   'coverage/**',
   '__pycache__/**',
+  '.next/**',
+  '.cache/**',
   '*.min.js',
   '*.bundle.js',
   '.env*',

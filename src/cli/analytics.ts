@@ -99,44 +99,51 @@ async function showAnalytics(
 
   const dateFilter = `datetime('now', '-${periodDays} days')`;
 
-  // Get query stats
-  const queryStats = db.get<{
-    total: number;
-    avg_duration: number;
-    successful: number;
-  }>(`
-    SELECT
-      COUNT(*) as total,
-      AVG(duration_ms) as avg_duration,
-      SUM(CASE WHEN result_count > 0 THEN 1 ELSE 0 END) as successful
-    FROM ${prefix}_query_log
-    WHERE created_at >= ${dateFilter}
-  `);
+  // Get query stats (table may not exist yet)
+  let queryStats: { total: number; avg_duration: number; successful: number } | undefined;
+  let topQueries: { query: string; count: number; avg_results: number }[] = [];
+  let recentQueries: QueryLogRow[] = [];
 
-  // Top queries
-  const topQueries = db.all<{
-    query: string;
-    count: number;
-    avg_results: number;
-  }>(`
-    SELECT
-      query,
-      COUNT(*) as count,
-      AVG(result_count) as avg_results
-    FROM ${prefix}_query_log
-    WHERE created_at >= ${dateFilter}
-    GROUP BY query
-    ORDER BY count DESC
-    LIMIT 10
-  `);
+  try {
+    queryStats = db.get<{
+      total: number;
+      avg_duration: number;
+      successful: number;
+    }>(`
+      SELECT
+        COUNT(*) as total,
+        AVG(duration_ms) as avg_duration,
+        SUM(CASE WHEN result_count > 0 THEN 1 ELSE 0 END) as successful
+      FROM ${prefix}_query_log
+      WHERE created_at >= ${dateFilter}
+    `);
 
-  // Recent queries
-  const recentQueries = db.all<QueryLogRow>(`
-    SELECT id, query, strategy, result_count, duration_ms, created_at
-    FROM ${prefix}_query_log
-    ORDER BY created_at DESC
-    LIMIT 20
-  `);
+    topQueries = db.all<{
+      query: string;
+      count: number;
+      avg_results: number;
+    }>(`
+      SELECT
+        query,
+        COUNT(*) as count,
+        AVG(result_count) as avg_results
+      FROM ${prefix}_query_log
+      WHERE created_at >= ${dateFilter}
+      GROUP BY query
+      ORDER BY count DESC
+      LIMIT 10
+    `);
+
+    recentQueries = db.all<QueryLogRow>(`
+      SELECT id, query, strategy, result_count, duration_ms, created_at
+      FROM ${prefix}_query_log
+      ORDER BY created_at DESC
+      LIMIT 20
+    `);
+  } catch {
+    // query_log table doesn't exist yet — show zeros
+    queryStats = { total: 0, avg_duration: 0, successful: 0 };
+  }
 
   await db.close();
 
@@ -198,11 +205,24 @@ async function showDashboard(
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
   const prefix = sanitizeProjectId(projectId);
 
-  // Core stats
+  // Core stats (query_log may not exist yet)
+  let totalQueries = 0;
+  let avgDurationMs = 0;
+  try {
+    const qlStats = db.get<{ total: number; avg_dur: number }>(`
+      SELECT COUNT(*) as total, COALESCE(AVG(duration_ms), 0) as avg_dur
+      FROM ${prefix}_query_log
+    `);
+    totalQueries = qlStats?.total || 0;
+    avgDurationMs = qlStats?.avg_dur || 0;
+  } catch {
+    // query_log table doesn't exist yet — that's fine
+  }
+
   const coreStats = db.get<UsageStats>(`
     SELECT
-      (SELECT COUNT(*) FROM ${prefix}_query_log) as total_queries,
-      (SELECT AVG(duration_ms) FROM ${prefix}_query_log) as avg_duration_ms,
+      ${totalQueries} as total_queries,
+      ${avgDurationMs} as avg_duration_ms,
       (SELECT COUNT(*) FROM ${prefix}_entities) as total_entities,
       (SELECT COUNT(*) FROM ${prefix}_relationships) as total_relationships
   `);
@@ -226,8 +246,8 @@ async function showDashboard(
     SELECT
       (SELECT MAX(updated_at) FROM ${prefix}_entities) as last_indexed,
       (SELECT COUNT(DISTINCT file_path) FROM ${prefix}_entities) as files_indexed,
-      (SELECT COUNT(*) FROM ${prefix}_entity_content) as entities_with_content,
-      (SELECT COUNT(*) FROM ${prefix}_embeddings) as entities_with_embeddings
+      (SELECT COUNT(*) FROM ${prefix}_entities WHERE content IS NOT NULL) as entities_with_content,
+      (SELECT COUNT(DISTINCT entity_id) FROM ${prefix}_vectors) as entities_with_embeddings
   `);
 
   // Session summary
