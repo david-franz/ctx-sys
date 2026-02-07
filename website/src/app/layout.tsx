@@ -52,8 +52,8 @@ export default function RootLayout({
                 <Link href="/pricing" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
                   Pricing
                 </Link>
-                <Link href="/thesis.pdf" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
-                  Thesis
+                <Link href="/whitepaper.pdf" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
+                  Whitepaper
                 </Link>
                 <a href="https://github.com/davidfranz/ctx-sys" target="_blank" rel="noopener noreferrer" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
                   GitHub
@@ -105,7 +105,7 @@ export default function RootLayout({
                 <div className="flex flex-col gap-4">
                   <Link href="/docs" className="text-slate-600 dark:text-slate-300 font-medium">Docs</Link>
                   <Link href="/pricing" className="text-slate-600 dark:text-slate-300 font-medium">Pricing</Link>
-                  <Link href="/thesis.pdf" className="text-slate-600 dark:text-slate-300 font-medium">Thesis</Link>
+                  <Link href="/whitepaper.pdf" className="text-slate-600 dark:text-slate-300 font-medium">Whitepaper</Link>
                   <a href="https://github.com/davidfranz/ctx-sys" className="text-slate-600 dark:text-slate-300 font-medium">GitHub</a>
                   <Link href="/signup" className="rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white text-center">Get Started</Link>
                 </div>
@@ -133,7 +133,7 @@ export default function RootLayout({
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Resources</h3>
                 <ul className="mt-4 space-y-3">
                   <li><Link href="/docs/guides" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Guides</Link></li>
-                  <li><Link href="/thesis.pdf" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Thesis Paper</Link></li>
+                  <li><Link href="/whitepaper.pdf" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Whitepaper</Link></li>
                   <li><Link href="/docs/api" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">API Reference</Link></li>
                 </ul>
               </div>

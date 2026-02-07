@@ -92,10 +92,10 @@ export default function DocsPage() {
         <section className="mt-16 p-8 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Additional Resources</h2>
           <div className="grid gap-4 md:grid-cols-3">
-            <Link href="/thesis.pdf" className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 transition-colors">
+            <Link href="/whitepaper.pdf" className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 transition-colors">
               <span className="text-2xl">📄</span>
               <div>
-                <p className="font-semibold text-slate-900 dark:text-white">Thesis Paper</p>
+                <p className="font-semibold text-slate-900 dark:text-white">Whitepaper</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400">Complete research documentation</p>
               </div>
             </Link>

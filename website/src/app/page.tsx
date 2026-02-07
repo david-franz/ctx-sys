@@ -153,20 +153,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Thesis Section */}
+      {/* Whitepaper Section */}
       <section className="py-24 bg-white dark:bg-slate-900">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-sm font-semibold text-cyan-500 uppercase tracking-wider">Research</h2>
           <p className="mt-2 text-4xl font-bold text-slate-900 dark:text-white">
-            Read the Thesis
+            Read the Whitepaper
           </p>
           <p className="mt-4 text-xl text-slate-600 dark:text-slate-300">
             ctx-sys is built on solid research foundations. The complete architecture, algorithms,
-            and evaluation are documented in the accompanying thesis paper.
+            and evaluation are documented in the accompanying whitepaper.
           </p>
           <div className="mt-8">
             <Link
-              href="/thesis.pdf"
+              href="/whitepaper.pdf"
               className="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 px-6 py-3 text-lg font-semibold text-white transition-all"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
