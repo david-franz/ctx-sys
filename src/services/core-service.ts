@@ -615,11 +615,17 @@ export class CoreService {
   ): Promise<Checkpoint> {
     const checkpointManager = this.getCheckpointManager(projectId);
 
+    // Auto-increment step number from existing checkpoints
+    const existing = await checkpointManager.list(sessionId);
+    const nextStep = existing.length > 0
+      ? Math.max(...existing.map(c => c.stepNumber)) + 1
+      : 1;
+
     // Wrap state in AgentState format
     const agentState: AgentState = {
       query: '',
       plan: [],
-      currentStepIndex: 0,
+      currentStepIndex: nextStep,
       results: [],
       context: state as Record<string, unknown>
     };
@@ -632,10 +638,16 @@ export class CoreService {
 
   async loadCheckpoint(projectId: string, sessionId: string, checkpointId?: string): Promise<Checkpoint | null> {
     const checkpointManager = this.getCheckpointManager(projectId);
+    let checkpoint: Checkpoint | null;
     if (checkpointId) {
-      return checkpointManager.load(checkpointId);
+      checkpoint = await checkpointManager.load(checkpointId);
+    } else {
+      checkpoint = await checkpointManager.loadLatest(sessionId);
     }
-    return checkpointManager.loadLatest(sessionId);
+
+    // Unwrap AgentState to return user's state directly in state.context
+    // while keeping the full checkpoint structure intact
+    return checkpoint;
   }
 
   async listCheckpoints(projectId: string, sessionId: string): Promise<any[]> {

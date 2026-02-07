@@ -1141,7 +1141,7 @@ export class ToolRegistry {
           checkpoint: {
             id: checkpoint.id,
             stepNumber: checkpoint.stepNumber,
-            state: checkpoint.state,
+            state: checkpoint.state.context ?? checkpoint.state,
             createdAt: checkpoint.createdAt.toISOString()
           }
         };
