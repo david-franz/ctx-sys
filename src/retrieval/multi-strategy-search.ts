@@ -108,9 +108,13 @@ export class MultiStrategySearch {
       searchPromises.push(this.graphSearch(parsed, opts));
     }
 
-    const allResults = await Promise.all(searchPromises);
-    for (const results of allResults) {
-      rawResults.push(...results);
+    // Use allSettled so individual strategy failures don't prevent
+    // other strategies from returning results
+    const settled = await Promise.allSettled(searchPromises);
+    for (const result of settled) {
+      if (result.status === 'fulfilled') {
+        rawResults.push(...result.value);
+      }
     }
 
     // Fuse results using RRF

@@ -1024,7 +1024,7 @@ export class ToolRegistry {
           strategies: strategies as any,
           includeTypes: include_types,
           includeSources: include_sources ?? true,
-          minScore: min_score ?? 0.3
+          minScore: min_score
         });
 
         return {

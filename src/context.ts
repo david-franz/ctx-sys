@@ -3,7 +3,7 @@ import * as os from 'os';
 import { DatabaseConnection } from './db/connection';
 import { ProjectManager, ProjectConfig } from './project';
 import { EntityStore } from './entities';
-import { EmbeddingManager, EmbeddingProviderFactory, EmbeddingProvider, MockEmbeddingProvider } from './embeddings';
+import { EmbeddingManager, EmbeddingProviderFactory, EmbeddingProvider, MockEmbeddingProvider, OllamaEmbeddingProvider } from './embeddings';
 
 /**
  * Default database path.
@@ -81,8 +81,13 @@ export class AppContext {
         });
         this.embeddingProviders.set(projectId, provider);
       } else {
-        // Default to mock provider if no config
-        this.embeddingProviders.set(projectId, new MockEmbeddingProvider());
+        // Default to Ollama with nomic-embed-text to match stored embeddings.
+        // Falls back to mock if Ollama is unavailable (semantic search will
+        // gracefully degrade via per-strategy error handling).
+        this.embeddingProviders.set(projectId, new OllamaEmbeddingProvider({
+          baseUrl: 'http://localhost:11434',
+          model: 'nomic-embed-text'
+        }));
       }
     }
     return this.embeddingProviders.get(projectId)!;
