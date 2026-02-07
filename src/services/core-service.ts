@@ -388,20 +388,45 @@ export class CoreService {
 
   async summarizeSession(projectId: string, sessionId: string): Promise<string> {
     const messageStore = this.getMessageStore(projectId);
-    const messages = await messageStore.getBySession(sessionId);
+    const messages = messageStore.getBySession(sessionId);
 
-    // Simple summary - would use LLM in production
-    const userMessages = messages.filter(m => m.role === 'user').length;
-    const assistantMessages = messages.filter(m => m.role === 'assistant').length;
+    if (messages.length === 0) return 'Empty session.';
 
-    const summary = `Session with ${userMessages} user messages and ${assistantMessages} assistant responses. ` +
-      `Topics discussed: ${messages.slice(0, 3).map(m => m.content.slice(0, 50)).join(', ')}...`;
+    // Try LLM summarization first
+    let summary: string;
+    try {
+      const { LLMSummarizationManager } = await import('../summarization/llm-manager.js');
+      const manager = new LLMSummarizationManager();
+      const provider = await manager.getProvider();
+
+      if (provider) {
+        const transcript = messages
+          .map(m => `[${m.role}]: ${m.content}`)
+          .join('\n\n');
+        summary = await provider.summarize(
+          `Summarize this conversation session concisely:\n\n${transcript.slice(0, 4000)}`,
+          { entityType: 'session', name: sessionId, maxTokens: 200, temperature: 0.3 }
+        );
+      } else {
+        summary = this.buildTemplateSummary(messages);
+      }
+    } catch {
+      summary = this.buildTemplateSummary(messages);
+    }
 
     // Mark session as summarized
     const sessionManager = this.getSessionManager(projectId);
     sessionManager.markSummarized(sessionId, summary);
 
     return summary;
+  }
+
+  private buildTemplateSummary(messages: Message[]): string {
+    const userMessages = messages.filter(m => m.role === 'user').length;
+    const assistantMessages = messages.filter(m => m.role === 'assistant').length;
+    const topics = messages.slice(0, 5).map(m => m.content.slice(0, 80)).join('; ');
+    return `Session with ${userMessages} user messages and ${assistantMessages} assistant responses. ` +
+      `Topics: ${topics}`;
   }
 
   async searchDecisions(projectId: string, query: string, options?: DecisionSearchOptions): Promise<Decision[]> {
