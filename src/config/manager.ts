@@ -106,8 +106,18 @@ export class ConfigManager {
     const global = await this.loadGlobal();
     const projectConfig = await this.loadProject(projectPath);
 
+    // Default database path to inside the project directory
+    const defaultDbPath = this.defaultGlobalConfig().database.path;
+    const database = {
+      ...global.database,
+      path: global.database.path === defaultDbPath
+        ? join(projectPath, '.ctx-sys', 'ctx-sys.db')
+        : global.database.path
+    };
+
     return {
       ...global,
+      database,
       projectConfig
     };
   }
