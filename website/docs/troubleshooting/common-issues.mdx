@@ -10,7 +10,7 @@ This guide helps resolve the most common issues with ctx-sys.
 
 ## Installation Issues
 
-### "Command not found: ctx"
+### "Command not found: ctx-sys"
 
 The npm global bin directory is not in your PATH.
 
@@ -88,7 +88,7 @@ curl http://localhost:11434/api/tags
 
 ### "Model not found"
 
-The embedding model is not downloaded.
+The embedding or summarization model is not downloaded.
 
 **Solution:**
 
@@ -96,35 +96,26 @@ The embedding model is not downloaded.
 # Pull the default embedding model
 ollama pull nomic-embed-text
 
-# Verify it's available
+# Pull the default summarization model
+ollama pull qwen3:0.6b
+
+# Verify they're available
 ollama list
 ```
 
 ### "Ollama is slow"
 
-Embeddings are taking too long.
+Embeddings or summarization are taking too long.
 
 **Solutions:**
 
 1. **Use a smaller model:**
-   ```json
-   {
-     "embeddings": {
-       "model": "all-minilm"
-     }
-   }
+   ```yaml
+   embeddings:
+     model: all-minilm
    ```
 
-2. **Increase batch size:**
-   ```json
-   {
-     "embeddings": {
-       "batchSize": 64
-     }
-   }
-   ```
-
-3. **Use GPU (if available):**
+2. **Use GPU (if available):**
    Ollama automatically uses GPU when available. Ensure CUDA/Metal is properly configured.
 
 ## Indexing Issues
@@ -136,31 +127,24 @@ Large codebases can take time to index initially.
 **Solutions:**
 
 1. **Exclude unnecessary files:**
-   ```json
-   {
-     "indexing": {
-       "exclude": [
-         "**/node_modules/**",
-         "**/dist/**",
-         "**/*.min.js",
-         "**/vendor/**"
-       ]
-     }
-   }
+   ```yaml
+   indexing:
+     ignore:
+       - node_modules
+       - dist
+       - "**/*.min.js"
+       - vendor
    ```
 
-2. **Index incrementally:**
+2. **Index incrementally from git:**
    ```bash
-   # Index only changed files
-   ctx index --changed
-
-   # Index specific directories
-   ctx index src/core
+   # Index only files changed since last sync
+   ctx-sys sync
    ```
 
 3. **Use watch mode for updates:**
    ```bash
-   ctx start --watch
+   ctx-sys watch
    ```
 
 ### "Out of memory during indexing"
@@ -169,38 +153,27 @@ Large files or too many files cause memory issues.
 
 **Solutions:**
 
-1. **Limit file size:**
-   ```json
-   {
-     "indexing": {
-       "maxFileSize": 524288  // 512KB
-     }
-   }
-   ```
+1. **Exclude large files via ignore patterns**
 
-2. **Process in batches:**
+2. **Index in batches using git sync:**
    ```bash
-   ctx index src/module1
-   ctx index src/module2
+   ctx-sys sync
    ```
 
 ### "Some files not being indexed"
 
 Files might be excluded or in an unsupported format.
 
-**Check what's being excluded:**
-
-```bash
-ctx index --dry-run
-```
-
-**Supported languages:**
+**Supported languages (via tree-sitter):**
 - TypeScript/JavaScript
 - Python
-- Go
-- Rust
-- Java
-- C/C++
+
+**Supported document formats:**
+- Markdown (.md)
+- YAML (.yaml, .yml)
+- JSON (.json)
+- TOML (.toml)
+- Plain text (.txt)
 
 ## Claude Desktop Issues
 
@@ -211,8 +184,8 @@ Claude Desktop cannot start ctx-sys.
 **Verify installation:**
 
 ```bash
-which ctx
-ctx --version
+which ctx-sys
+ctx-sys --version
 ```
 
 **Check config path:**
@@ -220,9 +193,6 @@ ctx --version
 ```bash
 # macOS
 cat ~/Library/Application\ Support/Claude/claude_desktop_config.json
-
-# Windows
-type %APPDATA%\Claude\claude_desktop_config.json
 ```
 
 **Verify config format:**
@@ -231,15 +201,13 @@ type %APPDATA%\Claude\claude_desktop_config.json
 {
   "mcpServers": {
     "ctx-sys": {
-      "command": "ctx",
-      "args": ["start"],
-      "cwd": "/absolute/path/to/project"
+      "command": "ctx-sys",
+      "args": ["serve"],
+      "env": {}
     }
   }
 }
 ```
-
-**Important:** The `cwd` must be an absolute path, not relative.
 
 ### "No tools available"
 
@@ -251,16 +219,15 @@ Claude Desktop connected but shows no ctx-sys tools.
 
 2. **Check the project is initialized:**
    ```bash
-   cd /path/to/project
-   ctx status
+   ctx-sys status
    # If not initialized:
-   ctx init
-   ctx index
+   ctx-sys init
+   ctx-sys index
    ```
 
-3. **Check server logs:**
+3. **Check server output:**
    ```bash
-   ctx start --verbose
+   ctx-sys serve
    ```
 
 ### "Context seems wrong/outdated"
@@ -271,19 +238,18 @@ ctx-sys is returning stale information.
 
 1. **Re-index the project:**
    ```bash
-   ctx index --force
+   ctx-sys index --force
    ```
 
-2. **Check database location:**
+2. **Sync from git:**
    ```bash
-   ctx status
-   # Shows database path
+   ctx-sys sync
    ```
 
 3. **Reset database:**
    ```bash
    rm .ctx-sys/ctx-sys.db
-   ctx index
+   ctx-sys index
    ```
 
 ## Database Issues
@@ -301,9 +267,10 @@ Multiple processes trying to access the database.
    kill <pid>
    ```
 
-2. **Remove stale lock:**
+2. **Remove stale WAL files:**
    ```bash
-   rm .ctx-sys/ctx-sys.db-journal
+   rm .ctx-sys/ctx-sys.db-wal
+   rm .ctx-sys/ctx-sys.db-shm
    ```
 
 ### "Database corrupted"
@@ -317,7 +284,7 @@ Database file is damaged.
 mv .ctx-sys/ctx-sys.db .ctx-sys/ctx-sys.db.bak
 
 # Re-create
-ctx index
+ctx-sys index
 ```
 
 ## Performance Issues
@@ -328,27 +295,23 @@ Context retrieval takes too long.
 
 **Solutions:**
 
-1. **Reduce result count:**
-   ```json
-   {
-     "retrieval": {
-       "maxResults": 5
-     }
-   }
+1. **Reduce token budget:**
+   ```yaml
+   retrieval:
+     default_max_tokens: 2000
    ```
 
-2. **Increase relevance threshold:**
-   ```json
-   {
-     "retrieval": {
-       "minRelevance": 0.7
-     }
-   }
+2. **Use fewer search strategies:**
+   ```yaml
+   retrieval:
+     strategies:
+       - fts
+       - vector
    ```
 
-3. **Optimize database:**
+3. **Generate embeddings** (enables semantic search):
    ```bash
-   ctx optimize
+   ctx-sys embed
    ```
 
 ### "High memory usage"
@@ -357,35 +320,18 @@ ctx-sys using too much RAM.
 
 **Solutions:**
 
-1. **Reduce embedding cache:**
-   ```json
-   {
-     "embeddings": {
-       "cacheSize": 1000
-     }
-   }
-   ```
+1. **Reduce the number of indexed files** via ignore patterns
 
-2. **Limit session history:**
-   ```json
-   {
-     "sessions": {
-       "maxMessages": 500
-     }
-   }
-   ```
+2. **Use incremental indexing** instead of full re-index
 
 ## Getting Help
 
 If these solutions don't work:
 
-1. **Check logs:**
+1. **Run health check:**
    ```bash
-   ctx start --verbose 2>&1 | tee ctx-sys.log
+   ctx-sys health
    ```
 
 2. **Report issues:**
-   [GitHub Issues](https://github.com/your-org/ctx-sys/issues)
-
-3. **Community:**
-   Join our Discord for community support.
+   [GitHub Issues](https://github.com/davidfranz/ctx-sys/issues)

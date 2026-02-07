@@ -32,15 +32,13 @@ Edit the configuration file and add ctx-sys to the `mcpServers` section:
 {
   "mcpServers": {
     "ctx-sys": {
-      "command": "ctx",
-      "args": ["start"],
-      "cwd": "/path/to/your/project"
+      "command": "ctx-sys",
+      "args": ["serve"],
+      "env": {}
     }
   }
 }
 ```
-
-Replace `/path/to/your/project` with your actual project path.
 
 ### 3. Restart Claude Desktop
 
@@ -54,30 +52,27 @@ In Claude Desktop, you should see ctx-sys tools available. Try asking:
 
 Claude should use ctx-sys to answer based on your indexed codebase.
 
-## Automatic Setup
-
-ctx-sys can automatically configure Claude Desktop:
-
-```bash
-ctx connect claude
-```
-
-This command:
-1. Locates your Claude Desktop config
-2. Adds the ctx-sys server entry
-3. Sets the working directory to your current project
-
 ## Available Tools
 
-Once connected, Claude has access to these ctx-sys tools:
+Once connected, Claude has access to all ctx-sys MCP tools:
 
 | Tool | Description |
 |------|-------------|
-| `context_query` | Search the codebase with intelligent retrieval |
-| `entity_search` | Find specific code entities (functions, classes) |
-| `decision_search` | Find past decisions and their context |
-| `index_files` | Index specific files |
-| `index_status` | Check indexing status |
+| `context_query` | Search the codebase with hybrid retrieval |
+| `search_entities` | Find specific code entities (functions, classes) |
+| `search_decisions` | Find past decisions and their context |
+| `index_codebase` | Index the full codebase |
+| `sync_from_git` | Incrementally update from git changes |
+| `index_document` | Index a specific document |
+| `get_index_status` | Check indexing status |
+| `query_graph` | Traverse the relationship graph |
+| `get_graph_stats` | Get graph statistics |
+| `store_message` | Store a conversation message |
+| `get_history` | Get conversation history |
+| `checkpoint_save` | Save agent state |
+| `checkpoint_load` | Restore agent state |
+
+See the [MCP Tools Reference](/docs/api/mcp-tools) for full details.
 
 ## Example Queries
 
@@ -88,9 +83,10 @@ With ctx-sys connected, try these queries in Claude:
 > "How does the authentication system work in this codebase?"
 
 Claude will:
-1. Search for auth-related code
+1. Search for auth-related code using hybrid search (FTS5 + semantic + graph)
 2. Find related decisions
-3. Provide a coherent explanation with code references
+3. Expand context with parent classes and imports
+4. Provide a coherent explanation with code references
 
 ### Finding Patterns
 
@@ -111,28 +107,28 @@ Claude will find similar endpoints and explain the conventions used.
 Ensure the config path is correct and ctx-sys is installed globally:
 
 ```bash
-which ctx
-# Should output path like /usr/local/bin/ctx
+which ctx-sys
+# Should output path like /usr/local/bin/ctx-sys
 ```
 
 ### "No tools available"
 
-1. Check that your project is initialized: `ctx index`
-2. Verify the `cwd` path in config is correct
-3. Restart Claude Desktop
+1. Check that your project is initialized: `ctx-sys status`
+2. Restart Claude Desktop
+3. Check server logs: `ctx-sys serve`
 
 ### "Context seems stale"
 
 Re-index your project:
 
 ```bash
-ctx index
+ctx-sys index
 ```
 
-Or enable watch mode for automatic updates:
+Or use git sync for incremental updates:
 
 ```bash
-ctx start --watch
+ctx-sys sync
 ```
 
 ## Tips for Best Results

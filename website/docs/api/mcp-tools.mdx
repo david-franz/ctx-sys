@@ -6,230 +6,202 @@ description: Complete reference for ctx-sys MCP tools
 
 # MCP Tools Reference
 
-This page documents all MCP (Model Context Protocol) tools provided by ctx-sys.
+This page documents all MCP (Model Context Protocol) tools provided by ctx-sys. These tools are available when running `ctx-sys serve`.
 
-## Context Retrieval
+## Project Management
 
-### context_query
+### create_project
 
-Search the codebase and retrieve relevant context.
+Create a new project for context management.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `query` | string | Yes | Natural language query |
-| `maxTokens` | number | No | Maximum tokens to return (default: 4000) |
-| `includeDecisions` | boolean | No | Include related decisions (default: true) |
-| `includeHistory` | boolean | No | Include conversation history (default: true) |
-
-**Returns:**
-
-```typescript
-{
-  items: Array<{
-    entityId: string;
-    name: string;
-    type: string;
-    content: string;
-    filePath?: string;
-    relevance: number;
-  }>;
-  totalTokens: number;
-  truncated: boolean;
-}
-```
-
-**Example:**
-
-```json
-{
-  "projectId": "my-project",
-  "query": "How does authentication work?",
-  "maxTokens": 2000
-}
-```
+| `name` | string | Yes | Unique project name (slug format) |
+| `path` | string | Yes | Absolute path to project root |
+| `config` | object | No | Configuration overrides |
 
 ---
 
-### entity_search
+### list_projects
 
-Search for specific code entities.
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `query` | string | No | Search query |
-| `filters` | object | No | Filter criteria |
-| `filters.type` | string | No | Entity type (function, class, etc.) |
-| `filters.filePath` | string | No | File path pattern |
-| `limit` | number | No | Maximum results (default: 20) |
-
-**Returns:**
-
-```typescript
-{
-  entities: Array<{
-    id: string;
-    name: string;
-    type: string;
-    filePath: string;
-    startLine: number;
-    endLine: number;
-    summary?: string;
-  }>;
-  total: number;
-}
-```
-
-**Example:**
-
-```json
-{
-  "projectId": "my-project",
-  "query": "UserService",
-  "filters": {
-    "type": "class"
-  }
-}
-```
+List all registered projects.
 
 ---
 
-### decision_search
+### set_active_project
 
-Search for past decisions.
+Set the active project for subsequent operations.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `query` | string | No | Search query |
+| `name` | string | Yes | Project name or ID |
+
+---
+
+### delete_project
+
+Delete a project and optionally its data.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | string | Yes | Project name or ID |
+| `keep_data` | boolean | No | Keep project data tables (default: false) |
+
+---
+
+## Entity Management
+
+### add_entity
+
+Add a custom entity (concept, technology, pattern, etc.).
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `type` | string | Yes | Entity type (function, class, concept, etc.) |
+| `name` | string | Yes | Entity name |
+| `content` | string | No | Entity description or content |
+| `summary` | string | No | Brief summary |
+| `project` | string | No | Target project (default: active) |
+| `metadata` | object | No | Additional metadata |
+
+---
+
+### get_entity
+
+Get an entity by ID or qualified name.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | string | No | Entity ID |
+| `qualified_name` | string | No | Qualified name (e.g., `src/file.ts::functionName`) |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### search_entities
+
+Search entities by text query.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | string | Yes | Search query |
+| `type` | string | No | Filter by entity type |
 | `limit` | number | No | Maximum results (default: 10) |
-| `since` | string | No | ISO date to filter from |
-
-**Returns:**
-
-```typescript
-{
-  decisions: Array<{
-    id: string;
-    decision: string;
-    rationale?: string;
-    timestamp: string;
-    sessionId: string;
-    entities: string[];
-  }>;
-  total: number;
-}
-```
+| `project` | string | No | Target project (default: active) |
 
 ---
 
 ## Indexing
 
-### index_files
+### index_codebase
 
-Index specific files.
+Index a codebase for context retrieval. Parses code files and extracts entities and relationships.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `filePaths` | string[] | Yes | Paths to index |
-| `force` | boolean | No | Re-index even if unchanged |
-
-**Returns:**
-
-```typescript
-{
-  filesIndexed: number;
-  entitiesExtracted: number;
-  duration: number;
-}
-```
+| `path` | string | No | Path to codebase root (default: project path) |
+| `project` | string | No | Target project (default: active) |
+| `depth` | string | No | Indexing depth: full, signatures, selective |
+| `force` | boolean | No | Force re-index even if not stale |
+| `ignore` | string[] | No | Patterns to ignore |
+| `languages` | string[] | No | Languages to index |
 
 ---
 
-### index_status
+### sync_from_git
 
-Get indexing status for a project.
+Sync codebase index from git changes. Updates entities for changed files only.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-
-**Returns:**
-
-```typescript
-{
-  isUpToDate: boolean;
-  totalFiles: number;
-  indexedFiles: number;
-  unindexedCount: number;
-  lastIndexed: string;
-}
-```
+| `project` | string | No | Target project (default: active) |
+| `since` | string | No | Commit SHA or "last_sync" |
+| `summarize` | boolean | No | Generate AI summaries for changed entities |
 
 ---
 
-## Sessions
+### index_document
 
-### session_create
-
-Create a new conversation session.
+Index a documentation file (markdown, YAML, JSON, TOML, plain text).
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `name` | string | No | Session name |
-
-**Returns:**
-
-```typescript
-{
-  sessionId: string;
-  name: string;
-  createdAt: string;
-}
-```
+| `path` | string | Yes | Path to document file |
+| `project` | string | No | Target project (default: active) |
+| `type` | string | No | Document type |
+| `link_to_code` | boolean | No | Attempt to link to code entities (default: true) |
 
 ---
 
-### session_add_message
+### get_index_status
 
-Add a message to a session.
+Get the current indexing status for a project.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `sessionId` | string | Yes | Session identifier |
-| `role` | string | Yes | "user" or "assistant" |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+## Context Retrieval
+
+### context_query
+
+Query for relevant context using hybrid RAG (vector + graph + keyword).
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | string | Yes | The search query |
+| `project` | string | No | Target project (default: active) |
+| `max_tokens` | number | No | Token budget for response (default: 4000) |
+| `include_sources` | boolean | No | Include source attribution (default: true) |
+| `include_types` | string[] | No | Entity types to include |
+| `strategies` | string[] | No | Search strategies to use |
+| `min_score` | number | No | Minimum relevance score 0-1 (default: 0.3) |
+
+---
+
+## Conversation Memory
+
+### store_message
+
+Store a conversation message for context tracking.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
 | `content` | string | Yes | Message content |
-
-**Returns:**
-
-```typescript
-{
-  messageId: string;
-  timestamp: string;
-}
-```
+| `role` | string | Yes | Message role (user, assistant, system) |
+| `session` | string | No | Session ID (creates new if not specified) |
+| `project` | string | No | Target project (default: active) |
+| `metadata` | object | No | Additional metadata |
 
 ---
 
-### session_get_history
+### get_history
 
 Get conversation history.
 
@@ -237,23 +209,214 @@ Get conversation history.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `sessionId` | string | Yes | Session identifier |
-| `limit` | number | No | Maximum messages (default: 50) |
+| `session` | string | No | Session ID (default: most recent) |
+| `limit` | number | No | Maximum messages to return (default: 50) |
+| `before` | string | No | Get messages before this message ID |
+| `project` | string | No | Target project (default: active) |
 
-**Returns:**
+---
 
-```typescript
-{
-  messages: Array<{
-    id: string;
-    role: string;
-    content: string;
-    timestamp: string;
-  }>;
-  total: number;
-}
-```
+### summarize_session
+
+Generate a summary of a conversation session.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session` | string | Yes | Session ID to summarize |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### search_decisions
+
+Search for architectural decisions across sessions.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | string | Yes | Search query |
+| `limit` | number | No | Maximum results (default: 10) |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### list_sessions
+
+List conversation sessions.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `status` | string | No | Filter by status |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+## Graph Operations
+
+### link_entities
+
+Create a relationship between two entities.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `source` | string | Yes | Source entity ID or name |
+| `target` | string | Yes | Target entity ID or name |
+| `type` | string | Yes | Relationship type (calls, imports, implements, etc.) |
+| `weight` | number | No | Relationship strength 0-1 (default: 1.0) |
+| `project` | string | No | Target project (default: active) |
+| `metadata` | object | No | Additional relationship metadata |
+
+---
+
+### query_graph
+
+Traverse the entity relationship graph.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `entity` | string | Yes | Starting entity ID or name |
+| `depth` | number | No | Maximum hops (default: 2) |
+| `direction` | string | No | Traversal direction: in, out, both |
+| `relationships` | string[] | No | Filter by relationship types |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### get_graph_stats
+
+Get statistics about the entity relationship graph.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `project` | string | No | Target project (default: active) |
+
+---
+
+## Agent Patterns
+
+### checkpoint_save
+
+Save agent state checkpoint for resumable tasks.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session` | string | Yes | Session/task ID |
+| `state` | object | Yes | Agent state to save |
+| `description` | string | No | Checkpoint description |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### checkpoint_load
+
+Load agent state from checkpoint.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session` | string | Yes | Session/task ID |
+| `checkpoint_id` | string | No | Specific checkpoint ID (default: latest) |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### checkpoint_list
+
+List checkpoints for a session.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session` | string | Yes | Session/task ID |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### memory_spill
+
+Spill hot memory items to cold storage to free up context.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session` | string | Yes | Session ID |
+| `threshold` | number | No | Token threshold for spilling |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### memory_recall
+
+Recall relevant items from cold storage.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session` | string | Yes | Session ID |
+| `query` | string | Yes | Query for relevant items to recall |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### memory_status
+
+Get current memory status (hot/cold distribution).
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session` | string | Yes | Session ID |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### reflection_store
+
+Store a learning reflection from agent experience.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `session` | string | Yes | Session ID |
+| `content` | string | Yes | Reflection content |
+| `type` | string | No | Reflection type |
+| `outcome` | string | No | Outcome of the experience |
+| `tags` | string[] | No | Tags for categorization |
+| `project` | string | No | Target project (default: active) |
+
+---
+
+### reflection_query
+
+Query stored reflections for relevant learnings.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | string | Yes | Search query |
+| `type` | string | No | Filter by reflection type |
+| `outcome` | string | No | Filter by outcome |
+| `project` | string | No | Target project (default: active) |
 
 ---
 
@@ -261,49 +424,40 @@ Get conversation history.
 
 ### analytics_get_stats
 
-Get token usage statistics.
+Get token savings and usage analytics.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `period` | string | No | "day", "week", "month", "all" |
-
-**Returns:**
-
-```typescript
-{
-  totalQueries: number;
-  tokensSaved: number;
-  tokensSavedFormatted: string;
-  costSaved: number;
-  costSavedFormatted: string;
-  savingsPercent: number;
-  averageRelevance: number;
-}
-```
+| `period` | string | No | Time period: day, week, month, all |
+| `project` | string | No | Target project (default: active) |
 
 ---
 
-### analytics_record_feedback
+### analytics_dashboard
 
-Record feedback on query usefulness.
+Get dashboard data with stats, recent queries, and top entities.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `queryLogId` | string | Yes | Query log identifier |
-| `wasUseful` | boolean | Yes | Whether the result was useful |
+| `project` | string | No | Target project (default: active) |
 
-**Returns:**
+---
 
-```typescript
-{
-  success: boolean;
-}
-```
+### analytics_feedback
+
+Record feedback on a query result.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query_id` | string | Yes | Query log ID |
+| `was_useful` | boolean | Yes | Whether the result was useful |
+| `project` | string | No | Target project (default: active) |
 
 ---
 
@@ -311,73 +465,26 @@ Record feedback on query usefulness.
 
 ### hooks_install
 
-Install git hooks in a repository.
+Install git hooks for automatic indexing.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `repositoryPath` | string | Yes | Path to git repository |
-| `config` | object | No | Hook configuration |
-
-**Returns:**
-
-```typescript
-{
-  success: boolean;
-  installed: string[];
-  configPath: string;
-}
-```
+| `repo_path` | string | No | Path to git repository (default: project path) |
+| `hooks` | string[] | No | Hooks to install (default: post-commit) |
+| `project` | string | No | Target project (default: active) |
 
 ---
 
-### hooks_generate_impact_report
+### hooks_impact_report
 
-Generate impact analysis for changes.
+Get impact analysis report for pending changes.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `projectId` | string | Yes | Project identifier |
-| `baseBranch` | string | No | Base branch (default: "main") |
-| `targetBranch` | string | No | Target branch (default: "HEAD") |
-
-**Returns:**
-
-```typescript
-{
-  generatedAt: string;
-  riskLevel: "low" | "medium" | "high";
-  summary: {
-    filesChanged: number;
-    entitiesAffected: number;
-    decisionsAffected: number;
-  };
-  risks: string[];
-  suggestions: string[];
-}
-```
-
----
-
-## Error Codes
-
-| Code | Description |
-|------|-------------|
-| `PROJECT_NOT_FOUND` | Project ID doesn't exist |
-| `INDEX_REQUIRED` | Project needs to be indexed first |
-| `SESSION_NOT_FOUND` | Session ID doesn't exist |
-| `INVALID_QUERY` | Query parameter is invalid |
-| `RATE_LIMITED` | Too many requests |
-| `INTERNAL_ERROR` | Internal server error |
-
-## Rate Limits
-
-- Queries: 100 per minute
-- Indexing: 10 per minute
-- Sessions: 50 per minute
-
-Enterprise plans have higher limits.
+| `base_branch` | string | No | Base branch for comparison (default: main) |
+| `target_branch` | string | No | Target branch (default: HEAD) |
+| `project` | string | No | Target project (default: active) |

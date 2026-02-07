@@ -21,18 +21,34 @@ Traditional approaches force you to manually copy-paste relevant files or hope t
 
 ctx-sys solves this by:
 
-1. **Indexing your codebase** - Understanding your code structure, relationships, and patterns
+1. **Indexing your codebase** - Understanding your code structure, relationships, and patterns via AST parsing
 2. **Remembering conversations** - Tracking decisions, context, and history across sessions
-3. **Retrieving intelligently** - Using semantic search and graph traversal to find exactly what's relevant
-4. **Saving tokens** - Typically reducing context size by 95% while maintaining relevance
+3. **Retrieving intelligently** - Using hybrid search (semantic + graph + FTS5 keyword) to find exactly what's relevant
+4. **Saving tokens** - Typically reducing context size by 60-80% while maintaining relevance
 
 ## Key Features
 
 ### Intelligent Code Understanding
 
-- **AST parsing** for TypeScript, JavaScript, Python, and more
-- **Symbol extraction** with full relationship mapping
-- **Automatic summarization** of complex code sections
+- **AST parsing** for TypeScript, JavaScript, Python, and more via tree-sitter
+- **Automatic relationship extraction** - imports, calls, extends, implements discovered from AST
+- **AI-generated summaries** via Ollama (qwen3:0.6b) or cloud providers
+- **Smart context expansion** - methods automatically include their parent class, functions include their imports
+
+### Hybrid RAG Retrieval
+
+- **Multi-strategy search** combining FTS5 keyword, semantic vector, and graph traversal
+- **Reciprocal Rank Fusion** to merge results from all strategies
+- **Query decomposition** for complex multi-part questions
+- **LLM re-ranking** to score relevance of top candidates
+- **HyDE query expansion** for better semantic matching
+
+### Universal Document Indexing
+
+- **Code files** - TypeScript, JavaScript, Python via tree-sitter AST parsing
+- **Documents** - Markdown, YAML, JSON, TOML, plain text
+- **Incremental updates** - Hash-based change detection skips unchanged files
+- **Overlapping chunks** - Long entities are split at smart boundaries (paragraph, line, sentence) with overlap to prevent information loss
 
 ### Conversation Memory
 
@@ -40,17 +56,18 @@ ctx-sys solves this by:
 - **Decision tracking** - never lose track of "why" decisions
 - **Context carry-over** between related conversations
 
-### Smart Retrieval
+### Privacy & Local-First
 
-- **Multi-strategy search** combining keyword, semantic, and graph traversal
-- **HyDE query expansion** for better semantic matching
-- **Relevance feedback** to improve results over time
+- **No cloud required** - Run entirely locally with Ollama
+- **Your data stays yours** - Single SQLite file (better-sqlite3), no external services
+- **Optional cloud** - Use OpenAI/Anthropic only if you choose to
 
 ### Developer Experience
 
-- **Zero configuration** to get started
-- **MCP integration** for seamless Claude Desktop connection
+- **30+ CLI commands** covering all functionality
+- **MCP integration** for seamless Claude Desktop/Code connection
 - **Real-time indexing** with file watching
+- **Git hooks** for automatic indexing on commit
 
 ## How It Works
 
@@ -65,18 +82,19 @@ ctx-sys solves this by:
 │                      ctx-sys                                │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
 │  │ Query Parser │→│ Multi-Search │→│   Context    │      │
-│  │              │  │  (Semantic,  │  │  Assembler   │      │
-│  │              │  │   Graph,     │  │              │      │
-│  │              │  │   Keyword)   │  │              │      │
+│  │  + Decompose │  │  (Semantic,  │  │  Assembler   │      │
+│  │              │  │  Graph, FTS) │  │  + Expansion │      │
+│  │              │  │  + Re-rank   │  │              │      │
 │  └──────────────┘  └──────────────┘  └──────────────┘      │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │              Relevant Context (5k tokens)                   │
-│  - AuthService class with middleware setup                  │
+│  - AuthService class with full source code                  │
 │  - Previous decision: "Use JWT for stateless auth"          │
 │  - Related: UserController, SessionManager                  │
+│  - Parent class & imported dependencies included            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -90,10 +108,13 @@ npm install -g ctx-sys
 
 # Initialize in your project
 cd your-project
-ctx init
+ctx-sys init
+
+# Index your codebase
+ctx-sys index
 
 # Start the MCP server
-ctx start
+ctx-sys serve
 ```
 
 Then connect to Claude Desktop and start asking questions about your codebase!

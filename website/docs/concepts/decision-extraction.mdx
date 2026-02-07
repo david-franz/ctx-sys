@@ -80,7 +80,7 @@ Common decision patterns:
 
 ### 3. Entity Linking
 
-Decisions are automatically linked to related code:
+Decisions are automatically linked to related code entities via the knowledge graph:
 
 ```
 Decision: "Add retry logic to the API client"
@@ -94,25 +94,15 @@ Decision: "Add retry logic to the API client"
 
 ### Query Past Decisions
 
-Ask about specific topics:
-
-```bash
-ctx decisions "authentication"
-```
-
-Or through an AI assistant:
+Through an AI assistant connected via MCP:
 
 > "What decisions have been made about the database schema?"
 
-### View Decision History
-
-```bash
-ctx decisions --all
-```
+ctx-sys will use `search_decisions` to find relevant decisions and include them in the context.
 
 ### Search in Context
 
-When querying for code, related decisions are automatically included:
+When querying for code via `context_query`, related decisions are automatically included:
 
 ```
 Query: "How does error handling work?"
@@ -122,6 +112,16 @@ Results:
   2. handleApiError() function
   3. Decision: "Use custom error classes for each domain"
   4. Decision: "Log all errors to CloudWatch"
+```
+
+### Via CLI
+
+```bash
+# Search for decisions about a topic
+ctx-sys search --type decision "authentication"
+
+# View all decisions in a session
+ctx-sys messages --session <session-id>
 ```
 
 ## Best Practices
@@ -154,43 +154,12 @@ When a decision changes, explicitly state the new decision:
 
 > "We're switching from JWT to session cookies because we need revocation support"
 
-## Decision Retrieval
-
-### Automatic Inclusion
-
-By default, relevant decisions are included in context queries:
-
-```json
-{
-  "retrieval": {
-    "includeDecisions": true,
-    "maxDecisions": 5
-  }
-}
-```
-
-### Decision-Only Queries
-
-Query specifically for decisions:
-
-```bash
-ctx query --type decisions "API design"
-```
-
-### Filter by Time
-
-Find recent decisions:
-
-```bash
-ctx decisions --since "1 week ago"
-```
-
 ## Privacy and Control
 
 ### What's Captured
 
 - Decisions from conversations with AI assistants
-- Only when ctx-sys is connected
+- Only when ctx-sys is connected via MCP
 
 ### What's NOT Captured
 
@@ -200,17 +169,17 @@ ctx decisions --since "1 week ago"
 
 ### Data Location
 
-Decisions are stored locally in `.ctx-sys/ctx-sys.db`:
+Decisions are stored locally in the SQLite database (better-sqlite3):
 
 ```bash
-# View decision count
-ctx stats decisions
+# View project dashboard
+ctx-sys dashboard
 
-# Export decisions
-ctx export decisions --format json > decisions.json
+# View analytics
+ctx-sys analytics
 ```
 
 ## Next Steps
 
 - [Graph RAG](/docs/concepts/graph-rag)
-- [Session Management](/docs/concepts/sessions)
+- [Configuration](/docs/guides/configuration)

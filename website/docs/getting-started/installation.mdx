@@ -12,7 +12,7 @@ ctx-sys can be installed via npm and works on macOS, Linux, and Windows.
 
 - **Node.js** 18+ (LTS recommended)
 - **Git** (for version tracking features)
-- **Ollama** (optional, for local embeddings)
+- **Ollama** (optional, for local embeddings and summarization)
 
 ## Quick Install
 
@@ -23,7 +23,17 @@ npm install -g ctx-sys
 Verify the installation:
 
 ```bash
-ctx --version
+ctx-sys --version
+```
+
+## From Source
+
+```bash
+git clone https://github.com/davidfranz/ctx-sys.git
+cd ctx-sys
+npm install
+npm run build
+npm link
 ```
 
 ## First-Time Setup
@@ -34,28 +44,38 @@ Navigate to your project directory and run:
 
 ```bash
 cd your-project
-ctx init
+ctx-sys init
 ```
 
 This creates a `.ctx-sys` directory with:
-- `config.json` - Project configuration
-- `ctx-sys.db` - SQLite database for entities and embeddings
+- `config.yaml` - Project configuration
+- `ctx-sys.db` - SQLite database (better-sqlite3) for entities, embeddings, and relationships
 
 ### 2. Index Your Codebase
 
 ```bash
-ctx index
+ctx-sys index
 ```
 
-This parses your source files, extracts symbols, and generates embeddings. First indexing may take a few minutes for large projects.
+This parses your source files using tree-sitter, extracts symbols and relationships, and stores everything in the database. First indexing may take a few minutes for large projects.
 
-### 3. Start the Server
+### 3. Generate Embeddings (Optional)
+
+If Ollama is running with an embedding model:
 
 ```bash
-ctx start
+ctx-sys embed
 ```
 
-The MCP server starts on stdio mode by default, ready to connect with Claude Desktop or other MCP clients.
+This generates vector embeddings for semantic search.
+
+### 4. Start the Server
+
+```bash
+ctx-sys serve
+```
+
+The MCP server starts on stdio mode, ready to connect with Claude Desktop or other MCP clients.
 
 ## Configuration Options
 
@@ -72,8 +92,11 @@ curl https://ollama.ai/install.sh | sh
 # Pull an embedding model
 ollama pull nomic-embed-text
 
+# Optionally pull a summarization model
+ollama pull qwen3:0.6b
+
 # ctx-sys will auto-detect Ollama
-ctx init
+ctx-sys init
 ```
 
 #### OpenAI (Cloud)
@@ -83,28 +106,70 @@ ctx init
 export OPENAI_API_KEY=sk-...
 
 # Configure ctx-sys to use OpenAI
-ctx init --provider openai
+ctx-sys init --provider openai
 ```
 
 ### Project Configuration
 
-Edit `.ctx-sys/config.json` to customize:
+Edit `.ctx-sys/config.yaml` to customize:
 
-```json
-{
-  "project": {
-    "name": "my-project",
-    "language": "typescript"
-  },
-  "indexing": {
-    "include": ["src/**/*.ts", "lib/**/*.ts"],
-    "exclude": ["**/*.test.ts", "**/node_modules/**"]
-  },
-  "embeddings": {
-    "provider": "ollama",
-    "model": "nomic-embed-text"
-  }
-}
+```yaml
+project:
+  name: my-project
+
+indexing:
+  mode: incremental
+  watch: true
+  ignore:
+    - node_modules
+    - dist
+  languages:
+    - typescript
+    - python
+
+embeddings:
+  provider: ollama
+  model: nomic-embed-text
+
+summarization:
+  enabled: true
+  provider: ollama
+  model: qwen3:0.6b
+
+retrieval:
+  default_max_tokens: 4000
+  strategies:
+    - vector
+    - graph
+    - fts
+```
+
+## CLI Commands Overview
+
+```bash
+# Core
+ctx-sys init              # Initialize project
+ctx-sys index             # Index codebase
+ctx-sys search <query>    # Search entities
+ctx-sys status            # Show indexing status
+ctx-sys serve             # Start MCP server
+ctx-sys watch             # Watch and auto-index
+
+# Embeddings & Summaries
+ctx-sys embed             # Generate embeddings
+ctx-sys embed-status      # Embedding coverage
+ctx-sys summarize         # Generate LLM summaries
+
+# Graph
+ctx-sys graph <entity>    # Traverse relationships
+ctx-sys graph-stats       # Graph statistics
+ctx-sys relationships     # List relationships
+
+# Sessions & Analytics
+ctx-sys sessions          # List sessions
+ctx-sys messages          # View messages
+ctx-sys analytics         # Usage analytics
+ctx-sys dashboard         # Project dashboard
 ```
 
 ## Updating
@@ -124,7 +189,7 @@ rm -rf your-project/.ctx-sys
 
 ## Troubleshooting
 
-### "Command not found: ctx"
+### "Command not found: ctx-sys"
 
 Ensure npm global bin directory is in your PATH:
 
@@ -157,7 +222,7 @@ Reset the database:
 
 ```bash
 rm .ctx-sys/ctx-sys.db
-ctx index
+ctx-sys index
 ```
 
 ## Next Steps

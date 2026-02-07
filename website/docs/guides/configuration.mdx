@@ -6,43 +6,44 @@ description: Configure ctx-sys for your project
 
 # Configuration
 
-ctx-sys uses a configuration file to customize behavior for your project.
+ctx-sys uses a YAML configuration file to customize behavior for your project.
 
 ## Configuration File
 
-The main configuration file is `.ctx-sys/config.json` in your project root.
+The main configuration file is `.ctx-sys/config.yaml` in your project root.
 
-```json
-{
-  "project": {
-    "name": "my-project",
-    "description": "My awesome project",
-    "language": "typescript"
-  },
-  "indexing": {
-    "include": ["src/**/*.ts", "src/**/*.tsx"],
-    "exclude": ["**/*.test.ts", "**/*.spec.ts", "**/node_modules/**"],
-    "maxFileSize": 1048576,
-    "followSymlinks": false
-  },
-  "embeddings": {
-    "provider": "ollama",
-    "model": "nomic-embed-text",
-    "dimensions": 768,
-    "batchSize": 32
-  },
-  "retrieval": {
-    "maxResults": 10,
-    "minRelevance": 0.5,
-    "includeDecisions": true,
-    "includeHistory": true
-  },
-  "sessions": {
-    "autoSave": true,
-    "maxMessages": 1000,
-    "summarizeAfter": 50
-  }
-}
+```yaml
+project:
+  name: my-project
+  description: My awesome project
+
+indexing:
+  mode: incremental
+  watch: true
+  ignore:
+    - node_modules
+    - dist
+    - "**/*.test.ts"
+    - "**/*.spec.ts"
+  languages:
+    - typescript
+    - python
+
+embeddings:
+  provider: ollama
+  model: nomic-embed-text
+
+summarization:
+  enabled: true
+  provider: ollama
+  model: qwen3:0.6b
+
+retrieval:
+  default_max_tokens: 4000
+  strategies:
+    - vector
+    - graph
+    - fts
 ```
 
 ## Configuration Options
@@ -53,42 +54,37 @@ The main configuration file is `.ctx-sys/config.json` in your project root.
 |--------|------|---------|-------------|
 | `name` | string | directory name | Project identifier |
 | `description` | string | `""` | Project description |
-| `language` | string | `"auto"` | Primary language (auto-detected) |
 
 ### Indexing Settings
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `include` | string[] | `["**/*"]` | Glob patterns to include |
-| `exclude` | string[] | common patterns | Glob patterns to exclude |
-| `maxFileSize` | number | 1MB | Maximum file size to index |
-| `followSymlinks` | boolean | `false` | Follow symbolic links |
+| `mode` | string | `"incremental"` | Indexing mode |
+| `watch` | boolean | `false` | Enable file watching |
+| `ignore` | string[] | common patterns | Glob patterns to exclude |
+| `languages` | string[] | `["all"]` | Languages to index |
 
 ### Embedding Settings
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `provider` | string | `"ollama"` | Provider: ollama, openai |
-| `model` | string | provider default | Model name |
-| `dimensions` | number | model default | Vector dimensions |
-| `batchSize` | number | `32` | Batch size for embedding |
+| `model` | string | `"nomic-embed-text"` | Embedding model name |
+
+### Summarization Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | boolean | `true` | Enable LLM summaries |
+| `provider` | string | `"ollama"` | Provider: ollama, openai, anthropic |
+| `model` | string | `"qwen3:0.6b"` | Summarization model |
 
 ### Retrieval Settings
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `maxResults` | number | `10` | Maximum results to return |
-| `minRelevance` | number | `0.5` | Minimum relevance score |
-| `includeDecisions` | boolean | `true` | Include past decisions |
-| `includeHistory` | boolean | `true` | Include conversation history |
-
-### Session Settings
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `autoSave` | boolean | `true` | Auto-save sessions |
-| `maxMessages` | number | `1000` | Max messages per session |
-| `summarizeAfter` | number | `50` | Summarize after N messages |
+| `default_max_tokens` | number | `4000` | Token budget for context |
+| `strategies` | string[] | `["vector", "graph", "fts"]` | Search strategies |
 
 ## Environment Variables
 
@@ -97,6 +93,9 @@ Some settings can be overridden via environment variables:
 ```bash
 # Embedding provider API key
 export OPENAI_API_KEY=sk-...
+
+# Anthropic API key (for cloud summarization)
+export ANTHROPIC_API_KEY=sk-ant-...
 
 # Ollama server URL (if not default)
 export OLLAMA_HOST=http://localhost:11434
@@ -112,80 +111,66 @@ export CTX_SYS_LOG_LEVEL=debug
 
 Global settings (applying to all projects) are stored in:
 
-- **macOS/Linux**: `~/.ctx-sys/config.json`
-- **Windows**: `%USERPROFILE%\.ctx-sys\config.json`
+- **macOS/Linux**: `~/.ctx-sys/config.yaml`
+- **Windows**: `%USERPROFILE%\.ctx-sys\config.yaml`
 
-```json
-{
-  "defaults": {
-    "provider": "ollama",
-    "model": "nomic-embed-text"
-  },
-  "telemetry": {
-    "enabled": false
-  }
-}
+```yaml
+database:
+  path: ~/.ctx-sys/ctx-sys.db
+
+providers:
+  ollama:
+    base_url: http://localhost:11434
+  openai:
+    api_key: ${OPENAI_API_KEY}
 ```
 
 ## Recommended Configurations
 
 ### TypeScript Project
 
-```json
-{
-  "project": {
-    "language": "typescript"
-  },
-  "indexing": {
-    "include": ["src/**/*.ts", "src/**/*.tsx"],
-    "exclude": [
-      "**/*.test.ts",
-      "**/*.spec.ts",
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/*.d.ts"
-    ]
-  }
-}
+```yaml
+project:
+  name: my-ts-project
+
+indexing:
+  languages:
+    - typescript
+  ignore:
+    - node_modules
+    - dist
+    - "**/*.test.ts"
+    - "**/*.spec.ts"
+    - "**/*.d.ts"
 ```
 
 ### Python Project
 
-```json
-{
-  "project": {
-    "language": "python"
-  },
-  "indexing": {
-    "include": ["**/*.py"],
-    "exclude": [
-      "**/test_*.py",
-      "**/*_test.py",
-      "**/venv/**",
-      "**/__pycache__/**"
-    ]
-  }
-}
+```yaml
+project:
+  name: my-python-project
+
+indexing:
+  languages:
+    - python
+  ignore:
+    - venv
+    - __pycache__
+    - "test_*.py"
+    - "*_test.py"
 ```
 
 ### Monorepo
 
-```json
-{
-  "project": {
-    "name": "my-monorepo"
-  },
-  "indexing": {
-    "include": [
-      "packages/*/src/**/*.ts",
-      "apps/*/src/**/*.ts"
-    ],
-    "exclude": [
-      "**/node_modules/**",
-      "**/dist/**"
-    ]
-  }
-}
+```yaml
+project:
+  name: my-monorepo
+
+indexing:
+  ignore:
+    - node_modules
+    - dist
+    - build
 ```
 
 ## Validation
@@ -193,13 +178,13 @@ Global settings (applying to all projects) are stored in:
 Validate your configuration:
 
 ```bash
-ctx config validate
+ctx-sys health
 ```
 
-View effective configuration:
+View project status:
 
 ```bash
-ctx config show
+ctx-sys status
 ```
 
 ## Next Steps

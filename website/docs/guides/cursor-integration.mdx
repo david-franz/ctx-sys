@@ -11,9 +11,10 @@ This guide explains how to use ctx-sys with Cursor IDE.
 ## Overview
 
 Cursor has built-in AI capabilities, but ctx-sys can enhance them by providing:
-- Better context retrieval from your codebase
+- Better context retrieval from your codebase via hybrid search
 - Persistent conversation memory
 - Decision tracking across sessions
+- Smart context expansion with parent classes and imports
 
 ## Setup Options
 
@@ -26,8 +27,8 @@ If Cursor supports MCP servers, configure ctx-sys as an MCP server:
   "mcp": {
     "servers": {
       "ctx-sys": {
-        "command": "ctx",
-        "args": ["start"],
+        "command": "ctx-sys",
+        "args": ["serve"],
         "cwd": "${workspaceFolder}"
       }
     }
@@ -40,7 +41,7 @@ If Cursor supports MCP servers, configure ctx-sys as an MCP server:
 Run ctx-sys as an HTTP server:
 
 ```bash
-ctx start --http --port 3000
+ctx-sys serve --http --port 3000
 ```
 
 Then configure Cursor to use the HTTP endpoint for context retrieval.
@@ -51,7 +52,7 @@ Generate context files that Cursor can include:
 
 ```bash
 # Generate a context snapshot
-ctx context "How does authentication work?" > .cursor/context.md
+ctx-sys search "How does authentication work?" > .cursor/context.md
 
 # Update context in .cursorrules
 echo "Include context from .cursor/context.md" >> .cursorrules
@@ -73,12 +74,12 @@ This project uses:
 
 ## Key Decisions
 
-Run `ctx decisions` to see recent architectural decisions.
+Run `ctx-sys search-decisions` to see recent architectural decisions.
 
 ## Getting Context
 
 For any code changes, first ask ctx-sys:
-`ctx context "your question"`
+`ctx-sys search "your question"`
 ```
 
 ### 2. Context Commands
@@ -89,9 +90,9 @@ Add useful context commands to your workflow:
 # Add to package.json scripts
 {
   "scripts": {
-    "ctx:auth": "ctx context 'authentication system'",
-    "ctx:api": "ctx context 'API patterns'",
-    "ctx:db": "ctx context 'database schema'"
+    "ctx:auth": "ctx-sys search 'authentication system'",
+    "ctx:api": "ctx-sys search 'API patterns'",
+    "ctx:db": "ctx-sys search 'database schema'"
   }
 }
 ```
@@ -101,7 +102,7 @@ Add useful context commands to your workflow:
 Use ctx-sys git hooks to keep context fresh:
 
 ```bash
-ctx hooks install
+ctx-sys hooks-install
 ```
 
 This automatically re-indexes changed files on commit.
@@ -110,9 +111,9 @@ This automatically re-indexes changed files on commit.
 
 1. **Keep context focused** - Request specific context rather than "everything about X"
 
-2. **Use decisions** - Run `ctx decisions` to understand past choices
+2. **Use decisions** - Run `ctx-sys search-decisions` to understand past choices
 
-3. **Index before sessions** - Run `ctx index` before starting a coding session
+3. **Index before sessions** - Run `ctx-sys index` before starting a coding session
 
 ## Troubleshooting
 
@@ -121,8 +122,8 @@ This automatically re-indexes changed files on commit.
 Ensure your project is indexed:
 
 ```bash
-ctx status
-ctx index
+ctx-sys status
+ctx-sys index
 ```
 
 ### Context seems irrelevant
@@ -131,10 +132,10 @@ Try more specific queries:
 
 ```bash
 # Instead of:
-ctx context "database"
+ctx-sys search "database"
 
 # Use:
-ctx context "User table schema and relationships"
+ctx-sys search "User table schema and relationships"
 ```
 
 ## Next Steps
