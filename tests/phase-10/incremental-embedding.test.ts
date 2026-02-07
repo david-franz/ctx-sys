@@ -225,10 +225,9 @@ describe('F10.2 - Incremental Embedding', () => {
       // Embed both
       await embeddingManager.embedIncremental([entity1, entity2]);
 
-      // Delete entity1 from store
-      await entityStore.delete(entity1.id);
-
-      // Cleanup orphans
+      // Don't delete entity1 from entity store — ON DELETE CASCADE
+      // would auto-remove its embedding. Instead, just exclude it from
+      // the valid set so cleanupOrphaned treats it as orphaned.
       const validIds = new Set([entity2.id]);
       const removed = await embeddingManager.cleanupOrphaned(validIds);
 

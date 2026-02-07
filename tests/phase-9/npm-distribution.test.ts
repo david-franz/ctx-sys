@@ -168,7 +168,7 @@ describe('F9.5 NPM Distribution', () => {
     it('should have required runtime dependencies', () => {
       expect(pkg.dependencies['@anthropic-ai/sdk']).toBeDefined();
       expect(pkg.dependencies['@modelcontextprotocol/sdk']).toBeDefined();
-      expect(pkg.dependencies['sql.js']).toBeDefined();
+      expect(pkg.dependencies['better-sqlite3']).toBeDefined();
       expect(pkg.dependencies['commander']).toBeDefined();
       expect(pkg.dependencies['uuid']).toBeDefined();
     });

@@ -189,7 +189,7 @@ export class CheckpointManager {
     const row = this.db.get<CheckpointRow>(
       `SELECT * FROM ${this.prefix}_checkpoints
        WHERE session_id = ?
-       ORDER BY step_number DESC, created_at DESC
+       ORDER BY step_number DESC, created_at DESC, rowid DESC
        LIMIT 1`,
       [sessionId]
     );

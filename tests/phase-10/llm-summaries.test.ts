@@ -74,7 +74,7 @@ describe('F10.6 - LLM Summaries', () => {
 
     it('should have correct id and model', () => {
       expect(provider.id).toBe('ollama');
-      expect(provider.model).toBe('qwen2.5-coder:7b');
+      expect(provider.model).toBe('qwen3:0.6b');
     });
 
     it('should allow custom model', () => {

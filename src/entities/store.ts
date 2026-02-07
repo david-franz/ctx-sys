@@ -295,16 +295,59 @@ export class EntityStore {
 
   /**
    * Search entities using FTS5 full-text search with BM25 ranking.
-   * F10.10: Falls back to LIKE if FTS5 table doesn't exist.
+   * F10.10: Falls back to LIKE if FTS5 table doesn't exist or returns no results.
    */
   async search(query: string, options?: EntitySearchOptions): Promise<Entity[]> {
+    // Empty query: return all entities with limit/offset
+    if (!query.trim()) {
+      return this.searchAll(options);
+    }
+
     // Try FTS5 first
     try {
-      return this.searchFTS5(query, options);
+      const results = this.searchFTS5(query, options);
+      if (results.length > 0) return results;
     } catch {
-      // Fall back to LIKE-based search
-      return this.searchLike(query, options);
+      // FTS5 failed, continue to LIKE fallback
     }
+
+    // Fall back to LIKE-based search (handles substring matching)
+    return this.searchLike(query, options);
+  }
+
+  /**
+   * Return all entities (for empty query with pagination).
+   */
+  private searchAll(options?: EntitySearchOptions): Entity[] {
+    let sql = `SELECT * FROM ${this.tableName} WHERE 1=1`;
+    const params: unknown[] = [];
+
+    if (options?.type) {
+      const types = Array.isArray(options.type) ? options.type : [options.type];
+      const placeholders = types.map(() => '?').join(', ');
+      sql += ` AND type IN (${placeholders})`;
+      params.push(...types);
+    }
+
+    if (options?.filePath) {
+      sql += ' AND file_path = ?';
+      params.push(options.filePath);
+    }
+
+    sql += ' ORDER BY name';
+
+    if (options?.limit) {
+      sql += ' LIMIT ?';
+      params.push(options.limit);
+    }
+
+    if (options?.offset) {
+      sql += ' OFFSET ?';
+      params.push(options.offset);
+    }
+
+    const rows = this.db.all<EntityRow>(sql, params);
+    return rows.map(row => this.rowToEntity(row));
   }
 
   /**
