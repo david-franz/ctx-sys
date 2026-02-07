@@ -77,6 +77,20 @@ export {
   ExpansionOptions
 } from './context-expander';
 
+// Query Decomposition
+export {
+  QueryDecomposer,
+  SubQuery,
+  DecompositionResult
+} from './query-decomposer';
+
+// LLM Re-ranking
+export {
+  LLMReranker,
+  RerankerConfig,
+  RerankResult
+} from './llm-reranker';
+
 // Shared Types
 export {
   SearchResult,
