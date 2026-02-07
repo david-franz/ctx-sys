@@ -145,8 +145,18 @@ export class MessageStore {
    * Search messages by content.
    */
   search(query: string, options?: { sessionId?: string; limit?: number }): Message[] {
-    let sql = `SELECT * FROM ${this.messagesTable} WHERE content LIKE ?`;
-    const params: unknown[] = [`%${query}%`];
+    // Split query into individual terms for flexible matching
+    // "context query" matches "context_query", "context...query", etc.
+    const terms = query.split(/[\s_\-]+/).filter(t => t.length > 0);
+    const termConditions = terms.length > 0
+      ? terms.map(() => `content LIKE ?`).join(' AND ')
+      : `content LIKE ?`;
+    const termParams = terms.length > 0
+      ? terms.map(t => `%${t}%`)
+      : [`%${query}%`];
+
+    let sql = `SELECT * FROM ${this.messagesTable} WHERE ${termConditions}`;
+    const params: unknown[] = [...termParams];
 
     if (options?.sessionId) {
       sql += ' AND session_id = ?';
