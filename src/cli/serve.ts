@@ -1,5 +1,9 @@
 import { Command } from 'commander';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { CtxSysMcpServer } from '../mcp';
+
+const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
 
 /**
  * Create the serve command for running the MCP server.
@@ -9,7 +13,7 @@ export function createServeCommand(): Command {
     .description('Start the MCP server')
     .option('-d, --db <path>', 'Database path')
     .option('-n, --name <name>', 'Server name', 'ctx-sys')
-    .option('-v, --version <version>', 'Server version', '0.1.0')
+    .option('-v, --version <version>', 'Server version', pkg.version)
     .action(async (options) => {
       const server = new CtxSysMcpServer({
         dbPath: options.db,

@@ -5,6 +5,10 @@
  */
 
 import { Command } from 'commander';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
 
 // Core commands
 import { createServeCommand } from './serve';
@@ -72,7 +76,7 @@ const program = new Command();
 program
   .name('ctx-sys')
   .description('Intelligent context management system for AI coding assistants')
-  .version('0.1.0');
+  .version(pkg.version);
 
 // Core commands
 program.addCommand(createInitCommand());

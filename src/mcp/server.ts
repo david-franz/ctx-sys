@@ -24,7 +24,7 @@ export class CtxSysMcpServer {
 
   constructor(config: McpServerConfig = {}) {
     const name = config.name || 'ctx-sys';
-    const version = config.version || '0.1.0';
+    const version = config.version || '1.0.0';
 
     this.mcp = new McpServer(
       { name, version },
