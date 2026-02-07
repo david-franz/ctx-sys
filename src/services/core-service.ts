@@ -797,10 +797,33 @@ export class CoreService {
   // GIT HOOKS (Simplified)
   // ─────────────────────────────────────────────────────────
 
-  async installHooks(projectId: string, repoPath: string, config?: HookConfig): Promise<void> {
-    // Would use HookInstaller in production
-    // Stub implementation - actual git hooks would be written to .git/hooks/
-    // For now, this is a no-op placeholder
+  async installHooks(projectId: string, repoPath: string, config?: HookConfig): Promise<string[]> {
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const hooksDir = path.join(repoPath, '.git', 'hooks');
+    if (!fs.existsSync(hooksDir)) {
+      throw new Error('Not a git repository or .git/hooks directory not found');
+    }
+
+    const hookNames = config?.hooks || ['post-commit'];
+    const installed: string[] = [];
+
+    for (const hookName of hookNames) {
+      const hookPath = path.join(hooksDir, hookName as string);
+
+      // Check for existing ctx-sys hook
+      if (fs.existsSync(hookPath)) {
+        const content = fs.readFileSync(hookPath, 'utf-8');
+        if (content.includes('ctx-sys')) continue; // Already installed
+      }
+
+      const script = `#!/bin/sh\n# ctx-sys-hook: ${hookName}\nctx-sys sync --project ${projectId} 2>/dev/null &\n`;
+      fs.writeFileSync(hookPath, script, { mode: 0o755 });
+      installed.push(hookName as string);
+    }
+
+    return installed;
   }
 
   async getImpactReport(projectId: string, baseBranch: string, targetBranch: string): Promise<ImpactReport> {
