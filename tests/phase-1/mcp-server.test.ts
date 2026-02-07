@@ -149,9 +149,6 @@ describe('F1.5 MCP Server Scaffold', () => {
       expect(toolNames).toContain('memory_spill');
       expect(toolNames).toContain('reflection_store');
 
-      // Analytics tools
-      expect(toolNames).toContain('analytics_get_stats');
-      expect(toolNames).toContain('analytics_dashboard');
     });
 
     it('should check tool existence', () => {

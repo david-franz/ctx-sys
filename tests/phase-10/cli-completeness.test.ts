@@ -35,7 +35,6 @@ import {
   createSummarizeStatusCommand,
   createProvidersCommand
 } from '../../src/cli/summarize';
-import { createAnalyticsCommand, createDashboardCommand } from '../../src/cli/analytics';
 import {
   createInspectCommand,
   createQueryCommand,
@@ -332,14 +331,6 @@ database:
       expect(providers.name()).toBe('providers');
     });
 
-    it('should create all analytics commands', () => {
-      const analytics = createAnalyticsCommand(mockOutput);
-      const dashboard = createDashboardCommand(mockOutput);
-
-      expect(analytics.name()).toBe('analytics');
-      expect(dashboard.name()).toBe('dashboard');
-    });
-
     it('should create all debug commands', () => {
       const inspect = createInspectCommand(mockOutput);
       const query = createQueryCommand(mockOutput);
@@ -400,8 +391,6 @@ database:
         createGraphCommand(),
         createEmbedCommand(),
         createSummarizeCommand(),
-        createAnalyticsCommand(),
-        createDashboardCommand(),
         createHealthCommand(),
         createInspectCommand()
       ];
@@ -586,9 +575,6 @@ describe('F10.7: Total command count', () => {
       createSummarizeCommand(),
       createSummarizeStatusCommand(),
       createProvidersCommand(),
-      // Analytics (2)
-      createAnalyticsCommand(),
-      createDashboardCommand(),
       // Debug (5)
       createInspectCommand(),
       createQueryCommand(),
@@ -598,7 +584,7 @@ describe('F10.7: Total command count', () => {
     ];
 
     // Total new commands in F10.7
-    expect(commands).toHaveLength(23);
+    expect(commands).toHaveLength(21);
 
     // All should be Command instances
     for (const cmd of commands) {

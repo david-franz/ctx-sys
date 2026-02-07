@@ -84,7 +84,6 @@ export class ToolRegistry {
     this.registerGraphTools();
     this.registerRetrievalTools();
     this.registerAgentTools();
-    this.registerAnalyticsTools();
     this.registerHooksTools();
   }
 
@@ -1421,110 +1420,6 @@ export class ToolRegistry {
             outcome: r.metadata?.outcome
           }))
         };
-      }
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────
-  // ANALYTICS
-  // ─────────────────────────────────────────────────────────
-
-  private registerAnalyticsTools(): void {
-    this.register(
-      {
-        name: 'analytics_get_stats',
-        description: 'Get token savings and usage analytics',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            period: {
-              type: 'string',
-              enum: ['day', 'week', 'month', 'all'],
-              description: 'Time period (default: week)'
-            },
-            project: {
-              type: 'string',
-              description: 'Target project (default: active)'
-            }
-          }
-        }
-      },
-      async (args) => {
-        const { period, project } = args as {
-          period?: 'day' | 'week' | 'month' | 'all';
-          project?: string;
-        };
-
-        const projectId = await this.resolveProjectId(project);
-        const stats = await this.coreService.getAnalytics(projectId, period ?? 'week');
-
-        return {
-          success: true,
-          ...stats
-        };
-      }
-    );
-
-    this.register(
-      {
-        name: 'analytics_dashboard',
-        description: 'Get dashboard data with stats, recent queries, and top entities',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            project: {
-              type: 'string',
-              description: 'Target project (default: active)'
-            }
-          }
-        }
-      },
-      async (args) => {
-        const { project } = args as { project?: string };
-        const projectId = await this.resolveProjectId(project);
-        const data = await this.coreService.getDashboardData(projectId);
-
-        return {
-          success: true,
-          ...data
-        };
-      }
-    );
-
-    this.register(
-      {
-        name: 'analytics_feedback',
-        description: 'Record feedback on a query result',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            query_id: {
-              type: 'string',
-              description: 'Query log ID'
-            },
-            was_useful: {
-              type: 'boolean',
-              description: 'Whether the result was useful'
-            },
-            project: {
-              type: 'string',
-              description: 'Target project (default: active)'
-            }
-          },
-          required: ['query_id', 'was_useful']
-        }
-      },
-      async (args) => {
-        const { query_id, was_useful, project } = args as {
-          query_id: string;
-          was_useful: boolean;
-          project?: string;
-        };
-
-        const projectId = await this.resolveProjectId(project);
-        await this.coreService.recordFeedback(projectId, query_id, was_useful);
-
-        return { success: true };
       }
     );
   }

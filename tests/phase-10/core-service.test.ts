@@ -371,33 +371,6 @@ describe('F10.0 CoreService Layer', () => {
     });
   });
 
-  describe('Analytics', () => {
-    let projectId: string;
-
-    beforeEach(async () => {
-      const projectPath = path.join(testDir, 'test-project');
-      fs.mkdirSync(projectPath, { recursive: true });
-      const project = await coreService.createProject('test-proj', projectPath);
-      projectId = project.id;
-    });
-
-    it('should get analytics stats', async () => {
-      const stats = await coreService.getAnalytics(projectId, 'week');
-
-      expect(stats).toBeDefined();
-      expect(stats.period).toBe('week');
-      expect(typeof stats.totalQueries).toBe('number');
-    });
-
-    it('should get dashboard data', async () => {
-      const data = await coreService.getDashboardData(projectId);
-
-      expect(data).toBeDefined();
-      expect(data.stats).toBeDefined();
-      expect(data.recentQueries).toBeDefined();
-    });
-  });
-
   describe('Utility Methods', () => {
     let projectId: string;
 

@@ -181,44 +181,6 @@ export interface GraphStats {
 }
 
 // ─────────────────────────────────────────────────────────
-// ANALYTICS
-// ─────────────────────────────────────────────────────────
-
-export type AnalyticsPeriod = 'day' | 'week' | 'month' | 'all';
-
-export interface AnalyticsStats {
-  period: string;
-  totalQueries: number;
-  tokensSaved: number;
-  costSaved: number;
-  savingsPercent: number;
-  averageRelevance: number;
-}
-
-export interface TokenSavings {
-  tokensSaved: number;
-  costSaved: number;
-  savingsPercent: number;
-  queriesAnalyzed: number;
-}
-
-export interface DashboardData {
-  stats: AnalyticsStats;
-  recentQueries: Array<{
-    id: string;
-    query?: string;
-    tokensRetrieved: number;
-    tokensSaved: number;
-    timestamp: Date;
-  }>;
-  topEntities: Array<{
-    entityId: string;
-    name: string;
-    usageCount: number;
-  }>;
-}
-
-// ─────────────────────────────────────────────────────────
 // AGENT
 // ─────────────────────────────────────────────────────────
 

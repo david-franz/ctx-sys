@@ -134,14 +134,6 @@ describe('F9.5 NPM Distribution', () => {
       expect(content).toContain('CtxSysMcpServer');
     });
 
-    it('should export analytics module', () => {
-      const indexPath = path.join(ROOT_DIR, 'src/index.ts');
-      const content = fs.readFileSync(indexPath, 'utf-8');
-
-      expect(content).toContain('QueryLogger');
-      expect(content).toContain('DashboardService');
-    });
-
     it('should export hooks module', () => {
       const indexPath = path.join(ROOT_DIR, 'src/index.ts');
       const content = fs.readFileSync(indexPath, 'utf-8');
@@ -208,7 +200,6 @@ describe('F9.5 NPM Distribution', () => {
       'models',
       'watch',
       'agent',
-      'analytics',
       'hooks'
     ];
 

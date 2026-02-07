@@ -14,7 +14,6 @@ import { DocumentIndexer } from '../documents/document-indexer';
 import { MultiStrategySearch, ContextAssembler, SearchResult, HeuristicReranker } from '../retrieval';
 import { CheckpointManager, Checkpoint, AgentState, SaveOptions } from '../agent/checkpoints';
 import { MemoryTierManager } from '../agent/memory-tier';
-import { QueryLogger } from '../analytics/query-logger';
 import {
   CreateEntityInput,
   CreateMessageInput,
@@ -34,9 +33,6 @@ import {
   GraphQueryOptions,
   GraphQueryResult,
   GraphStats,
-  AnalyticsPeriod,
-  AnalyticsStats,
-  DashboardData,
   SpillOptions,
   SpillResult,
   RecallResult,
@@ -62,7 +58,6 @@ export class CoreService {
   private searchServices: Map<string, MultiStrategySearch> = new Map();
   private checkpointManagers: Map<string, CheckpointManager> = new Map();
   private memoryManagers: Map<string, MemoryTierManager> = new Map();
-  private queryLoggers: Map<string, QueryLogger> = new Map();
 
   constructor(private context: AppContext) {}
 
@@ -151,15 +146,6 @@ export class CoreService {
       this.checkpointManagers.set(projectId, new CheckpointManager(this.context.db, projectId));
     }
     return this.checkpointManagers.get(projectId)!;
-  }
-
-  private getQueryLogger(projectId: string): QueryLogger {
-    if (!this.queryLoggers.has(projectId)) {
-      const logger = new QueryLogger(this.context.db);
-      logger.ensureTablesExist();
-      this.queryLoggers.set(projectId, logger);
-    }
-    return this.queryLoggers.get(projectId)!;
   }
 
   // ─────────────────────────────────────────────────────────
@@ -597,17 +583,6 @@ export class CoreService {
       ? results.reduce((sum, r) => sum + r.score, 0) / results.length
       : 0;
 
-    // Log query for analytics
-    const queryLogger = this.getQueryLogger(projectId);
-    await queryLogger.logQuery(projectId, query, {
-      totalTokens: assembled.tokenCount,
-      averageRelevance: avgRelevance,
-      items: results.map(r => ({ type: r.entity.type })),
-      strategiesUsed: options?.strategies || ['keyword', 'semantic']
-    }, {
-      latencyMs: Date.now() - startTime
-    });
-
     return {
       context: assembled.context,
       sources: assembled.sources,
@@ -745,79 +720,6 @@ export class CoreService {
       if (options?.outcome && m.metadata?.outcome !== options.outcome) return false;
       return true;
     });
-  }
-
-  // ─────────────────────────────────────────────────────────
-  // ANALYTICS
-  // ─────────────────────────────────────────────────────────
-
-  async getAnalytics(projectId: string, period: AnalyticsPeriod): Promise<AnalyticsStats> {
-    const queryLogger = this.getQueryLogger(projectId);
-    const stats = await queryLogger.getStats(projectId, period);
-
-    return {
-      period: stats.period,
-      totalQueries: stats.totalQueries,
-      tokensSaved: stats.totalTokensSaved,
-      costSaved: stats.totalCostSaved,
-      savingsPercent: stats.savingsPercent,
-      averageRelevance: stats.averageRelevance
-    };
-  }
-
-  async getDashboardData(projectId: string): Promise<DashboardData> {
-    const queryLogger = this.getQueryLogger(projectId);
-    const stats = await queryLogger.getStats(projectId, 'week');
-    const recentLogs = await queryLogger.getRecentLogs(projectId, 10);
-
-    return {
-      stats: {
-        period: stats.period,
-        totalQueries: stats.totalQueries,
-        tokensSaved: stats.totalTokensSaved,
-        costSaved: stats.totalCostSaved,
-        savingsPercent: stats.savingsPercent,
-        averageRelevance: stats.averageRelevance
-      },
-      recentQueries: recentLogs.map(log => ({
-        id: log.id,
-        query: log.query,
-        tokensRetrieved: log.tokensRetrieved,
-        tokensSaved: log.tokensSaved,
-        timestamp: log.timestamp
-      })),
-      topEntities: await this.getTopEntities(projectId)
-    };
-  }
-
-  private async getTopEntities(projectId: string): Promise<Array<{ entityId: string; name: string; usageCount: number }>> {
-    const entityStore = this.context.getEntityStore(projectId);
-
-    // Get entity counts by type to find the most populated types
-    const types = ['class', 'function', 'interface', 'file', 'module', 'concept', 'document'] as const;
-    const topEntities: Array<{ entityId: string; name: string; usageCount: number }> = [];
-
-    for (const type of types) {
-      const count = await entityStore.count(type as any);
-      if (count > 0) {
-        const entities = await entityStore.list({ type: type as any, limit: 3 });
-        for (const entity of entities) {
-          topEntities.push({
-            entityId: entity.id,
-            name: `${entity.name} (${type})`,
-            usageCount: count
-          });
-        }
-      }
-      if (topEntities.length >= 10) break;
-    }
-
-    return topEntities.slice(0, 10);
-  }
-
-  async recordFeedback(projectId: string, queryLogId: string, wasUseful: boolean): Promise<void> {
-    const queryLogger = this.getQueryLogger(projectId);
-    await queryLogger.recordFeedback(queryLogId, wasUseful);
   }
 
   // ─────────────────────────────────────────────────────────
@@ -968,7 +870,6 @@ export class CoreService {
     this.searchServices.delete(projectId);
     this.checkpointManagers.delete(projectId);
     this.memoryManagers.delete(projectId);
-    this.queryLoggers.delete(projectId);
     this.context.clearProjectCache(projectId);
   }
 

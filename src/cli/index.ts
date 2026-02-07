@@ -52,9 +52,6 @@ import {
   createProvidersCommand
 } from './summarize';
 
-// Analytics commands (F10.7)
-import { createAnalyticsCommand, createDashboardCommand } from './analytics';
-
 // Document indexing commands (F10.9)
 import { createDocIndexCommand } from './doc-index-cmd';
 import { createExtractRelCommand } from './extract-rel-cmd';
@@ -112,10 +109,6 @@ program.addCommand(createEmbedCleanupCommand());
 program.addCommand(createSummarizeCommand());
 program.addCommand(createSummarizeStatusCommand());
 program.addCommand(createProvidersCommand());
-
-// Analytics commands
-program.addCommand(createAnalyticsCommand());
-program.addCommand(createDashboardCommand());
 
 // Document indexing commands
 program.addCommand(createDocIndexCommand());

@@ -313,30 +313,6 @@ export {
   ProactiveContextSource
 } from './agent';
 
-// Token Analytics
-export {
-  QueryLogger,
-  FullContextEstimator,
-  DashboardService,
-  QueryLog,
-  UsageStats,
-  DailyStats,
-  QueryTypeStats,
-  ProjectStats,
-  TokenPricing,
-  AnalyticsConfig,
-  FullContextEstimate,
-  QueryResult,
-  LogOptions,
-  DashboardData,
-  SummaryCard,
-  ChartData,
-  RecentQueryItem,
-  ProjectComparison,
-  AnalyticsReport,
-  DEFAULT_ANALYTICS_CONFIG
-} from './analytics';
-
 // Git Hooks
 export {
   HookInstaller,
