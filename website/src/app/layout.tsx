@@ -49,13 +49,10 @@ export default function RootLayout({
                 <Link href="/docs" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
                   Docs
                 </Link>
-                <Link href="/pricing" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
-                  Pricing
+                <Link href="/thesis.pdf" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
+                  Thesis
                 </Link>
-                <Link href="/whitepaper.pdf" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
-                  Whitepaper
-                </Link>
-                <a href="https://github.com/davidfranz/ctx-sys" target="_blank" rel="noopener noreferrer" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
+                <a href="#" target="_blank" rel="noopener noreferrer" className="text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">
                   GitHub
                 </a>
 
@@ -77,7 +74,7 @@ export default function RootLayout({
                 </button>
 
                 <Link
-                  href="/signup"
+                  href="/docs/quickstart"
                   className="rounded-lg bg-cyan-500 hover:bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25"
                 >
                   Get Started
@@ -104,10 +101,9 @@ export default function RootLayout({
               <div className="md:hidden py-4 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex flex-col gap-4">
                   <Link href="/docs" className="text-slate-600 dark:text-slate-300 font-medium">Docs</Link>
-                  <Link href="/pricing" className="text-slate-600 dark:text-slate-300 font-medium">Pricing</Link>
-                  <Link href="/whitepaper.pdf" className="text-slate-600 dark:text-slate-300 font-medium">Whitepaper</Link>
-                  <a href="https://github.com/davidfranz/ctx-sys" className="text-slate-600 dark:text-slate-300 font-medium">GitHub</a>
-                  <Link href="/signup" className="rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white text-center">Get Started</Link>
+                  <Link href="/thesis.pdf" className="text-slate-600 dark:text-slate-300 font-medium">Thesis</Link>
+                  <a href="#" className="text-slate-600 dark:text-slate-300 font-medium">GitHub</a>
+                  <Link href="/docs/quickstart" className="rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white text-center">Get Started</Link>
                 </div>
               </div>
             )}
@@ -120,47 +116,37 @@ export default function RootLayout({
         {/* Footer */}
         <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Product</h3>
                 <ul className="mt-4 space-y-3">
                   <li><Link href="/docs" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Documentation</Link></li>
-                  <li><Link href="/pricing" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Pricing</Link></li>
-                  <li><Link href="/changelog" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Changelog</Link></li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Resources</h3>
                 <ul className="mt-4 space-y-3">
-                  <li><Link href="/docs/guides" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Guides</Link></li>
-                  <li><Link href="/whitepaper.pdf" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Whitepaper</Link></li>
-                  <li><Link href="/docs/api" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">API Reference</Link></li>
+                  <li><Link href="/docs/quickstart" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Guides</Link></li>
+                  <li><Link href="/thesis.pdf" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Thesis</Link></li>
+                  <li><Link href="/docs/cli" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">API Reference</Link></li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Open Source</h3>
                 <ul className="mt-4 space-y-3">
-                  <li><a href="https://github.com/davidfranz/ctx-sys" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">GitHub</a></li>
-                  <li><a href="https://github.com/davidfranz/ctx-sys/issues" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Issues</a></li>
-                  <li><a href="https://github.com/davidfranz/ctx-sys/discussions" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Discussions</a></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Legal</h3>
-                <ul className="mt-4 space-y-3">
-                  <li><Link href="/privacy" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Privacy</Link></li>
-                  <li><Link href="/terms" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Terms</Link></li>
-                  <li><Link href="/license" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">MIT License</Link></li>
+                  <li><a href="#" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">GitHub</a></li>
+                  <li><a href="#" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Issues</a></li>
+                  <li><a href="#" className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400">Discussions</a></li>
                 </ul>
               </div>
             </div>
             <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-3">
                 <img src="/logo.png" alt="ctx-sys" className="h-8 w-auto" />
-                <span className="text-sm text-slate-500 dark:text-slate-400">&copy; 2024 ctx-sys. MIT License.</span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">&copy; 2026 ctx-sys. MIT License.</span>
               </div>
               <div className="flex items-center gap-4">
-                <a href="https://github.com/davidfranz/ctx-sys" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                <a href="#" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                 </a>
               </div>

@@ -71,127 +71,184 @@ describe('F9.4 Product Website', () => {
       expect(content).toContain('export default function');
     });
 
-    it('should have pricing page', () => {
+    it('should NOT have pricing page (removed - open source tool)', () => {
       const pagePath = path.join(srcDir, 'pricing/page.tsx');
-      expect(fs.existsSync(pagePath)).toBe(true);
-
-      const content = fs.readFileSync(pagePath, 'utf-8');
-      expect(content).toContain('Pricing');
+      expect(fs.existsSync(pagePath)).toBe(false);
     });
 
-    it('should have dashboard page', () => {
+    it('should NOT have dashboard page (removed - no mock data)', () => {
       const pagePath = path.join(srcDir, 'dashboard/page.tsx');
-      expect(fs.existsSync(pagePath)).toBe(true);
+      expect(fs.existsSync(pagePath)).toBe(false);
+    });
 
-      const content = fs.readFileSync(pagePath, 'utf-8');
-      expect(content).toContain('Dashboard');
+    it('should have docs layout with sidebar', () => {
+      const layoutPath = path.join(srcDir, 'docs/layout.tsx');
+      expect(fs.existsSync(layoutPath)).toBe(true);
+
+      const content = fs.readFileSync(layoutPath, 'utf-8');
+      expect(content).toContain('DocsLayout');
+      expect(content).toContain('sections');
     });
   });
 
-  describe('Marketing Pages Content', () => {
+  describe('Documentation Pages', () => {
+    const docsDir = path.join(WEBSITE_DIR, 'src/app/docs');
+
+    const requiredPages = [
+      { path: 'page.tsx', name: 'Docs hub' },
+      { path: 'quickstart/page.tsx', name: 'Quick Start' },
+      { path: 'installation/page.tsx', name: 'Installation' },
+      { path: 'claude-desktop/page.tsx', name: 'Claude Desktop' },
+      { path: 'cursor/page.tsx', name: 'Cursor IDE' },
+      { path: 'ollama/page.tsx', name: 'Ollama Setup' },
+      { path: 'cli/page.tsx', name: 'CLI Reference' },
+      { path: 'mcp-tools/page.tsx', name: 'MCP Tools' },
+      { path: 'configuration/page.tsx', name: 'Configuration' },
+      { path: 'how-it-works/page.tsx', name: 'How It Works' },
+      { path: 'troubleshooting/page.tsx', name: 'Troubleshooting' },
+    ];
+
+    for (const page of requiredPages) {
+      it(`should have ${page.name} page`, () => {
+        const pagePath = path.join(docsDir, page.path);
+        expect(fs.existsSync(pagePath)).toBe(true);
+
+        const content = fs.readFileSync(pagePath, 'utf-8');
+        expect(content).toContain('export default function');
+      });
+    }
+
+    it('should have CLI reference with all command categories', () => {
+      const content = fs.readFileSync(path.join(docsDir, 'cli/page.tsx'), 'utf-8');
+      const lower = content.toLowerCase();
+      expect(lower).toContain('init');
+      expect(lower).toContain('index');
+      expect(lower).toContain('search');
+      expect(lower).toContain('serve');
+      expect(lower).toContain('summarize');
+    });
+
+    it('should have MCP tools reference with tool descriptions', () => {
+      const content = fs.readFileSync(path.join(docsDir, 'mcp-tools/page.tsx'), 'utf-8');
+      const lower = content.toLowerCase();
+      expect(lower).toContain('create_project');
+      expect(lower).toContain('search_entities');
+      expect(lower).toContain('context_query');
+    });
+
+    it('should have Ollama setup guide with model instructions', () => {
+      const content = fs.readFileSync(path.join(docsDir, 'ollama/page.tsx'), 'utf-8');
+      expect(content).toContain('nomic-embed-text');
+      expect(content).toContain('ollama pull');
+    });
+
+    it('should have Claude Desktop guide with MCP config', () => {
+      const content = fs.readFileSync(path.join(docsDir, 'claude-desktop/page.tsx'), 'utf-8');
+      expect(content).toContain('mcpServers');
+      expect(content).toContain('ctx-sys');
+    });
+  });
+
+  describe('Landing Page Content', () => {
     it('should have value proposition on home page', () => {
       const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
       const content = fs.readFileSync(pagePath, 'utf-8');
 
-      // Key marketing messages (text may be split across elements)
-      expect(content).toContain('Stop Repeating');
-      expect(content).toContain('Yourself');
-      expect(content).toContain('context');
+      expect(content).toContain('Intelligent Context');
+      expect(content).toContain('AI Coding');
+      expect(content).toContain('ctx-sys');
     });
 
     it('should have feature descriptions', () => {
       const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
       const content = fs.readFileSync(pagePath, 'utf-8');
 
-      // Key features
-      expect(content.toLowerCase()).toContain('graph rag');
-      expect(content.toLowerCase()).toContain('decision');
-      expect(content.toLowerCase()).toContain('token');
+      expect(content).toContain('Hybrid RAG');
+      expect(content).toContain('Code Intelligence');
+      expect(content).toContain('Conversation Memory');
+      expect(content).toContain('MCP Protocol');
     });
 
-    it('should have CTAs', () => {
-      const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
-      const layoutPath = path.join(WEBSITE_DIR, 'src/app/layout.tsx');
-      const pageContent = fs.readFileSync(pagePath, 'utf-8');
-      const layoutContent = fs.readFileSync(layoutPath, 'utf-8');
-
-      // CTA button text should be on home page or layout
-      expect(pageContent + layoutContent).toContain('Get Started');
-      // Signup link should be in layout navigation
-      expect(layoutContent).toContain('/signup');
-    });
-
-    it('should have stats section', () => {
+    it('should have CTAs linking to docs', () => {
       const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
       const content = fs.readFileSync(pagePath, 'utf-8');
 
-      expect(content).toContain('95%');
-      expect(content).toContain('token savings');
-    });
-  });
-
-  describe('Pricing Page Content', () => {
-    it('should have pricing tiers', () => {
-      const pagePath = path.join(WEBSITE_DIR, 'src/app/pricing/page.tsx');
-      const content = fs.readFileSync(pagePath, 'utf-8');
-
-      expect(content).toContain('Free');
-      expect(content).toContain('Pro');
-      expect(content).toContain('Team');
+      expect(content).toContain('Get Started');
+      expect(content).toContain('/docs/quickstart');
     });
 
-    it('should show prices', () => {
-      const pagePath = path.join(WEBSITE_DIR, 'src/app/pricing/page.tsx');
+    it('should show accurate stats', () => {
+      const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
       const content = fs.readFileSync(pagePath, 'utf-8');
 
-      expect(content).toContain('$0');
-      expect(content).toContain('$19');
-      expect(content).toContain('$49');
+      expect(content).toContain('33');
+      expect(content).toContain('CLI Commands');
+      expect(content).toContain('MCP Tools');
     });
 
-    it('should have FAQ section', () => {
-      const pagePath = path.join(WEBSITE_DIR, 'src/app/pricing/page.tsx');
+    it('should have before/after comparison', () => {
+      const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
       const content = fs.readFileSync(pagePath, 'utf-8');
 
-      expect(content).toContain('Frequently Asked Questions');
-      expect(content).toContain('free tier');
-    });
-  });
-
-  describe('Dashboard Page Content', () => {
-    it('should show analytics stats', () => {
-      const pagePath = path.join(WEBSITE_DIR, 'src/app/dashboard/page.tsx');
-      const content = fs.readFileSync(pagePath, 'utf-8');
-
-      expect(content).toContain('Queries');
-      expect(content).toContain('Tokens Saved');
-      expect(content).toContain('Cost Saved');
+      expect(content).toContain('Without ctx-sys');
+      expect(content).toContain('With ctx-sys');
     });
 
-    it('should have projects table', () => {
-      const pagePath = path.join(WEBSITE_DIR, 'src/app/dashboard/page.tsx');
+    it('should have architecture section explaining hybrid RAG', () => {
+      const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
       const content = fs.readFileSync(pagePath, 'utf-8');
 
-      expect(content).toContain('Projects');
-      expect(content).toContain('table');
+      expect(content).toContain('Hybrid RAG Pipeline');
+      expect(content).toContain('Keyword Search');
+      expect(content).toContain('Semantic Search');
+      expect(content).toContain('Graph Traversal');
+      expect(content).toContain('Reciprocal Rank Fusion');
     });
 
-    it('should show activity feed', () => {
-      const pagePath = path.join(WEBSITE_DIR, 'src/app/dashboard/page.tsx');
+    it('should have integrations section', () => {
+      const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
       const content = fs.readFileSync(pagePath, 'utf-8');
 
-      expect(content).toContain('Recent Activity');
+      expect(content).toContain('Claude Desktop');
+      expect(content).toContain('Cursor');
+      expect(content).toContain('MCP');
+    });
+
+    it('should use ctx command in examples', () => {
+      const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
+      const content = fs.readFileSync(pagePath, 'utf-8');
+
+      expect(content).toContain('ctx init');
+      expect(content).toContain('ctx index');
+      expect(content).toContain('ctx serve');
+    });
+
+    it('should indicate open source / MIT license', () => {
+      const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
+      const content = fs.readFileSync(pagePath, 'utf-8');
+
+      expect(content).toContain('Open Source');
+      expect(content).toContain('MIT');
     });
   });
 
   describe('Layout', () => {
-    it('should have navigation', () => {
+    it('should have navigation with docs and GitHub', () => {
       const layoutPath = path.join(WEBSITE_DIR, 'src/app/layout.tsx');
       const content = fs.readFileSync(layoutPath, 'utf-8');
 
       expect(content).toContain('nav');
       expect(content).toContain('Docs');
-      expect(content).toContain('Pricing');
+      expect(content).toContain('GitHub');
+    });
+
+    it('should NOT have pricing or dashboard in navigation', () => {
+      const layoutPath = path.join(WEBSITE_DIR, 'src/app/layout.tsx');
+      const content = fs.readFileSync(layoutPath, 'utf-8');
+
+      expect(content).not.toContain('Pricing');
+      expect(content).not.toContain('Dashboard');
+      expect(content).not.toContain('/signup');
     });
 
     it('should have footer', () => {
@@ -203,13 +260,72 @@ describe('F9.4 Product Website', () => {
       expect(content).toContain('Resources');
     });
 
+    it('should have correct copyright year', () => {
+      const layoutPath = path.join(WEBSITE_DIR, 'src/app/layout.tsx');
+      const content = fs.readFileSync(layoutPath, 'utf-8');
+
+      expect(content).toContain('2026');
+    });
+
     it('should have metadata', () => {
       const layoutPath = path.join(WEBSITE_DIR, 'src/app/layout.tsx');
       const content = fs.readFileSync(layoutPath, 'utf-8');
 
-      // Should have meta description or Next.js Metadata export
       expect(content).toMatch(/meta.*description|Metadata/i);
       expect(content).toContain('ctx-sys');
+    });
+
+    it('should have dark mode toggle', () => {
+      const layoutPath = path.join(WEBSITE_DIR, 'src/app/layout.tsx');
+      const content = fs.readFileSync(layoutPath, 'utf-8');
+
+      expect(content).toContain('darkMode');
+      expect(content).toContain('dark');
+    });
+  });
+
+  describe('Docs Navigation', () => {
+    it('should have sidebar with all doc sections', () => {
+      const layoutPath = path.join(WEBSITE_DIR, 'src/app/docs/layout.tsx');
+      const content = fs.readFileSync(layoutPath, 'utf-8');
+
+      expect(content).toContain('Getting Started');
+      expect(content).toContain('Integration Guides');
+      expect(content).toContain('Reference');
+      expect(content).toContain('Concepts');
+      expect(content).toContain('Help');
+    });
+
+    it('should have links to all doc pages', () => {
+      const layoutPath = path.join(WEBSITE_DIR, 'src/app/docs/layout.tsx');
+      const content = fs.readFileSync(layoutPath, 'utf-8');
+
+      expect(content).toContain('/docs/quickstart');
+      expect(content).toContain('/docs/installation');
+      expect(content).toContain('/docs/claude-desktop');
+      expect(content).toContain('/docs/cursor');
+      expect(content).toContain('/docs/ollama');
+      expect(content).toContain('/docs/cli');
+      expect(content).toContain('/docs/mcp-tools');
+      expect(content).toContain('/docs/configuration');
+      expect(content).toContain('/docs/how-it-works');
+      expect(content).toContain('/docs/troubleshooting');
+    });
+
+    it('should have previous/next navigation', () => {
+      const layoutPath = path.join(WEBSITE_DIR, 'src/app/docs/layout.tsx');
+      const content = fs.readFileSync(layoutPath, 'utf-8');
+
+      expect(content).toContain('Previous');
+      expect(content).toContain('Next');
+    });
+
+    it('should have mobile sidebar toggle', () => {
+      const layoutPath = path.join(WEBSITE_DIR, 'src/app/docs/layout.tsx');
+      const content = fs.readFileSync(layoutPath, 'utf-8');
+
+      expect(content).toContain('sidebarOpen');
+      expect(content).toContain('lg:hidden');
     });
   });
 });
