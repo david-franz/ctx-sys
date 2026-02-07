@@ -123,6 +123,8 @@ export class MultiStrategySearch {
     for (const result of settled) {
       if (result.status === 'fulfilled') {
         rawResults.push(...result.value);
+      } else {
+        console.error(`Search strategy failed: ${result.reason}`);
       }
     }
 
@@ -164,9 +166,12 @@ export class MultiStrategySearch {
   ): Promise<RawResult[]> {
     const results: RawResult[] = [];
 
-    // Search with all keywords joined
-    if (parsed.keywords.length > 0) {
-      const searchQuery = parsed.keywords.join(' ');
+    // Search with keywords or fall back to raw query
+    const searchQuery = parsed.keywords.length > 0
+      ? parsed.keywords.join(' ')
+      : parsed.normalizedQuery;
+
+    if (searchQuery) {
       const ftsResults = await this.entityStore.search(searchQuery, {
         type: options.entityTypes.length === 1 ? options.entityTypes[0] : undefined,
         limit: options.limit * 2
@@ -223,6 +228,7 @@ export class MultiStrategySearch {
     parsed: ParsedQuery,
     options: Required<MultiSearchOptions>
   ): Promise<RawResult[]> {
+    try {
     const results: RawResult[] = [];
 
     // Search with normalized query
@@ -268,6 +274,10 @@ export class MultiStrategySearch {
     }
 
     return results;
+    } catch (err) {
+      console.error(`Semantic search failed: ${err instanceof Error ? err.message : String(err)}`);
+      return [];
+    }
   }
 
   /**
@@ -279,6 +289,7 @@ export class MultiStrategySearch {
   ): Promise<RawResult[]> {
     if (!this.graphTraversal) return [];
 
+    try {
     const results: RawResult[] = [];
 
     // Start from mentioned entities
@@ -318,6 +329,10 @@ export class MultiStrategySearch {
     }
 
     return results;
+    } catch (err) {
+      console.error(`Graph search failed: ${err instanceof Error ? err.message : String(err)}`);
+      return [];
+    }
   }
 
   /**
