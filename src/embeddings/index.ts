@@ -4,6 +4,7 @@ export { OllamaEmbeddingProvider } from './ollama';
 export { OpenAIEmbeddingProvider } from './openai';
 export { MockEmbeddingProvider } from './mock';
 export { hashEntityContent, buildEmbeddingContent, hashContent } from './content-hasher';
+export { chunkEntity, estimateChunkCount, Chunk, ChunkResult, ChunkOptions } from './chunker';
 export {
   EmbeddingProvider,
   BatchOptions,
