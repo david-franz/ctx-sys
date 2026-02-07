@@ -97,10 +97,13 @@ export class QueryLogger {
     options: LogOptions = {}
   ): Promise<QueryLog> {
     const fullContextEstimate = await this.getFullContextEstimate(projectId);
-    const tokensSaved = fullContextEstimate - result.totalTokens;
+
+    // Only count savings when we actually returned useful results
+    const hasResults = result.totalTokens > 0 && result.items.length > 0;
+    const tokensSaved = hasResults ? Math.max(0, fullContextEstimate - result.totalTokens) : 0;
     const costActual = this.calculateCost(result.totalTokens);
-    const costEstimatedFull = this.calculateCost(fullContextEstimate);
-    const costSaved = costEstimatedFull - costActual;
+    const costEstimatedFull = hasResults ? this.calculateCost(fullContextEstimate) : 0;
+    const costSaved = hasResults ? Math.max(0, costEstimatedFull - costActual) : 0;
 
     const log: QueryLog = {
       id: generateId('qlog'),
