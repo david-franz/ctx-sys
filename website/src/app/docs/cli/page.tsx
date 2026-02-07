@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 
 function CmdBlock({ children }: { children: string }) {
@@ -48,9 +50,24 @@ function OptTable({
   );
 }
 
+const sidebarLinks = [
+  { href: '#core-commands', label: 'Core' },
+  { href: '#entity-commands', label: 'Entity' },
+  { href: '#graph-commands', label: 'Graph' },
+  { href: '#embedding-commands', label: 'Embedding' },
+  { href: '#summarization-commands', label: 'Summarization' },
+  { href: '#session-commands', label: 'Session' },
+  { href: '#document-decision-commands', label: 'Document / Decision' },
+  { href: '#analytics-commands', label: 'Analytics' },
+  { href: '#debug-commands', label: 'Debug' },
+  { href: '#common-workflows', label: 'Common Workflows' },
+];
+
 export default function CLIReferencePage() {
   return (
-    <>
+    <div className="flex gap-10">
+      {/* Main content */}
+      <div className="min-w-0 flex-1">
       <h1>CLI Reference</h1>
       <p>
         ctx-sys provides <strong>33 CLI commands</strong> organized by function.
@@ -1041,6 +1058,25 @@ All checks passed.`}</CmdBlock>
         configuration file options, see{' '}
         <Link href="/docs/configuration">Configuration</Link>.
       </p>
-    </>
+      </div>
+
+      {/* Right sticky sidebar */}
+      <nav className="hidden xl:block w-48 flex-shrink-0">
+        <div className="sticky top-8 space-y-1">
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+            On This Page
+          </p>
+          {sidebarLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="block text-sm py-1 text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+    </div>
   );
 }

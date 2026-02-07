@@ -8,7 +8,7 @@ export default function TroubleshootingPage() {
         This page covers common issues you may encounter when using ctx-sys,
         organized by category. If your issue is not listed here, check the{' '}
         <a
-          href="https://github.com/davidfranz/ctx-sys/issues"
+          href="#"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -596,7 +596,7 @@ Integrity check: PASSED`}
       <p>
         If this page does not resolve your issue, you can open an issue on the{' '}
         <a
-          href="https://github.com/davidfranz/ctx-sys/issues"
+          href="#"
           target="_blank"
           rel="noopener noreferrer"
         >

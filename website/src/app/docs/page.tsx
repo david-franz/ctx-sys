@@ -154,7 +154,7 @@ export default function DocsPage() {
 
       <div className="not-prose grid gap-4 sm:grid-cols-2">
         <Link
-          href="/thesis.pdf"
+          href="/whitepaper.pdf"
           className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 transition-colors no-underline"
         >
           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
@@ -174,10 +174,10 @@ export default function DocsPage() {
           </div>
           <div>
             <p className="font-semibold text-slate-900 dark:text-white">
-              Thesis PDF
+              Whitepaper
             </p>
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Full research paper and system design documentation
+              Research whitepaper and system design documentation
             </p>
           </div>
         </Link>

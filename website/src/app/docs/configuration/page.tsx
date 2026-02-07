@@ -71,7 +71,7 @@ providers:
 defaults:
   summarization:
     provider: ollama                   # string, default: ollama
-    model: qwen2.5-coder:7b           # string, default: qwen2.5-coder:7b
+    model: qwen3:0.6b           # string, default: qwen3:0.6b
 
   embeddings:
     provider: ollama                   # string, default: ollama
@@ -135,7 +135,7 @@ cli:
           <tr>
             <td><code>defaults.summarization.model</code></td>
             <td>string</td>
-            <td><code>qwen2.5-coder:7b</code></td>
+            <td><code>qwen3:0.6b</code></td>
             <td>Default model for entity summarization</td>
           </tr>
           <tr>
@@ -202,7 +202,7 @@ indexing:
 summarization:
   enabled: true                        # boolean, default: true
   provider: ollama                     # string, default: ollama
-  model: qwen2.5-coder:7b             # string, default: qwen2.5-coder:7b
+  model: qwen3:0.6b             # string, default: qwen3:0.6b
 
 # Embedding settings
 embeddings:
@@ -281,7 +281,7 @@ retrieval:
           <tr>
             <td><code>summarization.model</code></td>
             <td>string</td>
-            <td><code>qwen2.5-coder:7b</code></td>
+            <td><code>qwen3:0.6b</code></td>
             <td>Model used for entity summarization</td>
           </tr>
           <tr>
@@ -386,7 +386,7 @@ export OLLAMA_BASE_URL=http://gpu-server:11434`}
 database.path              = ~/.ctx-sys/ctx-sys.db
 providers.ollama.base_url  = http://localhost:11434
 defaults.summarization.provider = ollama
-defaults.summarization.model    = qwen2.5-coder:7b
+defaults.summarization.model    = qwen3:0.6b
 defaults.embeddings.provider    = ollama
 defaults.embeddings.model       = nomic-embed-text
 cli.colors                 = true
@@ -436,7 +436,7 @@ providers:
 defaults:
   summarization:
     provider: ollama
-    model: qwen2.5-coder:7b
+    model: qwen3:0.6b
   embeddings:
     provider: ollama
     model: nomic-embed-text`}

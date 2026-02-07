@@ -34,9 +34,13 @@ export default function OllamaPage() {
 
       <h3>macOS</h3>
       <p>Install via Homebrew or download the application directly:</p>
-      <pre>
-        <code>{`brew install ollama`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`brew install ollama`}
+          </code>
+        </pre>
+      </div>
       <p>
         Alternatively, download the macOS application from{' '}
         <a href="https://ollama.ai">ollama.ai</a>.
@@ -44,9 +48,13 @@ export default function OllamaPage() {
 
       <h3>Linux</h3>
       <p>Use the official install script:</p>
-      <pre>
-        <code>{`curl -fsSL https://ollama.ai/install.sh | sh`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`curl -fsSL https://ollama.ai/install.sh | sh`}
+          </code>
+        </pre>
+      </div>
 
       <h3>Windows</h3>
       <p>
@@ -60,9 +68,13 @@ export default function OllamaPage() {
       </p>
 
       <h3>Embedding Model</h3>
-      <pre>
-        <code>{`ollama pull nomic-embed-text`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ollama pull nomic-embed-text`}
+          </code>
+        </pre>
+      </div>
       <p>
         <code>nomic-embed-text</code> produces 768-dimensional vectors and is
         used by ctx-sys for all semantic search operations. It is compact and
@@ -70,9 +82,13 @@ export default function OllamaPage() {
       </p>
 
       <h3>Summarization Model</h3>
-      <pre>
-        <code>{`ollama pull qwen3:0.6b`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ollama pull qwen3:0.6b`}
+          </code>
+        </pre>
+      </div>
       <p>
         <code>qwen3:0.6b</code> is a small, fast language model used to
         generate entity summaries. Its small size means it runs quickly even
@@ -84,9 +100,13 @@ export default function OllamaPage() {
         Confirm that both models are available by listing your installed
         models:
       </p>
-      <pre>
-        <code>{`ollama list`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ollama list`}
+          </code>
+        </pre>
+      </div>
       <p>
         You should see both <code>nomic-embed-text</code> and{' '}
         <code>qwen3:0.6b</code> in the output.
@@ -97,9 +117,13 @@ export default function OllamaPage() {
         If Ollama is not already running as a background service, start the
         server manually:
       </p>
-      <pre>
-        <code>{`ollama serve`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ollama serve`}
+          </code>
+        </pre>
+      </div>
       <p>
         On macOS, launching the Ollama application starts the server
         automatically. On Linux, the install script typically configures Ollama
@@ -117,21 +141,27 @@ export default function OllamaPage() {
         following to your project&apos;s <code>config.yaml</code> (located in
         the <code>.ctx-sys</code> directory):
       </p>
-      <pre>
-        <code>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
 {`ollama:
   url: http://your-host:11434`}
-        </code>
-      </pre>
+          </code>
+        </pre>
+      </div>
 
       <h2>Generate Embeddings</h2>
       <p>
         With Ollama running and both models pulled, generate embeddings for
         your indexed codebase:
       </p>
-      <pre>
-        <code>{`ctx embed`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ctx embed`}
+          </code>
+        </pre>
+      </div>
       <p>
         This processes all indexed entities through the{' '}
         <code>nomic-embed-text</code> model and stores the resulting vectors
@@ -143,9 +173,13 @@ export default function OllamaPage() {
         Optionally, generate AI summaries for your code entities to improve
         search quality:
       </p>
-      <pre>
-        <code>{`ctx summarize`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ctx summarize`}
+          </code>
+        </pre>
+      </div>
       <p>
         This sends each entity to the <code>qwen3:0.6b</code> model and
         stores a concise summary alongside the entity.
@@ -158,9 +192,13 @@ export default function OllamaPage() {
         If ctx-sys reports that it cannot connect to Ollama, verify the server
         is reachable:
       </p>
-      <pre>
-        <code>{`curl http://localhost:11434/api/tags`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`curl http://localhost:11434/api/tags`}
+          </code>
+        </pre>
+      </div>
       <p>
         If this returns an error or times out, start Ollama with{' '}
         <code>ollama serve</code> and try again.
@@ -170,10 +208,14 @@ export default function OllamaPage() {
       <p>
         If you see an error about a missing model, pull it explicitly:
       </p>
-      <pre>
-        <code>{`ollama pull nomic-embed-text
-ollama pull qwen3:0.6b`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ollama pull nomic-embed-text
+ollama pull qwen3:0.6b`}
+          </code>
+        </pre>
+      </div>
 
       <h3>Slow Performance</h3>
       <p>
@@ -204,10 +246,14 @@ ollama pull qwen3:0.6b`}</code>
         environment variable and ctx-sys will use OpenAI&apos;s embedding
         model instead of Ollama:
       </p>
-      <pre>
-        <code>{`export OPENAI_API_KEY=sk-your-key-here
-ctx embed`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`export OPENAI_API_KEY=sk-your-key-here
+ctx embed`}
+          </code>
+        </pre>
+      </div>
       <p>
         Note that using OpenAI sends your code to OpenAI&apos;s servers for
         processing. If privacy is a concern, Ollama is the recommended option.

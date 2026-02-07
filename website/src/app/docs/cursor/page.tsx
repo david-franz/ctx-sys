@@ -37,9 +37,13 @@ export default function CursorPage() {
         If you have not already indexed your project, navigate to the project
         directory and run:
       </p>
-      <pre>
-        <code>{`ctx init && ctx index --embed`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ctx init && ctx index --embed`}
+          </code>
+        </pre>
+      </div>
       <p>
         This parses your source files, extracts entities, and generates vector
         embeddings for semantic search.
@@ -57,8 +61,9 @@ export default function CursorPage() {
         Click <strong>&quot;Add new MCP server&quot;</strong> and enter the
         following configuration:
       </p>
-      <pre>
-        <code>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
 {`{
   "mcpServers": {
     "ctx-sys": {
@@ -67,8 +72,9 @@ export default function CursorPage() {
     }
   }
 }`}
-        </code>
-      </pre>
+          </code>
+        </pre>
+      </div>
       <p>
         If Cursor cannot find the <code>ctx-sys</code> command, replace it
         with the full path to the binary. You can find this by running{' '}
@@ -122,16 +128,24 @@ export default function CursorPage() {
         For the best results, keep your ctx-sys index up to date as you make
         changes. You can automate this with git hooks:
       </p>
-      <pre>
-        <code>{`ctx hooks install`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ctx hooks install`}
+          </code>
+        </pre>
+      </div>
       <p>
         This installs a post-commit hook that automatically syncs the index
         after each commit. You can also manually re-index at any time:
       </p>
-      <pre>
-        <code>{`ctx index --embed`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ctx index --embed`}
+          </code>
+        </pre>
+      </div>
 
       <h3>Use for Code Reviews and Refactoring</h3>
       <p>

@@ -35,9 +35,13 @@ export default function ClaudeDesktopPage() {
         Navigate to your project directory and initialize ctx-sys, then index
         the codebase with embeddings:
       </p>
-      <pre>
-        <code>{`ctx init && ctx index --embed`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`ctx init && ctx index --embed`}
+          </code>
+        </pre>
+      </div>
       <p>
         This creates a <code>.ctx-sys</code> directory in your project, parses
         all source files, and generates vector embeddings for semantic search.
@@ -48,9 +52,13 @@ export default function ClaudeDesktopPage() {
         Claude Desktop needs the absolute path to the ctx-sys binary. Find it
         with:
       </p>
-      <pre>
-        <code>{`which ctx-sys`}</code>
-      </pre>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
+{`which ctx-sys`}
+          </code>
+        </pre>
+      </div>
       <p>
         Note the output (for example, <code>/usr/local/bin/ctx-sys</code>). You
         will need this in the next step if Claude Desktop cannot find the
@@ -76,8 +84,9 @@ export default function ClaudeDesktopPage() {
         contains other MCP servers, merge the <code>ctx-sys</code> entry into
         the existing <code>mcpServers</code> object:
       </p>
-      <pre>
-        <code>
+      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
+        <pre className="m-0 p-0 bg-transparent border-0">
+          <code className="text-sm text-slate-50 font-mono">
 {`{
   "mcpServers": {
     "ctx-sys": {
@@ -86,8 +95,9 @@ export default function ClaudeDesktopPage() {
     }
   }
 }`}
-        </code>
-      </pre>
+          </code>
+        </pre>
+      </div>
       <p>
         If <code>ctx-sys</code> is not on Claude Desktop&apos;s PATH, replace{' '}
         <code>&quot;ctx-sys&quot;</code> in the <code>command</code> field with the
