@@ -61,6 +61,7 @@ export class OllamaSummarizationProvider implements SummarizationProvider {
 
   async summarize(content: string, options: SummarizeOptions): Promise<string> {
     const prompt = this.buildPrompt(content, options);
+    const maxTokens = options.maxTokens ?? 150;
 
     const response = await fetch(`${this.baseUrl}/api/generate`, {
       method: 'POST',
@@ -69,9 +70,10 @@ export class OllamaSummarizationProvider implements SummarizationProvider {
         model: this.model,
         prompt,
         stream: false,
+        think: false,
         options: {
           temperature: options.temperature ?? 0.3,
-          num_predict: options.maxTokens ?? 150
+          num_predict: maxTokens
         }
       })
     });
@@ -125,8 +127,7 @@ Focus on: its purpose, main exports, and how it fits in the codebase.`
     const typePrompt = typePrompts[options.entityType] ||
       `Summarize this ${options.entityType} in 1-2 sentences.`;
 
-    return `/no_think
-${typePrompt}
+    return `${typePrompt}
 
 Be concise and technical. Don't start with "This function..." - just describe what it does.
 
@@ -142,10 +143,11 @@ Summary:`;
    * Strip thinking tags and clean up the response.
    */
   private cleanResponse(text: string): string {
-    // Remove <think>...</think> blocks (Qwen3 thinking mode)
+    // Remove closed <think>...</think> blocks (Qwen3 thinking mode)
     let cleaned = text.replace(/<think>[\s\S]*?<\/think>/g, '');
-    // Remove any unclosed <think> block at the start
-    cleaned = cleaned.replace(/^<think>[\s\S]*$/, '');
+    // Remove any unclosed <think> block anywhere in the text
+    // (happens when response is truncated mid-thinking)
+    cleaned = cleaned.replace(/<think>[\s\S]*$/, '');
     return cleaned.trim();
   }
 }
