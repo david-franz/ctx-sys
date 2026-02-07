@@ -234,6 +234,21 @@ async function showEntity(
     );
   }
 
+  // Fallback: search by name (exact match, then LIKE)
+  if (!entity) {
+    entity = db.get<EntityRow & { content?: string }>(
+      `SELECT * FROM ${prefix}_entities WHERE name = ?`,
+      [id]
+    );
+  }
+
+  if (!entity) {
+    entity = db.get<EntityRow & { content?: string }>(
+      `SELECT * FROM ${prefix}_entities WHERE name LIKE ?`,
+      [`%${id}%`]
+    );
+  }
+
   if (!entity) {
     output.error(`Entity not found: ${id}`);
     await db.close();

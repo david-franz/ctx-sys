@@ -55,6 +55,9 @@ import { createAnalyticsCommand, createDashboardCommand } from './analytics';
 import { createDocIndexCommand } from './doc-index-cmd';
 import { createExtractRelCommand } from './extract-rel-cmd';
 
+// Decision search (F10.7)
+import { createSearchDecisionsCommand } from './search-decisions-cmd';
+
 // Debug commands (F10.7)
 import {
   createInspectCommand,
@@ -114,7 +117,20 @@ program.addCommand(createDashboardCommand());
 program.addCommand(createDocIndexCommand());
 program.addCommand(createExtractRelCommand());
 
-// Debug commands
+// Decision search
+program.addCommand(createSearchDecisionsCommand());
+
+// Debug commands (also available as top-level: inspect, query, export, import, health)
+const debugCommand = new Command('debug')
+  .description('Database debugging and maintenance tools');
+debugCommand.addCommand(createInspectCommand());
+debugCommand.addCommand(createQueryCommand());
+debugCommand.addCommand(createExportCommand());
+debugCommand.addCommand(createImportCommand());
+debugCommand.addCommand(createHealthCommand());
+program.addCommand(debugCommand);
+
+// Also register debug commands as top-level for convenience
 program.addCommand(createInspectCommand());
 program.addCommand(createQueryCommand());
 program.addCommand(createExportCommand());

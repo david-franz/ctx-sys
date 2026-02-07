@@ -106,7 +106,7 @@ async function runSearch(
           output.log(`HyDE hypothetical: "${hypothetical?.slice(0, 120)}..."\n`);
         }
 
-        similar = embeddingManager.findSimilarByVector(embedding, {
+        similar = await embeddingManager.findSimilarByVector(embedding, {
           limit,
           threshold,
           entityTypes: options.type ? [options.type] : undefined

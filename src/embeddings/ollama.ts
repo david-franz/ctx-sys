@@ -69,6 +69,9 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     }
 
     const data = await response.json() as { embeddings: number[][] };
+    if (!data.embeddings || !data.embeddings[0]) {
+      throw new Error(`Ollama returned empty embedding for model ${this.config.model}`);
+    }
     return data.embeddings[0];
   }
 
