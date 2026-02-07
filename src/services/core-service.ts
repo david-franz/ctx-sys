@@ -491,13 +491,15 @@ export class CoreService {
   }
 
   async getGraphStats(projectId: string): Promise<GraphStats> {
+    const entityStore = this.context.getEntityStore(projectId);
     const relationshipStore = this.getRelationshipStore(projectId);
     const stats = await relationshipStore.getStatsByType();
     const avgDegree = await relationshipStore.getAverageDegree();
     const totalEdges = await relationshipStore.count();
+    const totalNodes = await entityStore.count();
 
     return {
-      totalNodes: 0, // Would need entity count
+      totalNodes,
       totalEdges,
       averageDegree: avgDegree,
       byType: stats
