@@ -9,6 +9,7 @@ import { DatabaseConnection } from '../db/connection';
 import { EntityStore, Entity, EntityType } from '../entities';
 import { EmbeddingManager } from '../embeddings/manager';
 import { OllamaEmbeddingProvider } from '../embeddings/ollama';
+import { HyDEQueryExpander, OllamaHypotheticalProvider } from '../retrieval';
 import { CLIOutput, defaultOutput } from './init';
 
 /**
@@ -30,6 +31,7 @@ export function createSearchCommand(output: CLIOutput = defaultOutput): Command 
     .option('-l, --limit <n>', 'Maximum number of results', '10')
     .option('-t, --type <type>', 'Filter by entity type (function, class, file, etc.)')
     .option('--semantic', 'Use vector similarity search (requires embeddings)', false)
+    .option('--hyde', 'Use HyDE (Hypothetical Document Embeddings) for better semantic search', false)
     .option('--threshold <n>', 'Minimum similarity score for semantic search', '0.3')
     .option('--format <format>', 'Output format (text, json)', 'text')
     .option('-d, --db <path>', 'Custom database path')
@@ -56,6 +58,7 @@ async function runSearch(
     limit?: string;
     type?: string;
     semantic?: boolean;
+    hyde?: boolean;
     threshold?: string;
     format?: string;
     db?: string;
@@ -78,20 +81,43 @@ async function runSearch(
     const limit = parseInt(options.limit || '10', 10);
     let results: SearchResultItem[];
 
-    if (options.semantic) {
+    if (options.semantic || options.hyde) {
       // Vector similarity search using embeddings
+      const baseUrl = config.providers?.ollama?.base_url || 'http://localhost:11434';
       const ollamaProvider = new OllamaEmbeddingProvider({
-        baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
+        baseUrl,
         model: config.defaults?.embeddings?.model || 'nomic-embed-text'
       });
       const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
 
       const threshold = parseFloat(options.threshold || '0.3');
-      const similar = await embeddingManager.findSimilar(query, {
-        limit,
-        threshold,
-        entityTypes: options.type ? [options.type] : undefined
-      });
+      let similar;
+
+      if (options.hyde) {
+        // HyDE: generate hypothetical answer, embed that instead
+        const hydeProvider = new OllamaHypotheticalProvider({ baseUrl });
+        const hyde = new HyDEQueryExpander(hydeProvider, embeddingManager);
+
+        const { embedding, usedHyDE, hypothetical } = await hyde.getSearchEmbedding(
+          query, projectId, { entityTypes: options.type ? [options.type] : undefined }
+        );
+
+        if (usedHyDE) {
+          output.log(`HyDE hypothetical: "${hypothetical?.slice(0, 120)}..."\n`);
+        }
+
+        similar = embeddingManager.findSimilarByVector(embedding, {
+          limit,
+          threshold,
+          entityTypes: options.type ? [options.type] : undefined
+        });
+      } else {
+        similar = await embeddingManager.findSimilar(query, {
+          limit,
+          threshold,
+          entityTypes: options.type ? [options.type] : undefined
+        });
+      }
 
       // Resolve entities for each result
       results = [];

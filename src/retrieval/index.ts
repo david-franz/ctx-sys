@@ -42,6 +42,7 @@ export {
   HyDEResult,
   HyDEQueryContext,
   MockHypotheticalProvider,
+  OllamaHypotheticalProvider,
   DEFAULT_HYDE_CONFIG,
   buildHypotheticalPrompt
 } from './hyde-expander';
