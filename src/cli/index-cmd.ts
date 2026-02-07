@@ -11,6 +11,7 @@ import { EntityStore } from '../entities';
 import { RelationshipStore } from '../graph/relationship-store';
 import { EmbeddingManager } from '../embeddings/manager';
 import { OllamaEmbeddingProvider } from '../embeddings/ollama';
+import { DocumentIndexer } from '../documents/document-indexer';
 import { CLIOutput, defaultOutput } from './init';
 
 /**
@@ -27,6 +28,7 @@ export function createIndexCommand(output: CLIOutput = defaultOutput): Command {
     .option('--exclude <patterns>', 'Comma-separated glob patterns to exclude')
     .option('-q, --quiet', 'Suppress progress output', false)
     .option('-d, --db <path>', 'Custom database path')
+    .option('--doc', 'Also index documentation files (md, yaml, json, etc.)', false)
     .option('--embed', 'Generate embeddings for RAG (requires Ollama)', false)
     .option('--embed-batch-size <n>', 'Batch size for embedding generation', '50')
     .action(async (directory: string, options) => {
@@ -55,6 +57,7 @@ async function runIndex(
     exclude?: string;
     quiet?: boolean;
     db?: string;
+    doc?: boolean;
     embed?: boolean;
     embedBatchSize?: string;
   },
@@ -151,6 +154,30 @@ async function runIndex(
 
     // Explicit save after indexing (before potentially slow embedding phase)
     db.save();
+
+    // Index documentation files if requested
+    if (options.doc) {
+      if (!options.quiet) {
+        output.log('');
+        output.log('Indexing documentation files...');
+      }
+
+      const docIndexer = new DocumentIndexer(entityStore, relationshipStore);
+      const docResult = await docIndexer.indexDirectory(projectPath);
+
+      db.save();
+
+      if (!options.quiet) {
+        output.success(`Documentation indexed: ${docResult.filesProcessed} files (${docResult.filesSkipped} unchanged)`);
+        output.log(`  Entities: ${docResult.totalEntities}, Relationships: ${docResult.totalRelationships}`);
+        if (docResult.errors.length > 0) {
+          output.log(`  Errors: ${docResult.errors.length}`);
+          for (const err of docResult.errors.slice(0, 3)) {
+            output.error(`    ${err}`);
+          }
+        }
+      }
+    }
 
     // Generate embeddings if requested
     if (options.embed) {

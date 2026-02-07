@@ -3,6 +3,7 @@
  */
 
 import { Command } from 'commander';
+import * as fs from 'fs';
 import * as path from 'path';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
@@ -13,8 +14,8 @@ import { CLIOutput, defaultOutput } from './init';
 
 export function createDocIndexCommand(output: CLIOutput = defaultOutput): Command {
   const command = new Command('doc-index')
-    .description('Index a document file for context retrieval')
-    .argument('<path>', 'Path to document file')
+    .description('Index document files or directories for context retrieval')
+    .argument('<path>', 'Path to document file or directory')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('--extract-entities', 'Use LLM to extract entities from text', false)
     .option('--extract-relationships', 'Use LLM to discover relationships', false)
@@ -34,7 +35,7 @@ export function createDocIndexCommand(output: CLIOutput = defaultOutput): Comman
 }
 
 async function runDocIndex(
-  filePath: string,
+  targetPath: string,
   options: {
     project?: string;
     extractEntities?: boolean;
@@ -61,28 +62,59 @@ async function runDocIndex(
     const relationshipStore = new RelationshipStore(db, projectId);
     const indexer = new DocumentIndexer(entityStore, relationshipStore);
 
-    const absolutePath = path.resolve(filePath);
+    const absolutePath = path.resolve(targetPath);
+    const stat = fs.statSync(absolutePath);
 
-    if (!options.quiet) {
-      output.log(`Indexing document: ${absolutePath}`);
-    }
+    if (stat.isDirectory()) {
+      // Directory mode
+      if (!options.quiet) {
+        output.log(`Indexing documents in: ${absolutePath}`);
+      }
 
-    const result = await indexer.indexFile(absolutePath, {
-      extractEntities: options.extractEntities,
-      extractRelationships: options.extractRelationships,
-      generateEmbeddings: options.embed,
-    });
+      const result = await indexer.indexDirectory(absolutePath, {
+        extractEntities: options.extractEntities,
+        extractRelationships: options.extractRelationships,
+        generateEmbeddings: options.embed,
+      });
 
-    db.save();
+      db.save();
 
-    if (!options.quiet) {
-      if (result.skipped) {
-        output.log('Document unchanged, skipped.');
-      } else {
-        output.success('Document indexed successfully');
-        output.log(`  Entities created: ${result.entitiesCreated}`);
-        output.log(`  Relationships created: ${result.relationshipsCreated}`);
-        output.log(`  Cross-document links: ${result.crossDocLinks}`);
+      if (!options.quiet) {
+        output.success('Directory indexed successfully');
+        output.log(`  Files processed: ${result.filesProcessed}`);
+        output.log(`  Files skipped (unchanged): ${result.filesSkipped}`);
+        output.log(`  Entities created: ${result.totalEntities}`);
+        output.log(`  Relationships created: ${result.totalRelationships}`);
+        if (result.errors.length > 0) {
+          output.log(`  Errors: ${result.errors.length}`);
+          for (const err of result.errors.slice(0, 5)) {
+            output.error(`    ${err}`);
+          }
+        }
+      }
+    } else {
+      // Single file mode
+      if (!options.quiet) {
+        output.log(`Indexing document: ${absolutePath}`);
+      }
+
+      const result = await indexer.indexFile(absolutePath, {
+        extractEntities: options.extractEntities,
+        extractRelationships: options.extractRelationships,
+        generateEmbeddings: options.embed,
+      });
+
+      db.save();
+
+      if (!options.quiet) {
+        if (result.skipped) {
+          output.log('Document unchanged, skipped.');
+        } else {
+          output.success('Document indexed successfully');
+          output.log(`  Entities created: ${result.entitiesCreated}`);
+          output.log(`  Relationships created: ${result.relationshipsCreated}`);
+          output.log(`  Cross-document links: ${result.crossDocLinks}`);
+        }
       }
     }
   } finally {
