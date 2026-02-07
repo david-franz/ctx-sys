@@ -161,19 +161,19 @@ describe('F9.3 Support Documentation', () => {
 
         expect(api).toContain('context_query');
         expect(api).toContain('Parameters');
-        expect(api).toContain('Returns');
+        expect(api).toContain('Description');
       });
 
-      it('should document entity_search', () => {
+      it('should document search_entities', () => {
         const api = readFile(path.join(WEBSITE_DOCS_DIR, 'api/mcp-tools.mdx'));
 
-        expect(api).toContain('entity_search');
+        expect(api).toContain('search_entities');
       });
 
-      it('should include error codes', () => {
+      it('should include graph operations', () => {
         const api = readFile(path.join(WEBSITE_DOCS_DIR, 'api/mcp-tools.mdx'));
 
-        expect(api).toContain('Error Codes');
+        expect(api).toContain('Graph Operations');
       });
     });
 
