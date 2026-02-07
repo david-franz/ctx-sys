@@ -78,7 +78,7 @@ The result: AI assistants that remember everything but only surface what matters
 │                    Storage Layer (SQLite)                         │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐  │
 │  │  Entities   │ │   Vectors   │ │    Graph    │ │  Messages  │  │
-│  │  (+ AST)    │ │ (sqlite-vec)│ │   (edges)   │ │ (sessions) │  │
+│  │  (+ AST)    │ │ (+ FTS5)    │ │   (edges)   │ │ (sessions) │  │
 │  └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘  │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐  │
 │  │ Checkpoints │ │  Analytics  │ │Hook History │ │ Reflections│  │
@@ -118,6 +118,13 @@ The result: AI assistants that remember everything but only surface what matters
 | **F10.5: Auto Relationship Extraction** | Extract imports, calls, extends, implements from AST |
 | **F10.6: LLM Summaries** | Multi-provider summarization (Ollama/OpenAI/Anthropic) |
 | **F10.7: CLI Completeness** | 30+ commands covering all functionality |
+| **F10.8: Robustness** | Replace hand-rolled glob/YAML/import parsers with picomatch, yaml |
+| **F10.9: Universal Document Indexing** | Index markdown, YAML, JSON, TOML, plain text + LLM extraction |
+| **F10.10: Native SQLite + FTS5** | Migrate to better-sqlite3 with FTS5 full-text search |
+| **F10.11: Smart Context Expansion** | Auto-include parent classes, imports, and type definitions |
+| **F10.12: Advanced Query Pipeline** | Query decomposition + LLM re-ranking |
+| **F10.13: Incremental Doc Updates** | Hash-based change detection + directory indexing for docs |
+| **F10.14: Embedding Quality** | Overlapping chunks prevent silent truncation of long entities |
 
 See [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) for architecture details.
 
@@ -440,11 +447,11 @@ providers:
 | Component | Technology | Rationale |
 |-----------|------------|-----------|
 | **Language** | TypeScript | MCP SDK compatibility, type safety |
-| **Database** | sql.js (WebAssembly SQLite) | Single file, portable, no native deps |
+| **Database** | better-sqlite3 + FTS5 | Native performance, full-text search with BM25 |
 | **AST Parsing** | tree-sitter | Multi-language, fast, accurate |
 | **Embeddings (local)** | Ollama + nomic-embed-text | Quality local embeddings |
 | **Embeddings (cloud)** | OpenAI text-embedding-3-small | Fallback option |
-| **Summaries (local)** | Ollama + qwen2.5-coder | Code-aware summarization |
+| **Summaries (local)** | Ollama + qwen3:0.6b | Fast local summarization |
 | **Summaries (cloud)** | OpenAI gpt-4o-mini, Anthropic claude-3-haiku | Cloud fallback options |
 | **MCP Framework** | @modelcontextprotocol/sdk | Official protocol SDK |
 
