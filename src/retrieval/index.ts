@@ -71,6 +71,12 @@ export {
   MockCritiqueModelProvider
 } from './draft-critique';
 
+// Context Expansion
+export {
+  ContextExpander,
+  ExpansionOptions
+} from './context-expander';
+
 // Shared Types
 export {
   SearchResult,
