@@ -17,7 +17,7 @@ ctx-sys is implemented in 12 phases, progressing from foundational infrastructur
 | 7 | Configuration & Polish | Configuration, model abstraction, watch mode, CLI | ✅ Complete |
 | 8 | Agent Patterns | Checkpointing, hot/cold memory API, reflection, proactive context | ✅ Complete |
 | 9 | Analytics & Distribution | Token analytics, git hooks, support docs, website, npm | ✅ Complete |
-| 10 | RAG Enhancements | Code content storage, scalable indexing, smart context, LLM summaries | ✅ Complete |
+| 10 | RAG Enhancements | Code content, scalable indexing, LLM summaries, robustness, Graph RAG | In Progress |
 | 11 | Integration & Team | VS Code extension, auto context injection, team knowledge base | Planned |
 | 12 | Commercial & Enterprise | Auth & SSO, desktop app, licensing & billing, telemetry | Planned |
 
@@ -208,7 +208,7 @@ Analytics infrastructure, support portal, and public-facing web presence.
 
 ## Phase 10: RAG Enhancements
 
-Critical improvements to make RAG actually useful - storing real code, handling large codebases, generating intelligent summaries, and returning usable context.
+Critical improvements to make RAG production-quality — storing real code, handling large codebases, intelligent summaries, universal document indexing, proper search infrastructure (FTS5 + ANN vectors), smart context expansion, and advanced query processing.
 
 | Feature | Description | Doc | Status |
 |---------|-------------|-----|--------|
@@ -220,6 +220,13 @@ Critical improvements to make RAG actually useful - storing real code, handling 
 | **F10.5** | Auto Relationship Extraction | [F10.5-auto-relationship-extraction.md](phase-10/F10.5-auto-relationship-extraction.md) | ✅ Complete |
 | **F10.6** | LLM-Generated Summaries | [F10.6-llm-summaries.md](phase-10/F10.6-llm-summaries.md) | ✅ Complete |
 | **F10.7** | CLI Completeness | [F10.7-cli-completeness.md](phase-10/F10.7-cli-completeness.md) | ✅ Complete |
+| **F10.8** | Robustness Improvements | [F10.8-robustness-improvements.md](phase-10/F10.8-robustness-improvements.md) | Planned |
+| **F10.9** | Universal Document Indexing + Graph RAG | [F10.9-graph-rag-extraction.md](phase-10/F10.9-graph-rag-extraction.md) | Planned |
+| **F10.10** | Native SQLite + FTS5 + sqlite-vec | [F10.10-native-sqlite-fts5.md](phase-10/F10.10-native-sqlite-fts5.md) | Planned |
+| **F10.11** | Smart Context Expansion | [F10.11-smart-context-expansion.md](phase-10/F10.11-smart-context-expansion.md) | Planned |
+| **F10.12** | Advanced Query Pipeline | [F10.12-advanced-query-pipeline.md](phase-10/F10.12-advanced-query-pipeline.md) | Planned |
+| **F10.13** | Incremental Document Updates | [F10.13-incremental-doc-updates.md](phase-10/F10.13-incremental-doc-updates.md) | Planned |
+| **F10.14** | Embedding Quality | [F10.14-embedding-quality.md](phase-10/F10.14-embedding-quality.md) | Planned |
 
 **Key Deliverables:**
 - ✅ Store actual source code in entities (not just descriptions)
@@ -229,6 +236,15 @@ Critical improvements to make RAG actually useful - storing real code, handling 
 - ✅ Automatically extract call graphs and type relationships
 - ✅ LLM-generated summaries for semantic understanding (Ollama or cloud)
 - ✅ Full CLI access to all features (30+ commands)
+- Replace hand-rolled glob/YAML/import detection with npm packages (F10.8)
+- Universal document indexing: markdown, YAML, JSON, TOML, plain text (F10.9)
+- LLM-powered entity and relationship extraction from any document (F10.9)
+- Cross-document relationship discovery against full entity graph (F10.9)
+- Native SQLite with FTS5 full-text search and sqlite-vec ANN vector indexing (F10.10)
+- Parent/child context expansion — methods include their class, functions include imports (F10.11)
+- Query decomposition for multi-part questions + LLM re-ranking (F10.12)
+- Incremental document updates with change detection + watch mode for docs (F10.13)
+- Overlapping chunk embeddings for long entities — no more silent truncation (F10.14)
 
 ---
 
@@ -325,7 +341,7 @@ ctx-sys/
 | AST Parsing | tree-sitter |
 | Embeddings (local) | Ollama (nomic-embed-text) |
 | Embeddings (cloud) | OpenAI (text-embedding-3-small) |
-| Summaries (local) | Ollama (qwen2.5-coder) |
+| Summaries (local) | Ollama (qwen3:0.6b) |
 | Summaries (cloud) | OpenAI (gpt-4o-mini), Anthropic (claude-3-haiku) |
 | MCP | @modelcontextprotocol/sdk |
 | CLI | Commander.js |
@@ -349,9 +365,16 @@ ctx-sys/
 For maximum value delivery, the recommended implementation order is:
 
 1. **Phases 1-9** — Foundation through analytics ✅ Complete
-2. **Phase 10** — RAG Enhancements ✅ Complete
-3. **Phase 11** — Integration (VS Code -> Auto-inject -> Team) — Next
-4. **Phase 12** — Commercial (Auth/SSO -> Desktop -> Billing -> Telemetry)
+2. **Phase 10.0-10.7** — RAG Enhancements ✅ Complete
+3. **Phase 10.8** — Robustness: replace hand-rolled code with npm packages
+4. **Phase 10.9** — Universal document indexing + Graph RAG
+5. **Phase 10.10** — Native SQLite + FTS5 + sqlite-vec (search infrastructure)
+6. **Phase 10.11** — Smart context expansion (parent/child entity inclusion)
+7. **Phase 10.12** — Advanced query pipeline (decomposition + re-ranking)
+8. **Phase 10.13** — Incremental document updates (change detection + watch)
+9. **Phase 10.14** — Embedding quality (overlapping chunks, no truncation)
+10. **Phase 11** — Integration (VS Code -> Auto-inject -> Team)
+11. **Phase 12** — Commercial (Auth/SSO -> Desktop -> Billing -> Telemetry)
 
 ---
 
