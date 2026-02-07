@@ -198,6 +198,21 @@ export class MultiStrategySearch {
       }
     }
 
+    // F10c.7: Search with expanded/synonym terms at lower weight
+    if (parsed.expandedTerms.length > 0) {
+      const expandedQuery = parsed.expandedTerms.join(' ');
+      const expandedResults = await this.entityStore.search(expandedQuery, {
+        limit: Math.floor(options.limit / 2)
+      });
+      for (let i = 0; i < expandedResults.length; i++) {
+        results.push({
+          entityId: expandedResults[i].id,
+          score: 0.5 / (i + 1),
+          source: 'keyword'
+        });
+      }
+    }
+
     return results;
   }
 

@@ -88,10 +88,10 @@ export class QueryParser {
       ...(options.customStopWords ?? [])
     ]);
 
-    this.synonyms = new Map(Object.entries({
+    this.synonyms = buildBidirectionalSynonyms({
       ...DEFAULT_SYNONYMS,
       ...(options.customSynonyms ?? {})
-    }));
+    });
 
     this.intentPatterns = this.buildIntentPatterns();
   }
@@ -437,26 +437,33 @@ const DEFAULT_STOP_WORDS = [
 
 /**
  * Default synonyms for technical terms.
+ * These are expanded bidirectionally at construction time.
  */
 const DEFAULT_SYNONYMS: Record<string, string[]> = {
   // Functions
-  'function': ['method', 'func', 'procedure', 'routine'],
+  'function': ['method', 'func', 'handler', 'callback', 'procedure'],
   'method': ['function', 'func', 'procedure'],
 
   // Classes
-  'class': ['type', 'interface', 'struct'],
+  'class': ['type', 'interface', 'struct', 'model'],
   'interface': ['type', 'class', 'contract'],
 
   // Files
   'file': ['module', 'source'],
-  'module': ['file', 'package'],
+  'module': ['file', 'package', 'library'],
+
+  // Data storage
+  'database': ['db', 'sqlite', 'sql', 'persistence', 'storage'],
+  'storage': ['store', 'persistence', 'cache', 'repository'],
+  'cache': ['memoize', 'cached', 'store'],
 
   // Actions
-  'create': ['make', 'add', 'new', 'generate'],
-  'delete': ['remove', 'destroy', 'drop'],
-  'update': ['modify', 'change', 'edit', 'alter'],
-  'get': ['fetch', 'retrieve', 'read', 'load'],
+  'create': ['make', 'add', 'new', 'generate', 'insert'],
+  'delete': ['remove', 'destroy', 'drop', 'purge'],
+  'update': ['modify', 'change', 'edit', 'alter', 'patch'],
+  'get': ['fetch', 'retrieve', 'read', 'load', 'find'],
   'set': ['assign', 'write', 'store', 'save'],
+  'search': ['find', 'query', 'lookup', 'filter', 'match', 'retrieve'],
 
   // Errors
   'error': ['exception', 'bug', 'issue', 'problem', 'fault'],
@@ -469,11 +476,48 @@ const DEFAULT_SYNONYMS: Record<string, string[]> = {
   'number': ['int', 'integer', 'float', 'numeric'],
 
   // Testing
-  'test': ['spec', 'check', 'verify', 'validate'],
+  'test': ['spec', 'assertion', 'mock', 'stub', 'fixture'],
+
+  // Architecture
+  'api': ['endpoint', 'route', 'handler', 'controller'],
+  'config': ['configuration', 'settings', 'options', 'preferences'],
+
+  // Patterns
+  'index': ['indexer', 'indexing', 'catalog', 'scan'],
+  'embed': ['embedding', 'vector', 'encode'],
+  'graph': ['network', 'relationship', 'edge', 'node', 'link'],
+  'parse': ['parser', 'tokenize', 'lex', 'analyze', 'ast'],
 
   // Common operations
-  'parse': ['extract', 'analyze', 'process'],
   'render': ['display', 'show', 'draw'],
   'handle': ['process', 'manage', 'deal'],
   'validate': ['verify', 'check', 'ensure']
 };
+
+/**
+ * Build bidirectional synonym map from one-directional definitions.
+ */
+function buildBidirectionalSynonyms(source: Record<string, string[]>): Map<string, string[]> {
+  const biMap = new Map<string, Set<string>>();
+
+  for (const [key, values] of Object.entries(source)) {
+    const allTerms = [key, ...values];
+    for (const term of allTerms) {
+      const lower = term.toLowerCase();
+      const existing = biMap.get(lower) || new Set<string>();
+      for (const other of allTerms) {
+        const otherLower = other.toLowerCase();
+        if (otherLower !== lower) {
+          existing.add(otherLower);
+        }
+      }
+      biMap.set(lower, existing);
+    }
+  }
+
+  const result = new Map<string, string[]>();
+  for (const [key, values] of biMap) {
+    result.set(key, [...values]);
+  }
+  return result;
+}
