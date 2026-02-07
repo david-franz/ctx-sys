@@ -16,6 +16,7 @@ import { GraphRelationshipType } from '../graph/types';
 import { MarkdownParser } from './markdown-parser';
 import { RequirementExtractor } from './requirement-extractor';
 import { DocumentLinker } from './document-linker';
+import { chunkSections } from './document-chunker';
 import { MarkdownDocument, MarkdownSection } from './types';
 
 export interface DocumentIndexOptions {
@@ -136,11 +137,15 @@ export class DocumentIndexer {
     });
     entitiesCreated++;
 
+    // Apply chunking: split large sections, merge small ones, add overlap
+    const chunkedSections = chunkSections(
+      doc.sections.filter(s => s.level > 0)
+    );
+
     // Create section entities with CONTAINS hierarchy
     const sectionEntities: Map<string, Entity> = new Map();
 
-    for (const section of doc.sections) {
-      if (section.level === 0) continue; // skip preamble for hierarchy
+    for (const section of chunkedSections) {
 
       const sectionEntity = await this.entityStore.upsert({
         type: 'section',
