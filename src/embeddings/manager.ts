@@ -117,18 +117,19 @@ export class EmbeddingManager {
    * Generate embedding for text without storing it.
    * Useful for query embeddings and HyDE.
    */
-  async embedText(text: string): Promise<number[]> {
-    return this.provider.embed(text);
+  async embedText(text: string, options?: { isQuery?: boolean }): Promise<number[]> {
+    return this.provider.embed(text, { isQuery: options?.isQuery ?? true });
   }
 
   /**
    * Find similar entities by query text.
+   * Uses query-specific embedding prefix for models that support it.
    */
   async findSimilar(
     query: string,
     options?: { limit?: number; threshold?: number; entityTypes?: string[] }
   ): Promise<SimilarityResult[]> {
-    const queryEmbedding = await this.provider.embed(query);
+    const queryEmbedding = await this.provider.embed(query, { isQuery: true });
     return this.findSimilarByVector(queryEmbedding, options);
   }
 

@@ -1,4 +1,4 @@
-import { EmbeddingProvider, BatchOptions } from './types';
+import { EmbeddingProvider, BatchOptions, EmbedOptions } from './types';
 
 interface OllamaConfig {
   baseUrl: string;
@@ -36,6 +36,21 @@ const MODEL_DIMENSIONS: Record<string, number> = {
 };
 
 /**
+ * Model-specific prompt prefixes for query vs document embedding.
+ * Some models (e.g., nomic-embed-text) produce better results with task-specific prefixes.
+ */
+const MODEL_PREFIXES: Record<string, { query: string; document: string }> = {
+  'nomic-embed-text': {
+    query: 'search_query: ',
+    document: 'search_document: '
+  },
+  'mxbai-embed-large': {
+    query: 'Represent this sentence for searching relevant passages: ',
+    document: ''
+  }
+};
+
+/**
  * Embedding provider using Ollama's local API.
  */
 export class OllamaEmbeddingProvider implements EmbeddingProvider {
@@ -49,10 +64,20 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     this.dimensions = MODEL_DIMENSIONS[config.model] || 768;
   }
 
-  async embed(text: string): Promise<number[]> {
-    // Truncate to model's max context to avoid 400 errors
+  /**
+   * Apply model-specific prefix to text based on whether it's a query or document.
+   */
+  private applyPrefix(text: string, isQuery: boolean): string {
+    const prefixes = MODEL_PREFIXES[this.config.model];
+    if (!prefixes) return text;
+    const prefix = isQuery ? prefixes.query : prefixes.document;
+    return prefix + text;
+  }
+
+  async embed(text: string, options?: EmbedOptions): Promise<number[]> {
     const maxChars = MODEL_MAX_CHARS[this.config.model] || DEFAULT_MAX_CHARS;
-    const truncated = text.length > maxChars ? text.slice(0, maxChars) : text;
+    const prefixed = this.applyPrefix(text, options?.isQuery ?? false);
+    const truncated = prefixed.length > maxChars ? prefixed.slice(0, maxChars) : prefixed;
 
     const response = await fetch(`${this.config.baseUrl}/api/embed`, {
       method: 'POST',
@@ -75,17 +100,21 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     return data.embeddings[0];
   }
 
-  async embedBatch(texts: string[], options?: BatchOptions): Promise<number[][]> {
+  async embedBatch(texts: string[], options?: BatchOptions & EmbedOptions): Promise<number[][]> {
     const batchSize = options?.batchSize || 10;
     const results: number[][] = [];
     let completed = 0;
     const maxChars = MODEL_MAX_CHARS[this.config.model] || DEFAULT_MAX_CHARS;
+    const isQuery = options?.isQuery ?? false;
 
     for (let i = 0; i < texts.length; i += batchSize) {
       const batch = texts.slice(i, Math.min(i + batchSize, texts.length));
 
-      // Truncate each text and send as array to Ollama's native batch API
-      const truncatedBatch = batch.map(t => t.length > maxChars ? t.slice(0, maxChars) : t);
+      // Apply model-specific prefixes and truncate
+      const truncatedBatch = batch.map(t => {
+        const prefixed = this.applyPrefix(t, isQuery);
+        return prefixed.length > maxChars ? prefixed.slice(0, maxChars) : prefixed;
+      });
 
       const response = await fetch(`${this.config.baseUrl}/api/embed`, {
         method: 'POST',

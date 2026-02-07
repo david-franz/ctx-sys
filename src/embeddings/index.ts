@@ -7,6 +7,7 @@ export { hashEntityContent, buildEmbeddingContent, hashContent } from './content
 export { chunkEntity, estimateChunkCount, Chunk, ChunkResult, ChunkOptions } from './chunker';
 export {
   EmbeddingProvider,
+  EmbedOptions,
   BatchOptions,
   StoredEmbedding,
   SimilarityResult,

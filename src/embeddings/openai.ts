@@ -1,4 +1,4 @@
-import { EmbeddingProvider, BatchOptions } from './types';
+import { EmbeddingProvider, BatchOptions, EmbedOptions } from './types';
 
 interface OpenAIConfig {
   apiKey: string;
@@ -29,7 +29,7 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
     this.dimensions = MODEL_DIMENSIONS[config.model] || 1536;
   }
 
-  async embed(text: string): Promise<number[]> {
+  async embed(text: string, _options?: EmbedOptions): Promise<number[]> {
     const response = await fetch('https://api.openai.com/v1/embeddings', {
       method: 'POST',
       headers: {
@@ -51,7 +51,7 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
     return data.data[0].embedding;
   }
 
-  async embedBatch(texts: string[], options?: BatchOptions): Promise<number[][]> {
+  async embedBatch(texts: string[], options?: BatchOptions & EmbedOptions): Promise<number[][]> {
     // OpenAI supports batch input natively (up to 2048 items)
     const batchSize = Math.min(options?.batchSize || 100, 2048);
     const results: number[][] = [];

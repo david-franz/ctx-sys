@@ -2,13 +2,18 @@
  * Embedding provider and storage type definitions.
  */
 
+export interface EmbedOptions {
+  /** Whether this text is a search query (vs a document to be indexed) */
+  isQuery?: boolean;
+}
+
 export interface EmbeddingProvider {
   readonly name: string;
   readonly modelId: string;
   readonly dimensions: number;
 
-  embed(text: string): Promise<number[]>;
-  embedBatch(texts: string[], options?: BatchOptions): Promise<number[][]>;
+  embed(text: string, options?: EmbedOptions): Promise<number[]>;
+  embedBatch(texts: string[], options?: BatchOptions & EmbedOptions): Promise<number[][]>;
   isAvailable(): Promise<boolean>;
 }
 

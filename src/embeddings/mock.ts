@@ -1,4 +1,4 @@
-import { EmbeddingProvider, BatchOptions } from './types';
+import { EmbeddingProvider, BatchOptions, EmbedOptions } from './types';
 
 /**
  * Mock embedding provider for testing.
@@ -19,7 +19,7 @@ export class MockEmbeddingProvider implements EmbeddingProvider {
    * Generate a deterministic embedding from text.
    * Uses a simple hash-based approach for reproducibility.
    */
-  async embed(text: string): Promise<number[]> {
+  async embed(text: string, _options?: EmbedOptions): Promise<number[]> {
     if (!this.available) {
       throw new Error('Mock provider unavailable');
     }
@@ -45,7 +45,7 @@ export class MockEmbeddingProvider implements EmbeddingProvider {
     return embedding.map(v => v / norm);
   }
 
-  async embedBatch(texts: string[], options?: BatchOptions): Promise<number[][]> {
+  async embedBatch(texts: string[], options?: BatchOptions & EmbedOptions): Promise<number[][]> {
     const results: number[][] = [];
 
     for (let i = 0; i < texts.length; i++) {

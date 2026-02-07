@@ -5,6 +5,7 @@
 
 import { createHash } from 'crypto';
 import { Entity } from '../entities';
+import { splitIdentifier } from '../utils/identifier-splitter';
 
 /**
  * Generate a stable hash for entity content.
@@ -29,24 +30,52 @@ export function hashContent(content: string): string {
 export function buildEmbeddingContent(entity: Entity): string {
   const parts: string[] = [];
 
-  // Always include name and type
-  parts.push(`${entity.type}: ${entity.name}`);
+  // Include type and split name for better semantic matching
+  parts.push(`${entity.type}: ${splitIdentifier(entity.name)}`);
+
+  // Include file context for code entities
+  if (entity.filePath) {
+    const pathParts = entity.filePath.split('/').slice(-2);
+    parts.push(`in ${pathParts.join('/')}`);
+  }
 
   // Include summary if available
   if (entity.summary) {
     parts.push(entity.summary);
   }
 
-  // Include code with whitespace stripped to maximize semantic content per token
+  // Include code with meaningful extraction
   if (entity.content) {
-    const stripped = entity.content
-      .split('\n')
-      .map(line => line.trimStart())       // remove indentation
-      .filter(line => line.length > 0)     // remove blank lines
-      .slice(0, 80)                        // more lines fit now
-      .join('\n');
-    parts.push(stripped);
+    const meaningful = extractMeaningfulCode(entity.content);
+    parts.push(meaningful);
   }
 
   return parts.join('\n\n');
+}
+
+/**
+ * Extract meaningful code: signatures, doc comments, exports.
+ * Strips implementation details to focus on what the code does, not how.
+ */
+function extractMeaningfulCode(code: string): string {
+  const lines = code.split('\n');
+  const meaningful: string[] = [];
+  let inDocComment = false;
+
+  for (const line of lines) {
+    const trimmed = line.trimStart();
+    // Keep doc comments
+    if (trimmed.startsWith('/**')) inDocComment = true;
+    if (inDocComment || trimmed.startsWith('//') || trimmed.startsWith('*')) {
+      meaningful.push(trimmed);
+      if (trimmed.endsWith('*/')) inDocComment = false;
+      continue;
+    }
+    // Keep signatures (function, class, interface, type, export)
+    if (/^(export|async|function|class|interface|type|const|let|var|import)\b/.test(trimmed)) {
+      meaningful.push(trimmed);
+    }
+  }
+
+  return meaningful.slice(0, 60).join('\n');
 }
