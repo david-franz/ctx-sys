@@ -8,6 +8,7 @@ import { EmbeddingManager } from '../embeddings';
 import { GraphTraversal } from '../graph';
 import { QueryParser, ParsedQuery, EntityMention } from './query-parser';
 import { SearchResult, SearchStrategy, SearchConfig } from './types';
+import { Reranker } from './heuristic-reranker';
 
 /**
  * Raw search result before fusion.
@@ -72,7 +73,8 @@ export class MultiStrategySearch {
     private entityStore: EntityStore,
     private embeddingManager: EmbeddingManager,
     private graphTraversal?: GraphTraversal,
-    queryParser?: QueryParser
+    queryParser?: QueryParser,
+    private reranker?: Reranker
   ) {
     this.queryParser = queryParser ?? new QueryParser();
   }
@@ -132,7 +134,18 @@ export class MultiStrategySearch {
     const limited = filtered.slice(0, opts.limit);
 
     // Hydrate with full entities
-    return this.hydrateResults(limited);
+    const hydrated = await this.hydrateResults(limited);
+
+    // Rerank if available
+    if (this.reranker && hydrated.length > 1) {
+      const reranked = await this.reranker.rerank(query, hydrated);
+      return reranked.map(r => {
+        const original = hydrated.find(h => h.entity.id === r.entityId)!;
+        return { ...original, score: r.rerankedScore };
+      }).filter(Boolean);
+    }
+
+    return hydrated;
   }
 
   /**

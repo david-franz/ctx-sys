@@ -11,7 +11,7 @@ import { SessionManager, MessageStore, MessageInput } from '../conversation';
 import { Session, Message, Decision } from '../conversation/types';
 import { RelationshipStore, GraphTraversal } from '../graph';
 import { DocumentIndexer } from '../documents/document-indexer';
-import { MultiStrategySearch, ContextAssembler, SearchResult } from '../retrieval';
+import { MultiStrategySearch, ContextAssembler, SearchResult, HeuristicReranker } from '../retrieval';
 import { CheckpointManager, Checkpoint, AgentState, SaveOptions } from '../agent/checkpoints';
 import { MemoryTierManager } from '../agent/memory-tier';
 import { QueryLogger } from '../analytics/query-logger';
@@ -138,7 +138,9 @@ export class CoreService {
       this.searchServices.set(projectId, new MultiStrategySearch(
         entityStore,
         embeddingManager,
-        graphTraversal
+        graphTraversal,
+        undefined,
+        new HeuristicReranker()
       ));
     }
     return this.searchServices.get(projectId)!;

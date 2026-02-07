@@ -91,6 +91,13 @@ export {
   RerankResult
 } from './llm-reranker';
 
+// Heuristic Re-ranking
+export {
+  HeuristicReranker,
+  Reranker,
+  RerankerResult
+} from './heuristic-reranker';
+
 // Shared Types
 export {
   SearchResult,
