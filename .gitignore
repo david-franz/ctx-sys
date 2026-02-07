@@ -41,6 +41,9 @@ coverage/
 # ctx-sys data (local development)
 .ctx-sys/
 
+# Next.js (website)
+website/.next/
+
 # Temporary files
 tmp/
 temp/
