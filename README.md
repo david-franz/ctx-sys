@@ -89,7 +89,7 @@ The result: AI assistants that remember everything but only surface what matters
 
 ## Current Status
 
-> **Beta Release** - Core functionality, Phase 10 RAG enhancements, and Phase 10b MCP tool fixes are complete. Phase 10c retrieval quality improvements planned.
+> **Beta Release** - Core functionality, Phase 10 RAG enhancements, Phase 10b MCP tool fixes, and Phase 10c retrieval quality improvements are complete.
 
 ### What Works Now
 
@@ -149,20 +149,20 @@ Systematic testing of all 33 MCP tools revealed 15 issues — 10 bugs and 5 plac
 | **F10b.14** | hooks_impact_report git diff analysis | Done |
 | **F10b.15** | analytics_dashboard entity type breakdown | Done |
 
-### Phase 10c: Retrieval Quality Improvements (Planned)
+### Phase 10c: Retrieval Quality Improvements (Complete)
 
 Improvements to search quality, document RAG, and analytics honesty:
 
-| Feature | Description | Priority |
-|---------|-------------|----------|
-| **F10c.1** | FTS5 camelCase/PascalCase tokenizer | Critical |
-| **F10c.2** | Embedding model quality & prompt prefixes | High |
-| **F10c.3** | Hybrid reranking pipeline | High |
-| **F10c.4** | Document chunking with size constraints + overlap | High |
-| **F10c.5** | Search strategy auto-tuning by query type | Medium |
-| **F10c.6** | Realistic analytics baselines (grep+read comparison) | Medium |
-| **F10c.7** | Query understanding & synonym expansion | Medium |
-| **F10c.8** | Code-aware context assembly (signatures over bodies) | Medium |
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **F10c.1** | FTS5 camelCase/PascalCase identifier splitting | Done |
+| **F10c.2** | Embedding model quality & query/document prefixes | Done |
+| **F10c.3** | Heuristic reranking pipeline | Done |
+| **F10c.4** | Document chunking with size constraints + overlap | Done |
+| **F10c.5** | Query-adaptive search strategy auto-tuning | Done |
+| **F10c.6** | Realistic analytics baselines (grep+read comparison) | Done |
+| **F10c.7** | Query expansion with bidirectional synonyms | Done |
+| **F10c.8** | Code-aware context assembly (signatures over bodies) | Done |
 
 ---
 
