@@ -602,11 +602,17 @@ export class ToolRegistry {
 
         const projectId = await this.resolveProjectId(project);
 
-        // Create session if not specified
+        // Create session if not specified, or auto-create if provided ID doesn't exist
         let sessionId = session;
         if (!sessionId) {
           const newSession = await this.coreService.createSession(projectId);
           sessionId = newSession.id;
+        } else {
+          const existing = await this.coreService.getSession(projectId, sessionId);
+          if (!existing) {
+            const newSession = await this.coreService.createSession(projectId, sessionId);
+            sessionId = newSession.id;
+          }
         }
 
         const message = await this.coreService.storeMessage(projectId, sessionId, {
