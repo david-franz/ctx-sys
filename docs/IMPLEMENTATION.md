@@ -322,13 +322,13 @@ Shareable knowledge bases, full retrieval pipeline integration, conversation int
 
 | Feature | Description | Doc | Status |
 |---------|-------------|-----|--------|
-| **F10e.1** | Wire Full Retrieval Pipeline | [F10e.1-wire-retrieval-pipeline.md](phase-10e/F10e.1-wire-retrieval-pipeline.md) | Planned |
-| **F10e.2** | Fix Export/Import (Vectors + Content) | [F10e.2-fix-export-import.md](phase-10e/F10e.2-fix-export-import.md) | Planned |
-| **F10e.3** | Embedding Model Version Tracking | [F10e.3-model-version-tracking.md](phase-10e/F10e.3-model-version-tracking.md) | Planned |
-| **F10e.4** | Knowledge Base Packaging (.ctx-kb) | [F10e.4-knowledge-base-packaging.md](phase-10e/F10e.4-knowledge-base-packaging.md) | Planned |
-| **F10e.5** | Conversation Intelligence | [F10e.5-conversation-intelligence.md](phase-10e/F10e.5-conversation-intelligence.md) | Planned |
-| **F10e.6** | Incremental Session Summaries | [F10e.6-incremental-summaries.md](phase-10e/F10e.6-incremental-summaries.md) | Planned |
-| **F10e.7** | Team Instructions | [F10e.7-team-instructions.md](phase-10e/F10e.7-team-instructions.md) | Planned |
+| **F10e.1** | Wire Full Retrieval Pipeline | [F10e.1-wire-retrieval-pipeline.md](phase-10e/F10e.1-wire-retrieval-pipeline.md) | ✅ Done |
+| **F10e.2** | Fix Export/Import (Vectors + Content) | [F10e.2-fix-export-import.md](phase-10e/F10e.2-fix-export-import.md) | ✅ Done |
+| **F10e.3** | Embedding Model Version Tracking | [F10e.3-model-version-tracking.md](phase-10e/F10e.3-model-version-tracking.md) | ✅ Done |
+| **F10e.4** | Knowledge Base Packaging (.ctx-kb) | [F10e.4-knowledge-base-packaging.md](phase-10e/F10e.4-knowledge-base-packaging.md) | ✅ Done |
+| **F10e.5** | Conversation Intelligence | [F10e.5-conversation-intelligence.md](phase-10e/F10e.5-conversation-intelligence.md) | ✅ Done |
+| **F10e.6** | Incremental Session Summaries | [F10e.6-incremental-summaries.md](phase-10e/F10e.6-incremental-summaries.md) | ✅ Done |
+| **F10e.7** | Team Instructions | [F10e.7-team-instructions.md](phase-10e/F10e.7-team-instructions.md) | ✅ Done |
 
 **Key Deliverables:**
 

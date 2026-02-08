@@ -89,7 +89,7 @@ The result: AI assistants that remember everything but only surface what matters
 
 ## Current Status
 
-> **Beta Release** - Core functionality complete through Phase 10d. All critical bugs fixed, analytics removed, CLI/MCP unified.
+> **Beta Release** - Core functionality complete through Phase 10e. Knowledge bases, conversation intelligence, team instructions, and full retrieval pipeline.
 
 ### What Works Now
 
@@ -179,19 +179,19 @@ Full end-to-end system testing revealed critical issues. Analytics removed, core
 | **F10d.7** | CLI `context` command (mirrors MCP context_query) | Done |
 | **F10d.8** | HTML document indexing (.html/.htm support) | Done |
 
-### Phase 10e: Knowledge Bases & Long-Term Context
+### Phase 10e: Knowledge Bases & Long-Term Context (Complete)
 
 Shareable knowledge bases, full retrieval pipeline, conversation intelligence, and team instructions.
 
 | Feature | Description | Status |
 | ------- | ----------- | ------ |
-| **F10e.1** | Wire full retrieval pipeline (gate, expander, decomposer, HyDE) as opt-in | Planned |
-| **F10e.2** | Fix export/import to include vectors, content, and metadata | Planned |
-| **F10e.3** | Embedding model version tracking for stale vector detection | Planned |
-| **F10e.4** | Knowledge base packaging (.ctx-kb create/install/info) | Planned |
-| **F10e.5** | Conversation intelligence (message FTS5, embeddings, persistent decisions) | Planned |
-| **F10e.6** | Incremental session summaries with version history | Planned |
-| **F10e.7** | Team instructions with scope-based priority boosting | Planned |
+| **F10e.1** | Wire full retrieval pipeline (gate, expander, decomposer, HyDE) as opt-in | Done |
+| **F10e.2** | Fix export/import to include vectors, content, and metadata | Done |
+| **F10e.3** | Embedding model version tracking for stale vector detection | Done |
+| **F10e.4** | Knowledge base packaging (.ctx-kb create/install/info) | Done |
+| **F10e.5** | Conversation intelligence (message FTS5, persistent decisions) | Done |
+| **F10e.6** | Incremental session summaries with version history | Done |
+| **F10e.7** | Team instructions with scope-based priority boosting | Done |
 
 ---
 
@@ -312,13 +312,31 @@ ctx-sys sessions          # List conversation sessions
 ctx-sys messages          # View session messages
 ```
 
+### Knowledge Bases
+
+```bash
+ctx-sys kb create <name>  # Package project as shareable .ctx-kb
+ctx-sys kb install <file> # Install a knowledge base package
+ctx-sys kb info <file>    # Show package details
+ctx-sys kb list           # List installed knowledge bases
+```
+
+### Team Instructions
+
+```bash
+ctx-sys instruction add <name>  # Add a team instruction
+ctx-sys instruction list        # List all instructions
+ctx-sys instruction edit <id>   # Edit an instruction
+ctx-sys instruction remove <id> # Remove an instruction
+```
+
 ### Debug & Maintenance
 
 ```bash
 ctx-sys health            # System health check
 ctx-sys inspect           # Inspect database tables
 ctx-sys query <sql>       # Execute SQL query
-ctx-sys export <file>     # Export project data
+ctx-sys export <file>     # Export project data (--full for all tables)
 ctx-sys import <file>     # Import project data
 ```
 
@@ -350,6 +368,7 @@ Everything is an entity. Entities have types, content, metadata, and vector embe
 | **Docs** | Document, Section, Requirement, Feature, UserStory |
 | **Conversation** | Session, Message, Decision, Question |
 | **Domain** | Person, Concept, Technology, Pattern, Component |
+| **Team** | Instruction (with scope and priority) |
 
 ### Relationships (Graph RAG)
 
