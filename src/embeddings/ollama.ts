@@ -1,4 +1,4 @@
-import { EmbeddingProvider, BatchOptions, EmbedOptions } from './types';
+import { EmbeddingProvider, BatchOptions, EmbedOptions, ModelIdentifier } from './types';
 
 interface OllamaConfig {
   baseUrl: string;
@@ -148,6 +148,13 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     }
 
     return results;
+  }
+
+  getModelIdentifier(): ModelIdentifier {
+    return {
+      name: this.config.model,
+      provider: 'ollama',
+    };
   }
 
   async isAvailable(): Promise<boolean> {

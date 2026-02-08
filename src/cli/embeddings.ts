@@ -38,6 +38,7 @@ export function createEmbedCommand(output: CLIOutput = defaultOutput): Command {
     .option('-p, --project <path>', 'Project directory', '.')
     .option('-t, --type <type>', 'Only embed entities of this type')
     .option('-f, --force', 'Regenerate all embeddings')
+    .option('--model-upgrade', 'Re-embed only vectors from a different model')
     .option('-l, --limit <n>', 'Max entities to embed')
     .option('--dry-run', 'Show what would be embedded')
     .option('-d, --db <path>', 'Custom database path')
@@ -103,6 +104,7 @@ async function generateEmbeddings(
   options: {
     type?: string;
     force?: boolean;
+    modelUpgrade?: boolean;
     limit?: string;
     dryRun?: boolean;
     db?: string;
@@ -118,6 +120,60 @@ async function generateEmbeddings(
 
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
   const prefix = sanitizeProjectId(projectId);
+
+  const ollamaProvider = new OllamaEmbeddingProvider({
+    baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
+    model: config.defaults?.embeddings?.model || 'nomic-embed-text'
+  });
+
+  // Handle --model-upgrade: re-embed entities with vectors from a different model
+  if (options.modelUpgrade) {
+    const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
+    const mismatchIds = embeddingManager.getModelMismatchEntityIds();
+
+    if (mismatchIds.length === 0) {
+      await db.close();
+      output.log(`All vectors match current model (${ollamaProvider.modelId}).`);
+      return;
+    }
+
+    if (options.dryRun) {
+      await db.close();
+      output.log(`${mismatchIds.length} entities have vectors from a different model.`);
+      output.log(`Current model: ${ollamaProvider.modelId}`);
+      return;
+    }
+
+    output.log(`Found ${mismatchIds.length} entities with vectors from a different model. Re-embedding...`);
+
+    try {
+      const entityStore = new EntityStore(db, projectId);
+      const fullEntities = [];
+      for (const id of mismatchIds) {
+        const entity = await entityStore.get(id);
+        if (entity) fullEntities.push(entity);
+      }
+
+      const result = await embeddingManager.embedIncremental(fullEntities, {
+        batchSize: 50,
+        onProgress: (completed, total) => {
+          if (completed % 50 === 0) {
+            output.log(`  Progress: ${completed}/${total}`);
+          }
+        }
+      });
+
+      // Clean up old model vectors
+      const cleaned = embeddingManager.cleanupOldModelVectors();
+      output.log(colors.bold(`Re-embedded ${result.embedded} entities, cleaned ${cleaned} old vectors`));
+      db.save();
+    } catch (err) {
+      output.error(`Embedding failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      await db.close();
+    }
+    return;
+  }
 
   // Find entities needing embeddings
   let sql = `
@@ -154,8 +210,16 @@ async function generateEmbeddings(
   }>(sql, params);
 
   if (entities.length === 0) {
+    // Check for model mismatch and report
+    const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
+    const mismatchCount = embeddingManager.getModelMismatchCount();
     await db.close();
     output.log('All entities are up to date.');
+    if (mismatchCount > 0) {
+      output.log(colors.yellow(
+        `Note: ${mismatchCount} vectors from a different model. Run --model-upgrade to re-embed.`
+      ));
+    }
     return;
   }
 
@@ -174,10 +238,6 @@ async function generateEmbeddings(
   output.log(`Found ${entities.length} entities needing embeddings. Generating...`);
 
   try {
-    const ollamaProvider = new OllamaEmbeddingProvider({
-      baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
-      model: config.defaults?.embeddings?.model || 'nomic-embed-text'
-    });
     const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
     const entityStore = new EntityStore(db, projectId);
 
@@ -229,6 +289,14 @@ async function showEmbeddingStatus(
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
   const prefix = sanitizeProjectId(projectId);
 
+  const currentModel = config.defaults?.embeddings?.model || 'nomic-embed-text';
+  const ollamaProvider = new OllamaEmbeddingProvider({
+    baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
+    model: currentModel
+  });
+  const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
+  const detailedStats = await embeddingManager.getDetailedStats();
+
   const stats = db.get<EmbeddingStats>(`
     SELECT
       (SELECT COUNT(*) FROM ${prefix}_entities) as total_entities,
@@ -260,6 +328,9 @@ async function showEmbeddingStatus(
 
   const result = {
     ...stats,
+    currentModel: ollamaProvider.modelId,
+    modelMismatch: detailedStats.modelMismatchCount,
+    byModel: detailedStats.byModel,
     byType,
     storageBytes: storageSize?.size || 0
   };
@@ -270,16 +341,30 @@ async function showEmbeddingStatus(
   }
 
   output.log(colors.bold('Embedding Status\n'));
+  output.log(`  Current model:   ${ollamaProvider.modelId}`);
   output.log(`  Total entities:  ${stats?.total_entities || 0}`);
   output.log(`  Embedded:        ${stats?.embedded || 0}`);
   output.log(`  Pending:         ${stats?.pending || 0}`);
   output.log(`  Stale:           ${stats?.stale || 0}`);
+  if (detailedStats.modelMismatchCount && detailedStats.modelMismatchCount > 0) {
+    output.log(colors.yellow(`  Model mismatch:  ${detailedStats.modelMismatchCount} (run embed --model-upgrade)`));
+  }
   output.log(`  Storage:         ${formatBytes(result.storageBytes)}`);
 
   const coverage = stats?.total_entities
     ? ((stats.embedded / stats.total_entities) * 100).toFixed(1)
     : '0.0';
   output.log(`  Coverage:        ${coverage}%`);
+
+  // Per-model breakdown
+  if (detailedStats.byModel && detailedStats.byModel.length > 1) {
+    output.log(`\n${colors.bold('By Model:')}`);
+    for (const m of detailedStats.byModel) {
+      const isCurrent = m.modelId === ollamaProvider.modelId;
+      const label = isCurrent ? `${m.modelId} (current)` : m.modelId;
+      output.log(`  ${label}: ${m.count} vectors`);
+    }
+  }
 
   if (byType.length > 0) {
     output.log(`\n${colors.bold('By Type:')}`);

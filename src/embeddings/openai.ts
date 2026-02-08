@@ -1,4 +1,4 @@
-import { EmbeddingProvider, BatchOptions, EmbedOptions } from './types';
+import { EmbeddingProvider, BatchOptions, EmbedOptions, ModelIdentifier } from './types';
 
 interface OpenAIConfig {
   apiKey: string;
@@ -88,6 +88,13 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
     }
 
     return results;
+  }
+
+  getModelIdentifier(): ModelIdentifier {
+    return {
+      name: this.config.model,
+      provider: 'openai',
+    };
   }
 
   async isAvailable(): Promise<boolean> {

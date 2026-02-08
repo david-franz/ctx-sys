@@ -1,4 +1,4 @@
-import { EmbeddingProvider, BatchOptions, EmbedOptions } from './types';
+import { EmbeddingProvider, BatchOptions, EmbedOptions, ModelIdentifier } from './types';
 
 /**
  * Mock embedding provider for testing.
@@ -54,6 +54,13 @@ export class MockEmbeddingProvider implements EmbeddingProvider {
     }
 
     return results;
+  }
+
+  getModelIdentifier(): ModelIdentifier {
+    return {
+      name: 'test-model',
+      provider: 'mock',
+    };
   }
 
   async isAvailable(): Promise<boolean> {

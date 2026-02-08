@@ -7,6 +7,12 @@ export interface EmbedOptions {
   isQuery?: boolean;
 }
 
+export interface ModelIdentifier {
+  name: string;
+  provider: string;
+  version?: string;
+}
+
 export interface EmbeddingProvider {
   readonly name: string;
   readonly modelId: string;
@@ -15,6 +21,7 @@ export interface EmbeddingProvider {
   embed(text: string, options?: EmbedOptions): Promise<number[]>;
   embedBatch(texts: string[], options?: BatchOptions & EmbedOptions): Promise<number[][]>;
   isAvailable(): Promise<boolean>;
+  getModelIdentifier(): ModelIdentifier;
 }
 
 export interface BatchOptions {
