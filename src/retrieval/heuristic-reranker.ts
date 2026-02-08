@@ -76,6 +76,20 @@ export class HeuristicReranker implements Reranker {
         boost += 0.2;
       }
 
+      // F10f.6: Entity type scoring — prefer substantive entities over stubs
+      const typeWeights: Record<string, number> = {
+        'class': 0.15,
+        'function': 0.1,
+        'method': 0.1,
+        'interface': 0.05,
+        'type': 0.05,
+        'document': 0.1,
+        'section': 0.05,
+        'file': -0.1,
+        'module': -0.05,
+      };
+      boost += typeWeights[entity.type] || 0;
+
       // F10e.7: Instruction priority boost
       if (entity.type === 'instruction') {
         const meta = entity.metadata as Record<string, unknown> | undefined;

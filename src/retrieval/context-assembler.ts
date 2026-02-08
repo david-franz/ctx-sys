@@ -228,6 +228,14 @@ export class ContextAssembler {
     // Sort by relevance
     const sorted = [...results].sort((a, b) => b.score - a.score);
 
+    // F10f.6: Build set of file paths already represented by code entities
+    const representedFiles = new Set<string>();
+    for (const result of sorted) {
+      if (result.entity.type !== 'file' && result.entity.filePath) {
+        representedFiles.add(result.entity.filePath);
+      }
+    }
+
     // Group by type if requested
     const grouped = opts.groupByType
       ? this.groupByType(sorted)
@@ -249,6 +257,11 @@ export class ContextAssembler {
       for (const result of groupResults) {
         // F10f.1: Skip results below relevance floor
         if (opts.minRelevance && result.score < opts.minRelevance) {
+          continue;
+        }
+
+        // F10f.6: Skip file stubs when their contents are already represented
+        if (result.entity.type === 'file' && result.entity.filePath && representedFiles.has(result.entity.filePath)) {
           continue;
         }
 
