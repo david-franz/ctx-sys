@@ -25,7 +25,7 @@ export function createContextCommand(output: CLIOutput = defaultOutput): Command
     .option('--strategy <strategies>', 'Search strategies: keyword,semantic,graph (comma-separated)')
     .option('--min-score <n>', 'Minimum relevance score (0-1)', '0.1')
     .option('--no-sources', 'Omit source attribution')
-    .option('--expand', 'Auto-include parent classes, imports, type definitions')
+    .option('--no-expand', 'Disable auto-inclusion of parent classes, imports, types')
     .option('--expand-tokens <n>', 'Token budget for expansion (default: 2000)')
     .option('--decompose', 'Break complex queries into sub-queries')
     .option('--gate', 'Skip retrieval for trivial queries')

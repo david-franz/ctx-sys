@@ -4,6 +4,7 @@
 
 import { Command } from 'commander';
 import * as path from 'path';
+import * as fs from 'fs';
 import { CodebaseIndexer, IndexOptions, IndexResult } from '../indexer';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
@@ -29,8 +30,9 @@ export function createIndexCommand(output: CLIOutput = defaultOutput): Command {
     .option('--exclude <patterns>', 'Comma-separated glob patterns to exclude')
     .option('-q, --quiet', 'Suppress progress output', false)
     .option('-d, --db <path>', 'Custom database path')
-    .option('--doc', 'Also index documentation files (md, yaml, json, etc.)', false)
-    .option('--embed', 'Generate embeddings for RAG (requires Ollama)', false)
+    .option('--no-doc', 'Skip documentation indexing')
+    .option('--doc-path <path>', 'Index specific doc file or directory')
+    .option('--no-embed', 'Skip embedding generation')
     .option('--embed-batch-size <n>', 'Batch size for embedding generation', '50')
     .action(async (directory: string, options) => {
       try {
@@ -59,6 +61,7 @@ async function runIndex(
     quiet?: boolean;
     db?: string;
     doc?: boolean;
+    docPath?: string;
     embed?: boolean;
     embedBatchSize?: string;
   },
@@ -164,32 +167,63 @@ async function runIndex(
     // Explicit save after indexing (before potentially slow embedding phase)
     db.save();
 
-    // Index documentation files if requested
-    if (options.doc) {
-      if (!options.quiet) {
-        output.log('');
-        output.log('Indexing documentation files...');
-      }
-
+    // Index documentation files (default: on, --no-doc to skip)
+    if (options.doc !== false) {
       const docIndexer = new DocumentIndexer(entityStore, relationshipStore);
-      const docResult = await docIndexer.indexDirectory(projectPath);
 
-      db.save();
+      if (options.docPath) {
+        // Index specific file or directory
+        const absoluteDocPath = path.resolve(options.docPath);
+        const stat = fs.statSync(absoluteDocPath);
 
-      if (!options.quiet) {
-        output.success(`Documentation indexed: ${docResult.filesProcessed} files (${docResult.filesSkipped} unchanged)`);
-        output.log(`  Entities: ${docResult.totalEntities}, Relationships: ${docResult.totalRelationships}`);
-        if (docResult.errors.length > 0) {
-          output.log(`  Errors: ${docResult.errors.length}`);
-          for (const err of docResult.errors.slice(0, 3)) {
-            output.error(`    ${err}`);
+        if (!options.quiet) {
+          output.log('');
+          output.log(`Indexing document: ${absoluteDocPath}`);
+        }
+
+        if (stat.isDirectory()) {
+          const docResult = await docIndexer.indexDirectory(absoluteDocPath);
+          db.save();
+          if (!options.quiet) {
+            output.success(`Documentation indexed: ${docResult.filesProcessed} files (${docResult.filesSkipped} unchanged)`);
+            output.log(`  Entities: ${docResult.totalEntities}, Relationships: ${docResult.totalRelationships}`);
+          }
+        } else {
+          const docResult = await docIndexer.indexFile(absoluteDocPath);
+          db.save();
+          if (!options.quiet) {
+            if (docResult.skipped) {
+              output.log('Document unchanged, skipped.');
+            } else {
+              output.success(`Document indexed: ${docResult.entitiesCreated} entities, ${docResult.relationshipsCreated} relationships`);
+            }
+          }
+        }
+      } else {
+        // Index all docs in project directory
+        if (!options.quiet) {
+          output.log('');
+          output.log('Indexing documentation files...');
+        }
+
+        const docResult = await docIndexer.indexDirectory(projectPath);
+        db.save();
+
+        if (!options.quiet) {
+          output.success(`Documentation indexed: ${docResult.filesProcessed} files (${docResult.filesSkipped} unchanged)`);
+          output.log(`  Entities: ${docResult.totalEntities}, Relationships: ${docResult.totalRelationships}`);
+          if (docResult.errors.length > 0) {
+            output.log(`  Errors: ${docResult.errors.length}`);
+            for (const err of docResult.errors.slice(0, 3)) {
+              output.error(`    ${err}`);
+            }
           }
         }
       }
     }
 
-    // Generate embeddings if requested
-    if (options.embed) {
+    // Generate embeddings (default: on, --no-embed to skip)
+    if (options.embed !== false) {
       if (!options.quiet) {
         output.log('');
         output.log('Generating embeddings...');

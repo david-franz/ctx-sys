@@ -30,7 +30,7 @@ export function createSearchCommand(output: CLIOutput = defaultOutput): Command 
     .option('-p, --project <path>', 'Project directory', '.')
     .option('-l, --limit <n>', 'Maximum number of results', '10')
     .option('-t, --type <type>', 'Filter by entity type (function, class, file, etc.)')
-    .option('--semantic', 'Use vector similarity search (requires embeddings)', false)
+    .option('--no-semantic', 'Keyword search only (no embeddings)')
     .option('--hyde', 'Use HyDE (Hypothetical Document Embeddings) for better semantic search', false)
     .option('--threshold <n>', 'Minimum similarity score for semantic search', '0.3')
     .option('--format <format>', 'Output format (text, json)', 'text')
@@ -62,6 +62,7 @@ async function runSearch(
     threshold?: string;
     format?: string;
     db?: string;
+    quiet?: boolean;
   },
   output: CLIOutput
 ): Promise<void> {
@@ -81,54 +82,68 @@ async function runSearch(
     const limit = parseInt(options.limit || '10', 10);
     let results: SearchResultItem[];
 
-    if (options.semantic || options.hyde) {
-      // Vector similarity search using embeddings
-      const baseUrl = config.providers?.ollama?.base_url || 'http://localhost:11434';
-      const ollamaProvider = new OllamaEmbeddingProvider({
-        baseUrl,
-        model: config.defaults?.embeddings?.model || 'nomic-embed-text'
-      });
-      const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
+    const useSemantic = options.semantic !== false;
 
-      const threshold = parseFloat(options.threshold || '0.3');
-      let similar;
+    if (useSemantic || options.hyde) {
+      // Vector similarity search using embeddings (default: on)
+      try {
+        const baseUrl = config.providers?.ollama?.base_url || 'http://localhost:11434';
+        const ollamaProvider = new OllamaEmbeddingProvider({
+          baseUrl,
+          model: config.defaults?.embeddings?.model || 'nomic-embed-text'
+        });
+        const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
 
-      if (options.hyde) {
-        // HyDE: generate hypothetical answer, embed that instead
-        const hydeProvider = new OllamaHypotheticalProvider({ baseUrl });
-        const hyde = new HyDEQueryExpander(hydeProvider, embeddingManager);
+        const threshold = parseFloat(options.threshold || '0.3');
+        let similar;
 
-        const { embedding, usedHyDE, hypothetical } = await hyde.getSearchEmbedding(
-          query, projectId, { entityTypes: options.type ? [options.type] : undefined }
-        );
+        if (options.hyde) {
+          // HyDE: generate hypothetical answer, embed that instead
+          const hydeProvider = new OllamaHypotheticalProvider({ baseUrl });
+          const hyde = new HyDEQueryExpander(hydeProvider, embeddingManager);
 
-        if (usedHyDE) {
-          output.log(`HyDE hypothetical: "${hypothetical?.slice(0, 120)}..."\n`);
+          const { embedding, usedHyDE, hypothetical } = await hyde.getSearchEmbedding(
+            query, projectId, { entityTypes: options.type ? [options.type] : undefined }
+          );
+
+          if (usedHyDE) {
+            output.log(`HyDE hypothetical: "${hypothetical?.slice(0, 120)}..."\n`);
+          }
+
+          similar = await embeddingManager.findSimilarByVector(embedding, {
+            limit,
+            threshold,
+            entityTypes: options.type ? [options.type] : undefined
+          });
+        } else {
+          similar = await embeddingManager.findSimilar(query, {
+            limit,
+            threshold,
+            entityTypes: options.type ? [options.type] : undefined
+          });
         }
 
-        similar = await embeddingManager.findSimilarByVector(embedding, {
-          limit,
-          threshold,
-          entityTypes: options.type ? [options.type] : undefined
-        });
-      } else {
-        similar = await embeddingManager.findSimilar(query, {
-          limit,
-          threshold,
-          entityTypes: options.type ? [options.type] : undefined
-        });
-      }
-
-      // Resolve entities for each result
-      results = [];
-      for (const result of similar) {
-        const entity = await entityStore.get(result.entityId);
-        if (entity) {
-          results.push({ entity, score: result.score });
+        // Resolve entities for each result
+        results = [];
+        for (const result of similar) {
+          const entity = await entityStore.get(result.entityId);
+          if (entity) {
+            results.push({ entity, score: result.score });
+          }
         }
+      } catch (err) {
+        // Graceful fallback to keyword search if Ollama unavailable
+        if (!options.quiet) {
+          output.log(`Semantic search unavailable, falling back to keyword search`);
+          output.log(`  (${err instanceof Error ? err.message : String(err)})\n`);
+        }
+        results = entityStore.searchWithScores(query, {
+          limit,
+          type: options.type as EntityType | undefined
+        });
       }
     } else {
-      // Keyword search with real BM25 scoring
+      // Keyword search only (--no-semantic)
       results = entityStore.searchWithScores(query, {
         limit,
         type: options.type as EntityType | undefined
