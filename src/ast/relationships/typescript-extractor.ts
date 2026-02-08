@@ -82,17 +82,43 @@ export class TypeScriptRelationshipExtractor implements RelationshipExtractor {
     const relationships: ExtractedRelationship[] = [];
 
     const processSymbol = (symbol: SymbolLike): void => {
-      if (symbol.type === 'class') {
-        // Methods/properties are contained by class
+      if (symbol.type === 'class' || symbol.type === 'interface') {
+        // Methods/properties are contained by class/interface
         for (const child of symbol.children || []) {
           relationships.push({
             source: symbol.qualifiedName,
-            sourceType: 'class',
+            sourceType: symbol.type as any,
             target: child.qualifiedName,
             targetType: child.type as any,
             type: 'contains',
             weight: 1.0
           });
+        }
+
+        // Extends relationship
+        if (symbol.extends) {
+          relationships.push({
+            source: symbol.qualifiedName,
+            sourceType: symbol.type as any,
+            target: symbol.extends,
+            targetType: symbol.type === 'interface' ? 'interface' : 'class',
+            type: 'extends',
+            weight: 1.0
+          });
+        }
+
+        // Implements relationship (classes implementing interfaces)
+        if (symbol.implements) {
+          for (const iface of symbol.implements) {
+            relationships.push({
+              source: symbol.qualifiedName,
+              sourceType: symbol.type as any,
+              target: iface,
+              targetType: 'interface',
+              type: 'implements',
+              weight: 1.0
+            });
+          }
         }
       }
 

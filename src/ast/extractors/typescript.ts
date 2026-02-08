@@ -81,6 +81,9 @@ export class TypeScriptExtractor extends BaseExtractor {
       }
     }
 
+    // Extract extends/implements from class heritage
+    const heritage = this.extractHeritage(node);
+
     symbols.push({
       type: 'class',
       name,
@@ -88,6 +91,8 @@ export class TypeScriptExtractor extends BaseExtractor {
       docstring,
       decorators,
       isExported,
+      extends: heritage.extends,
+      implements: heritage.implements,
       startLine: node.startPosition.row + 1,
       endLine: node.endPosition.row + 1,
       children: [...methods, ...properties]
@@ -119,16 +124,66 @@ export class TypeScriptExtractor extends BaseExtractor {
       }
     }
 
+    // Extract extends for interfaces
+    const heritage = this.extractHeritage(node);
+
     symbols.push({
       type: 'interface',
       name,
       qualifiedName,
       docstring,
       isExported,
+      extends: heritage.extends,
+      implements: heritage.implements,
       startLine: node.startPosition.row + 1,
       endLine: node.endPosition.row + 1,
       children: properties
     });
+  }
+
+  /**
+   * Extract extends/implements from class or interface heritage clauses.
+   * Handles both direct children and class_heritage wrapper node.
+   */
+  private extractHeritage(node: SyntaxNode): { extends?: string; implements?: string[] } {
+    let extendsName: string | undefined;
+    const implementsNames: string[] = [];
+
+    const processChildren = (children: SyntaxNode[]): void => {
+      for (const child of children) {
+        if (child.type === 'class_heritage') {
+          // Recurse into heritage wrapper
+          processChildren(this.getChildren(child));
+        } else if (child.type === 'extends_clause' || child.type === 'extends_type_clause') {
+          // Parse the extends target from clause text: "extends Foo<T>" → "Foo"
+          const text = child.text.replace(/^extends\s+/, '');
+          // Could be comma-separated for interfaces: "extends A, B"
+          const names = text.split(',');
+          for (const n of names) {
+            const clean = n.replace(/<[^>]*>/g, '').trim().split(/\s/)[0];
+            if (clean && !extendsName) {
+              extendsName = clean;
+            } else if (clean) {
+              // Interface can extend multiple — treat extras as additional extends
+              implementsNames.push(clean);
+            }
+          }
+        } else if (child.type === 'implements_clause') {
+          const text = child.text.replace(/^implements\s+/, '');
+          for (const n of text.split(',')) {
+            const clean = n.replace(/<[^>]*>/g, '').trim().split(/\s/)[0];
+            if (clean) implementsNames.push(clean);
+          }
+        }
+      }
+    };
+
+    processChildren(this.getChildren(node));
+
+    return {
+      extends: extendsName,
+      implements: implementsNames.length > 0 ? implementsNames : undefined
+    };
   }
 
   private extractInterfaceMember(

@@ -675,9 +675,30 @@ function extractCodeSummary(content: string, entityType: string, budget: number)
 }
 
 /**
+ * Get the leading whitespace length of a line (indentation level).
+ */
+function getIndentLevel(line: string): number {
+  const match = line.match(/^(\s*)/);
+  return match ? match[1].length : 0;
+}
+
+/**
+ * Determine the class-member indentation level.
+ * Scans lines after the class declaration for the first non-empty, non-brace line.
+ */
+function detectMemberIndent(lines: string[], declStart: number): number {
+  for (let j = declStart + 1; j < lines.length; j++) {
+    const trimmed = lines[j].trim();
+    if (!trimmed || trimmed === '{' || trimmed === '}') continue;
+    return getIndentLevel(lines[j]);
+  }
+  return 2; // fallback
+}
+
+/**
  * F10g.4: Extract class/interface summary — doc comment, declaration,
  * properties, constructor, and public method signatures.
- * Filters out body code (if/for/while/return) that previously leaked through.
+ * Uses indentation to distinguish member declarations from body code.
  */
 function extractClassSummary(lines: string[], budget: number): string {
   const parts: string[] = [];
@@ -706,19 +727,25 @@ function extractClassSummary(lines: string[], budget: number): string {
     declStart++;
   }
 
-  // 3. Properties (before first method)
+  // Determine the expected indentation for class members
+  const memberIndent = detectMemberIndent(lines, declStart);
+
+  // 3. Properties (at member indent, before first method)
   const properties: string[] = [];
   for (let j = declStart + 1; j < lines.length; j++) {
-    const line = lines[j].trim();
-    if (!line || line === '{' || line === '}') continue;
+    const line = lines[j];
+    const trimmed = line.trim();
+    if (!trimmed || trimmed === '{' || trimmed === '}') continue;
+    // Only consider lines at member indent level
+    if (getIndentLevel(line) !== memberIndent) continue;
     // Stop at first method-like line
-    if (isMethodSignature(line)) break;
+    if (isMethodSignature(trimmed)) break;
     // Capture property declarations
-    if (/^(public\s+|readonly\s+|static\s+|protected\s+|private\s+)/.test(line) &&
-        !line.includes('(')) {
-      properties.push('  ' + line.replace(/=\s*[^;]+/, '').trim());
-    } else if (/^[\w]+\s*[?!]?\s*:\s*/.test(line) && !line.includes('(')) {
-      properties.push('  ' + line.replace(/=\s*[^;]+/, '').trim());
+    if (/^(public\s+|readonly\s+|static\s+|protected\s+|private\s+)/.test(trimmed) &&
+        !trimmed.includes('(')) {
+      properties.push('  ' + trimmed.replace(/=\s*[^;]+/, '').trim());
+    } else if (/^[\w]+\s*[?!]?\s*:\s*/.test(trimmed) && !trimmed.includes('(')) {
+      properties.push('  ' + trimmed.replace(/=\s*[^;]+/, '').trim());
     }
   }
   if (properties.length > 0) {
@@ -726,14 +753,16 @@ function extractClassSummary(lines: string[], budget: number): string {
     parts.push(...properties);
   }
 
-  // 4. Constructor signature
+  // 4. Constructor signature (at member indent)
   const constructorLines: string[] = [];
   for (let j = declStart + 1; j < lines.length; j++) {
-    const line = lines[j].trim();
-    if (line.startsWith('constructor(') || line.startsWith('constructor (')) {
-      constructorLines.push('  ' + line.replace(/\{.*$/, '').trim());
+    const line = lines[j];
+    const trimmed = line.trim();
+    if (getIndentLevel(line) !== memberIndent) continue;
+    if (trimmed.startsWith('constructor(') || trimmed.startsWith('constructor (')) {
+      constructorLines.push('  ' + trimmed.replace(/\{.*$/, '').trim());
       // Handle multi-line constructor params
-      if (!line.includes(')')) {
+      if (!trimmed.includes(')')) {
         while (j < lines.length - 1 && !lines[j].includes(')')) {
           j++;
           constructorLines.push('    ' + lines[j].trim().replace(/\{.*$/, '').trim());
@@ -747,12 +776,15 @@ function extractClassSummary(lines: string[], budget: number): string {
     parts.push(...constructorLines);
   }
 
-  // 5. Public method signatures (filtered — no body code leakage)
+  // 5. Public method signatures — only at member indent level
   const methods: string[] = [];
   for (let j = declStart + 1; j < lines.length; j++) {
-    const line = lines[j].trim();
-    if (isMethodSignature(line) && !line.startsWith('constructor')) {
-      methods.push('  ' + line.replace(/\{.*$/, '').trim());
+    const line = lines[j];
+    const trimmed = line.trim();
+    // Skip lines not at member indentation — this filters out ALL body code
+    if (getIndentLevel(line) !== memberIndent) continue;
+    if (isMethodSignature(trimmed) && !trimmed.startsWith('constructor')) {
+      methods.push('  ' + trimmed.replace(/\{.*$/, '').trim());
     }
   }
   if (methods.length > 0) {
@@ -769,6 +801,7 @@ function extractClassSummary(lines: string[], budget: number): string {
 /**
  * Check if a trimmed line looks like a method/function signature.
  * Excludes body code like if(), for(), while(), etc.
+ * NOTE: Callers should also filter by indentation level for robust results.
  */
 function isMethodSignature(line: string): boolean {
   // Must have an open paren (method call pattern)
@@ -776,11 +809,12 @@ function isMethodSignature(line: string): boolean {
 
   // Exclude known body-code patterns
   const bodyPatterns = [
-    /^(if|for|while|switch|catch|return|const|let|var|this|throw|await|yield)\b/,
+    /^(if|for|while|switch|catch|return|const|let|var|this|throw|await|yield|new|super|try|else|do|break|continue|delete|typeof|void|in|of)\b/,
     /^\/\//, // comments
     /^\/\*/, // block comments
     /^\}/, // closing braces
     /^\{/, // opening braces
+    /^['".]/, // string or chaining
   ];
   for (const pat of bodyPatterns) {
     if (pat.test(line)) return false;

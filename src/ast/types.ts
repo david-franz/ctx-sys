@@ -34,6 +34,8 @@ export interface Symbol {
   isStatic?: boolean;
   isAsync?: boolean;
   isExported?: boolean;
+  extends?: string;
+  implements?: string[];
   startLine: number;
   endLine: number;
   docstring?: string;

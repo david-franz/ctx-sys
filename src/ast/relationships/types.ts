@@ -106,6 +106,8 @@ export interface SymbolLike {
   startLine: number;
   endLine: number;
   children?: SymbolLike[];
+  extends?: string;
+  implements?: string[];
 }
 
 /**
