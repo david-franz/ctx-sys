@@ -675,7 +675,9 @@ function extractCodeSummary(content: string, entityType: string, budget: number)
 }
 
 /**
- * Extract class/interface: doc comment, declaration, constructor, public method signatures.
+ * F10g.4: Extract class/interface summary — doc comment, declaration,
+ * properties, constructor, and public method signatures.
+ * Filters out body code (if/for/while/return) that previously leaked through.
  */
 function extractClassSummary(lines: string[], budget: number): string {
   const parts: string[] = [];
@@ -694,53 +696,121 @@ function extractClassSummary(lines: string[], budget: number): string {
   }
 
   // 2. Class/interface declaration line
-  while (i < lines.length) {
-    const line = lines[i].trim();
+  let declStart = i;
+  while (declStart < lines.length) {
+    const line = lines[declStart].trim();
     if (/^(export\s+)?(abstract\s+)?(class|interface)\s/.test(line)) {
-      parts.push(lines[i]);
+      parts.push(lines[declStart]);
       break;
     }
-    i++;
+    declStart++;
   }
 
-  // 3. Constructor signature
-  for (let j = i; j < lines.length; j++) {
-    if (lines[j].trim().startsWith('constructor(')) {
-      parts.push('  ' + lines[j].trim());
-      if (!lines[j].includes(')')) {
+  // 3. Properties (before first method)
+  const properties: string[] = [];
+  for (let j = declStart + 1; j < lines.length; j++) {
+    const line = lines[j].trim();
+    if (!line || line === '{' || line === '}') continue;
+    // Stop at first method-like line
+    if (isMethodSignature(line)) break;
+    // Capture property declarations
+    if (/^(public\s+|readonly\s+|static\s+|protected\s+|private\s+)/.test(line) &&
+        !line.includes('(')) {
+      properties.push('  ' + line.replace(/=\s*[^;]+/, '').trim());
+    } else if (/^[\w]+\s*[?!]?\s*:\s*/.test(line) && !line.includes('(')) {
+      properties.push('  ' + line.replace(/=\s*[^;]+/, '').trim());
+    }
+  }
+  if (properties.length > 0) {
+    parts.push('');
+    parts.push(...properties);
+  }
+
+  // 4. Constructor signature
+  const constructorLines: string[] = [];
+  for (let j = declStart + 1; j < lines.length; j++) {
+    const line = lines[j].trim();
+    if (line.startsWith('constructor(') || line.startsWith('constructor (')) {
+      constructorLines.push('  ' + line.replace(/\{.*$/, '').trim());
+      // Handle multi-line constructor params
+      if (!line.includes(')')) {
         while (j < lines.length - 1 && !lines[j].includes(')')) {
           j++;
-          parts.push('  ' + lines[j].trim());
+          constructorLines.push('    ' + lines[j].trim().replace(/\{.*$/, '').trim());
         }
       }
       break;
     }
   }
+  if (constructorLines.length > 0) {
+    parts.push('');
+    parts.push(...constructorLines);
+  }
 
-  // 4. Public method signatures (without bodies)
-  for (let j = i; j < lines.length; j++) {
+  // 5. Public method signatures (filtered — no body code leakage)
+  const methods: string[] = [];
+  for (let j = declStart + 1; j < lines.length; j++) {
     const line = lines[j].trim();
-    if (line.match(/^(async\s+)?(public\s+)?[\w]+\s*\(/) &&
-        !line.startsWith('private') &&
-        !line.startsWith('constructor')) {
-      parts.push('  ' + line.replace(/\{.*$/, '').trim());
+    if (isMethodSignature(line) && !line.startsWith('constructor')) {
+      methods.push('  ' + line.replace(/\{.*$/, '').trim());
     }
   }
+  if (methods.length > 0) {
+    parts.push('');
+    parts.push(...methods);
+  }
+
+  parts.push('}');
 
   const result = parts.join('\n');
   return result.length <= budget ? result : result.slice(0, budget) + '\n  // ...';
 }
 
 /**
- * Extract function/method: doc comment + signature (not body).
+ * Check if a trimmed line looks like a method/function signature.
+ * Excludes body code like if(), for(), while(), etc.
+ */
+function isMethodSignature(line: string): boolean {
+  // Must have an open paren (method call pattern)
+  if (!line.includes('(')) return false;
+
+  // Exclude known body-code patterns
+  const bodyPatterns = [
+    /^(if|for|while|switch|catch|return|const|let|var|this|throw|await|yield)\b/,
+    /^\/\//, // comments
+    /^\/\*/, // block comments
+    /^\}/, // closing braces
+    /^\{/, // opening braces
+  ];
+  for (const pat of bodyPatterns) {
+    if (pat.test(line)) return false;
+  }
+
+  // Must look like a method: optional modifiers + name + paren
+  return /^(async\s+)?(public\s+|protected\s+|static\s+|abstract\s+|get\s+|set\s+|override\s+)*[\w]+\s*[<(]/.test(line) &&
+    !line.startsWith('private');
+}
+
+/**
+ * F10g.4: Extract function/method summary — doc comment + signature.
+ * Handles multi-line parameter lists properly.
  */
 function extractFunctionSummary(lines: string[], budget: number): string {
   const parts: string[] = [];
-
+  let parenDepth = 0;
   let foundSignature = false;
+
   for (const line of lines) {
     parts.push(line);
-    if (line.includes('{') && !line.trim().startsWith('*')) {
+
+    // Track parenthesis depth for multi-line params
+    for (const ch of line) {
+      if (ch === '(') parenDepth++;
+      if (ch === ')') parenDepth--;
+    }
+
+    // Signature ends when parens are balanced and we see {
+    if (parenDepth <= 0 && line.includes('{') && !line.trim().startsWith('*')) {
       foundSignature = true;
       break;
     }
