@@ -15,19 +15,19 @@ function normalizeBaseUrl(url: string): string {
 
 /**
  * Max input lengths (in characters) for known embedding models.
- * Derived from context_length in tokens * ~3 chars/token (conservative for code).
- * mxbai-embed-large: 512 tokens → ~1500 chars
- * nomic-embed-text: 2048 tokens → ~6000 chars (we cap at 4000 for safety)
+ * Uses ~2 chars/token for code (symbols, braces, operators tokenize short).
+ * mxbai-embed-large: 512 tokens → 1024 chars
+ * nomic-embed-text: 2048 tokens → 4000 chars
  */
 const MODEL_MAX_CHARS: Record<string, number> = {
   'nomic-embed-text': 4000,
-  'mxbai-embed-large': 1500,
-  'all-minilm': 1000,
-  'bge-base': 2000,
-  'bge-large': 2000
+  'mxbai-embed-large': 1024,
+  'all-minilm': 700,
+  'bge-base': 1024,
+  'bge-large': 1024
 };
 
-const DEFAULT_MAX_CHARS = 2000;
+const DEFAULT_MAX_CHARS = 1024;
 
 const MODEL_DIMENSIONS: Record<string, number> = {
   'nomic-embed-text': 768,
@@ -119,8 +119,8 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
           result.dimensions = value;
         }
         if (key.endsWith('.context_length') && typeof value === 'number') {
-          // Convert tokens to chars: ~3 chars/token is conservative for code
-          result.maxChars = Math.floor(value * 3);
+          // Convert tokens to chars: ~2 chars/token for code (conservative)
+          result.maxChars = Math.floor(value * 2);
         }
       }
 

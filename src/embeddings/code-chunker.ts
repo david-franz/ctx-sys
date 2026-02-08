@@ -18,15 +18,15 @@ export interface CodeChunk {
 }
 
 export interface CodeChunkOptions {
-  /** Max chars per chunk including header (default: 1500) */
+  /** Max chars per chunk including header (default: 1024) */
   maxChars?: number;
-  /** Overlap between chunks in chars (default: 200) */
+  /** Overlap between chunks in chars (default: 150) */
   overlapChars?: number;
 }
 
 const DEFAULTS: Required<CodeChunkOptions> = {
-  maxChars: 1500,
-  overlapChars: 200,
+  maxChars: 1024,
+  overlapChars: 150,
 };
 
 /**
