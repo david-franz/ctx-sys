@@ -7,23 +7,19 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage[english]{babel}
-\usepackage{amsmath,amssymb,amsthm}
+\usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{listings}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{multirow}
 \usepackage{caption}
-\usepackage{subcaption}
 \usepackage{geometry}
 \usepackage{fancyhdr}
 \usepackage{setspace}
 \usepackage{tikz}
-\usepackage{pgfplots}
 \usepackage{float}
 \usepackage{enumitem}
 
@@ -31,8 +27,7 @@
 % CONFIGURATION
 % ============================================================================
 \geometry{margin=1in}
-\pgfplotsset{compat=1.18}
-\usetikzlibrary{shapes,arrows,positioning,calc,fit,backgrounds}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc,fit,backgrounds,decorations.pathreplacing}
 
 \hypersetup{
     colorlinks=true,
@@ -46,8 +41,10 @@
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{ctxcyan}{HTML}{06B6D4}
+\definecolor{ctxdark}{HTML}{0F172A}
 
-\lstdefinestyle{typescript}{
+\lstdefinestyle{code}{
     backgroundcolor=\color{codebg},
     commentstyle=\color{codegreen},
     keywordstyle=\color{blue},
@@ -65,36 +62,19 @@
     showtabs=false,
     tabsize=2,
     language=Java,
-    morekeywords={async,await,interface,type,implements,extends,export,import,const,let,from,as,Promise,Map,Set,Record,Partial,Required}
+    morekeywords={async,await,interface,type,export,import,const,let,from}
 }
 
-\lstdefinestyle{sql}{
-    backgroundcolor=\color{codebg},
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{blue},
-    basicstyle=\ttfamily\footnotesize,
+\lstdefinestyle{terminal}{
+    backgroundcolor=\color{ctxdark},
+    basicstyle=\ttfamily\footnotesize\color{white},
     breaklines=true,
-    language=SQL
+    frame=single,
+    rulecolor=\color{ctxdark},
+    numbers=none
 }
 
-\lstdefinelanguage{yaml}{
-    keywords={true,false,null,y,n},
-    sensitive=false,
-    comment=[l]{\#},
-    morestring=[b]',
-    morestring=[b]"
-}
-
-\lstdefinestyle{yaml}{
-    backgroundcolor=\color{codebg},
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{blue},
-    basicstyle=\ttfamily\footnotesize,
-    breaklines=true,
-    language=yaml
-}
-
-\lstset{style=typescript}
+\lstset{style=code}
 
 % Page style
 \pagestyle{fancy}
@@ -106,35 +86,11 @@
 % Spacing
 \onehalfspacing
 
-% Theorem environments
-\theoremstyle{definition}
-\newtheorem{definition}{Definition}[section]
-\newtheorem{example}{Example}[section]
-\theoremstyle{plain}
-\newtheorem{theorem}{Theorem}[section]
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{proposition}[theorem]{Proposition}
-
-% Acronyms (kept as inline definitions)
-% RAG: Retrieval-Augmented Generation
-% LLM: Large Language Model
-% AST: Abstract Syntax Tree
-% MCP: Model Context Protocol
-% FTS: Full-Text Search
-% RRF: Reciprocal Rank Fusion
-% HyDE: Hypothetical Document Embeddings
-% BFS: Breadth-First Search
-% DFS: Depth-First Search
-% CTE: Common Table Expression
-% API: Application Programming Interface
-% CLI: Command Line Interface
-% LRU: Least Recently Used
-
 % ============================================================================
 % TITLE
 % ============================================================================
-\title{\textbf{ctx-sys: An Intelligent Context Management System for AI-Assisted Software Development}\\[0.5cm]
-{\large A Hybrid Retrieval Architecture Combining Vector Embeddings, Graph Traversal, and Semantic Analysis for Scalable Code Understanding}}
+\title{\textbf{ctx-sys: Intelligent Context Management\\for AI-Assisted Software Development}\\[0.5cm]
+{\large Local Hybrid RAG with Graph Traversal, Semantic Search, and Conversation Memory}}
 
 \author{David Franz}
 \date{February 2026}
@@ -150,17 +106,20 @@
 % ABSTRACT
 % ============================================================================
 \begin{abstract}
-Modern AI coding assistants, built upon Large Language Models (LLMs), face fundamental limitations in context management. As conversations extend and codebases grow beyond context window capacities, these systems lose access to critical information---past decisions, code dependencies, documentation, and architectural context. This paper presents \textbf{ctx-sys}, an intelligent context management framework that addresses these limitations through a hybrid retrieval architecture.
+Modern AI coding assistants face a fundamental limitation: context windows are too small to hold an entire codebase, its documentation, and the history of decisions made about it. This paper presents \textbf{ctx-sys}, an open-source context management system that solves this through a local-first hybrid RAG architecture.
 
-The system implements a ``smart librarian'' paradigm: rather than attempting to fit all information into limited context windows, it indexes, extracts semantic meaning, and retrieves precisely relevant context on demand. The architecture integrates multiple retrieval strategies---vector similarity search using dense embeddings, graph-based traversal of code relationships, and keyword-based full-text search with BM25 ranking---unified through Reciprocal Rank Fusion (RRF).
+ctx-sys indexes codebases using tree-sitter AST parsing, generates semantic embeddings with Ollama, and builds a relationship graph connecting functions, classes, imports, and documentation. At query time, three retrieval strategies---vector similarity, full-text search with BM25, and graph traversal---are combined via Reciprocal Rank Fusion (RRF) to find precisely the right context.
 
-Key contributions include: (1) a unified entity model supporting heterogeneous information types including code symbols, documentation sections, conversation history, and domain concepts; (2) multi-language AST parsing using tree-sitter for structural code understanding; (3) advanced retrieval techniques including HyDE (Hypothetical Document Embeddings) for vocabulary mismatch resolution, retrieval gating for computational efficiency, smart context expansion, and query decomposition with LLM re-ranking; (4) a draft-critique loop for hallucination detection; (5) agent-oriented memory management with explicit hot/cold tiering and checkpointing for resumable execution; and (6) overlapping chunk embeddings and incremental document updates for improved retrieval quality.
+The system runs entirely locally with no cloud dependencies, stores everything in a single SQLite database, and integrates with AI assistants through the Model Context Protocol (MCP). Advanced features include HyDE query expansion, multi-vector chunking for large entities, conversation memory with decision tracking, and agent-oriented memory management.
 
-The implementation comprises approximately 20,000 lines of TypeScript with comprehensive test coverage (1,555 tests across 56 test suites spanning 10 implementation phases). The storage layer uses native SQLite via better-sqlite3 with FTS5 full-text search and BM25 ranking for high-performance local-first operation. Integration with AI assistants is achieved through the Model Context Protocol (MCP), enabling compatibility with Claude, GitHub Copilot, and similar tools. Evaluation demonstrates significant improvements in context relevance and token efficiency compared to naive full-context approaches.
+The implementation comprises approximately 20,000 lines of TypeScript with 1,555 tests across 56 test suites. It supports TypeScript, Python, Rust, Go, and Java, with universal document indexing for Markdown, HTML, and structured formats.
 
 \medskip
-\noindent\textbf{Keywords:} Retrieval-Augmented Generation, Context Management, AI Coding Assistants, Graph RAG, Code Intelligence, Embedding Search
+\noindent\textbf{Keywords:} Retrieval-Augmented Generation, Context Management, AI Coding Assistants, Graph RAG, Local-First, MCP
 \end{abstract}
+
+\tableofcontents
+\newpage
 
 % ============================================================================
 % SECTION 1: INTRODUCTION
@@ -168,2797 +127,722 @@ The implementation comprises approximately 20,000 lines of TypeScript with compr
 \section{Introduction}
 \label{sec:introduction}
 
-\subsection{Motivation}
+\subsection{The Context Problem}
 
-The integration of Large Language Models (LLMs) into software development workflows has transformed how developers write, understand, and maintain code. Tools such as GitHub Copilot, Claude, and ChatGPT have demonstrated remarkable capabilities in code generation, explanation, and debugging. However, these systems share a fundamental limitation: \textit{context constraints}.
+AI coding assistants built on Large Language Models have transformed software development. Tools like Claude, GitHub Copilot, and Cursor demonstrate remarkable capabilities in code generation, explanation, and debugging. However, they share a fundamental limitation: \textit{context constraints}.
 
-Modern LLMs operate within fixed context windows---typically ranging from 8,000 to 200,000 tokens---that must accommodate both the input prompt and the generated response. While these windows have expanded significantly over recent years, they remain insufficient for comprehensive software development tasks for several reasons:
+Even with context windows reaching 200,000 tokens, they remain insufficient for comprehensive development tasks:
 
-\begin{enumerate}
-    \item \textbf{Codebase Scale}: Production codebases routinely contain millions of lines of code across thousands of files. Even a moderately-sized project of 100,000 lines exceeds any practical context window.
+\begin{itemize}
+    \item \textbf{Codebase scale}: A 100,000-line project exceeds any practical context window
+    \item \textbf{Information dispersion}: Relevant context is scattered across source files, documentation, commit history, and past conversations
+    \item \textbf{Conversation drift}: Extended sessions accumulate decisions and understanding that degrades as conversations exceed limits
+    \item \textbf{Dependency complexity}: Understanding one function may require tracing imports, types, and base classes across dozens of files
+\end{itemize}
 
-    \item \textbf{Information Dispersion}: Relevant context for a given task is typically scattered across multiple files, documentation, commit history, issue trackers, and past conversations.
+Simply expanding context windows is not the answer. Token costs scale linearly, attention mechanisms are quadratic, and larger contexts do not solve the problem of \textit{relevance}---determining which information among vast repositories actually pertains to the current task.
 
-    \item \textbf{Conversation Drift}: Extended development sessions accumulate decisions, clarifications, and contextual understanding that degrades as conversations exceed context limits.
+\subsection{The Smart Librarian Paradigm}
 
-    \item \textbf{Dependency Complexity}: Understanding a single function may require tracing imports, type definitions, base classes, and documentation across dozens of files.
-\end{enumerate}
-
-The naive approach of simply expanding context windows is economically and computationally prohibitive. Token costs scale linearly or super-linearly with context size, and attention mechanisms exhibit quadratic complexity. More fundamentally, larger contexts do not solve the problem of \textit{relevance}---determining which information among vast repositories actually pertains to the current task.
-
-\subsection{Problem Statement}
-
-This paper addresses the following research question:
-
-\begin{quote}
-\textit{How can we design a context management system that enables AI coding assistants to access relevant information from large, heterogeneous knowledge sources while minimizing token consumption and maximizing retrieval precision?}
-\end{quote}
-
-This decomposes into several sub-problems:
+ctx-sys adopts a ``smart librarian'' approach: rather than hoarding everything into context, it knows \textit{where} information exists and retrieves only what matters. This manifests as:
 
 \begin{enumerate}
-    \item How should diverse information types (code, documentation, conversations, domain knowledge) be represented in a unified retrieval system?
-
-    \item What retrieval strategies are most effective for different query types, and how should multiple strategies be combined?
-
-    \item How can structural code understanding (AST analysis) enhance retrieval beyond surface-level text matching?
-
-    \item How should conversation history be managed to preserve important decisions while respecting context limits?
-
-    \item What mechanisms can detect and prevent hallucinations when LLMs generate responses based on retrieved context?
+    \item \textbf{Index} the codebase, documentation, and conversation history
+    \item \textbf{Extract} entities, relationships, and semantic meaning
+    \item \textbf{Retrieve} precisely the right context on demand
+    \item \textbf{Assemble} context with source attribution, respecting token budgets
 \end{enumerate}
+
+The result: AI assistants that have access to everything but only surface what's relevant.
 
 \subsection{Contributions}
 
 This paper makes the following contributions:
 
 \begin{enumerate}
-    \item \textbf{Unified Entity Model}: A flexible data model that represents code symbols, documentation sections, conversation messages, and domain concepts as first-class entities with vector embeddings and typed relationships.
-
-    \item \textbf{Hybrid Retrieval Architecture}: A multi-strategy search system combining vector similarity, graph traversal, and full-text search with Reciprocal Rank Fusion for result combination.
-
-    \item \textbf{Code Intelligence Pipeline}: Integration of tree-sitter AST parsing with AI-powered summarization for structural code understanding across multiple programming languages.
-
-    \item \textbf{Advanced Retrieval Techniques}: Implementation of HyDE query expansion for vocabulary mismatch resolution, retrieval gating for computational efficiency, smart context expansion, and query decomposition with LLM re-ranking.
-
-    \item \textbf{Verification Mechanisms}: A draft-critique loop that validates LLM responses against retrieved context to detect hallucinations.
-
-    \item \textbf{Agent Memory Management}: Hot/cold memory tiering with explicit APIs and checkpointing for resumable long-running tasks.
-
-    \item \textbf{Reference Implementation}: A complete, tested implementation (ctx-sys) with MCP integration for practical deployment.
+    \item A \textbf{hybrid retrieval architecture} combining vector similarity, graph traversal, and full-text search with Reciprocal Rank Fusion
+    \item \textbf{Code-aware indexing} using tree-sitter AST parsing with automatic relationship extraction across 5 programming languages
+    \item \textbf{Advanced retrieval techniques} including HyDE query expansion, multi-vector chunking, retrieval gating, and smart context expansion
+    \item \textbf{Conversation memory} with decision extraction and session management for persistent knowledge
+    \item A complete \textbf{reference implementation} with MCP integration, 30 tools, and production-ready deployment as an npm package
 \end{enumerate}
 
-\subsection{Paper Structure}
-
-The remainder of this paper is organized as follows:
-
-\begin{description}
-    \item[Section 2] reviews related work in retrieval-augmented generation, code intelligence, and context management for LLMs.
-
-    \item[Section 3] presents the system architecture, design principles, and component interactions.
-
-    \item[Section 4] details the data model, database schema, and storage layer implementation.
-
-    \item[Section 5] describes the code intelligence pipeline including AST parsing, symbol extraction, and relationship analysis.
-
-    \item[Section 6] covers the embedding and retrieval system, including multi-strategy search and fusion algorithms.
-
-    \item[Section 7] explains advanced retrieval techniques: HyDE expansion, retrieval gating, smart context expansion, query decomposition, and the draft-critique loop.
-
-    \item[Section 8] discusses conversation management, session handling, and decision extraction.
-
-    \item[Section 9] presents the agent patterns: checkpointing, memory tiering, and proactive context.
-
-    \item[Section 10] describes the system integration through MCP, CLI, and configuration management.
-
-    \item[Section 11] presents evaluation methodology and results.
-
-    \item[Section 12] concludes with a discussion of limitations and future work.
-\end{description}
-
 
 % ============================================================================
-% SECTION 2: RELATED WORK
-% ============================================================================
-\section{Related Work}
-\label{sec:related-work}
-
-\subsection{Retrieval-Augmented Generation}
-
-Retrieval-Augmented Generation (RAG) has emerged as a fundamental paradigm for extending LLM capabilities beyond their training data. The core insight is that LLMs can effectively utilize external knowledge when provided in their context, enabling factual grounding without model retraining.
-
-\subsubsection{Dense Retrieval}
-
-Traditional information retrieval relied on sparse representations such as TF-IDF and BM25. The advent of dense retrieval, pioneered by systems like DPR (Dense Passage Retrieval), demonstrated that learned embeddings could significantly outperform lexical methods for semantic similarity tasks.
-
-Modern embedding models, such as OpenAI's text-embedding-3-small and open-source alternatives like nomic-embed-text, map text to high-dimensional vectors where semantic similarity corresponds to geometric proximity. These embeddings form the foundation of our vector similarity search.
-
-\subsubsection{Graph-Enhanced RAG}
-
-Recent work has explored augmenting vector retrieval with knowledge graphs. Microsoft's GraphRAG demonstrated that graph structures capturing entity relationships can significantly improve retrieval quality for complex queries requiring multi-hop reasoning.
-
-Our system implements a similar approach, though optimized for code-specific relationships (imports, inheritance, function calls) rather than general knowledge graphs.
-
-\subsubsection{Query Expansion Techniques}
-
-Query expansion addresses the vocabulary mismatch problem---users often phrase queries differently from how information is stored. HyDE (Hypothetical Document Embeddings) introduced the technique of generating hypothetical answers and using their embeddings for retrieval, which we implement as a configurable option for conceptual queries.
-
-\subsection{Code Intelligence}
-
-\subsubsection{Abstract Syntax Tree Analysis}
-
-Abstract Syntax Tree (AST) parsing provides structural understanding of source code beyond surface-level text processing. Tree-sitter, a parser generator tool, has become the de facto standard for multi-language parsing in developer tools, offering incremental parsing, error recovery, and language-agnostic APIs.
-
-Our implementation uses tree-sitter's WebAssembly variant (web-tree-sitter) to support parsing without native dependencies, enabling broader deployment scenarios.
-
-\subsubsection{Code Search and Retrieval}
-
-Academic and industrial systems have explored various approaches to code search:
-
-\begin{itemize}
-    \item \textbf{Lexical}: Traditional search engines treating code as text
-    \item \textbf{Semantic}: Embedding-based similarity (CodeBERT, CodeT5)
-    \item \textbf{Structural}: Graph-based representations (code2vec)
-\end{itemize}
-
-ctx-sys combines these approaches, using lexical search for exact matches, semantic embeddings for conceptual queries, and graph traversal for dependency analysis.
-
-\subsubsection{Code Summarization}
-
-Automatic code summarization---generating natural language descriptions of code---enhances searchability and comprehension. We employ LLM-based summarization using the qwen3:0.6b model with specialized prompts for different symbol types (functions, classes, modules).
-
-\subsection{Context Management for LLMs}
-
-\subsubsection{Conversation Memory}
-
-Managing conversation history in multi-turn dialogues is a recognized challenge. Approaches include:
-
-\begin{itemize}
-    \item \textbf{Truncation}: Removing old messages (loses information)
-    \item \textbf{Summarization}: Compressing history into summaries
-    \item \textbf{Retrieval}: Selectively retrieving relevant past messages
-\end{itemize}
-
-ctx-sys implements summarization for session archival and retrieval for historical context access.
-
-\subsubsection{Memory-Augmented Agents}
-
-Long-running AI agents require persistent memory beyond conversation windows. Systems like MemGPT introduced explicit memory hierarchies. Our hot/cold memory tiering draws inspiration from this work while providing more explicit developer control.
-
-\subsection{Hallucination Detection}
-
-LLM hallucinations---generating plausible but incorrect information---are particularly problematic in code generation where errors have concrete consequences. Our draft-critique loop implements self-verification, where the model critiques its own outputs against retrieved context, similar to self-consistency approaches.
-
-
-% ============================================================================
-% SECTION 3: SYSTEM ARCHITECTURE
+% SECTION 2: SYSTEM ARCHITECTURE
 % ============================================================================
 \section{System Architecture}
 \label{sec:architecture}
 
-\subsection{Design Principles}
+\subsection{Architecture Overview}
 
-The ctx-sys architecture is guided by several core principles:
+Figure~\ref{fig:architecture} shows the overall system architecture. ctx-sys sits between developer tools and AI assistants, providing intelligent context retrieval through the Model Context Protocol.
 
-\subsubsection{Smart Librarian Paradigm}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    box/.style={rectangle, draw, rounded corners=4pt, minimum width=2.8cm, minimum height=0.8cm, font=\small},
+    layer/.style={rectangle, draw, rounded corners=6pt, fill=#1, minimum width=14cm, minimum height=1.6cm, font=\small\bfseries},
+    arrow/.style={-{Stealth[length=6pt]}, thick},
+    label/.style={font=\footnotesize\itshape, text=gray}
+]
 
-Rather than attempting to include all potentially relevant information in context (the ``hoarder'' approach), ctx-sys acts as a ``smart librarian''---knowing where information exists and retrieving precisely what is needed on demand. This principle manifests in:
+% Integration layer
+\node[layer=cyan!8] (integration) at (0,6) {};
+\node[font=\small\bfseries] at (-5.5,6.5) {Developer Tools};
+\node[box, fill=white] (claude) at (-3.5,5.8) {Claude Desktop};
+\node[box, fill=white] (cursor) at (0,5.8) {Cursor IDE};
+\node[box, fill=white] (code) at (3.5,5.8) {Claude Code};
 
-\begin{itemize}
-    \item Comprehensive indexing of all information sources
-    \item Query understanding to determine actual information needs
-    \item Targeted retrieval within strict token budgets
-    \item Source attribution for transparency
-\end{itemize}
+% MCP layer
+\node[layer=ctxcyan!15] (mcp) at (0,4) {};
+\node[font=\small\bfseries] at (-5.5,4.5) {MCP Server};
+\node[box, fill=white] (search) at (-4,3.8) {context\_query};
+\node[box, fill=white] (index) at (-0.8,3.8) {index\_codebase};
+\node[box, fill=white] (memory) at (2.4,3.8) {store\_message};
+\node[box, fill=white] (graph) at (5.2,3.8) {query\_graph};
+\node[label] at (0,3.2) {+ 26 more tools};
 
-\subsubsection{Unified Entity Model}
+% Processing layer
+\node[layer=orange!8] (processing) at (0,1.8) {};
+\node[font=\small\bfseries] at (-5.5,2.3) {Processing};
+\node[box, fill=white] (ast) at (-4.5,1.6) {AST Parser};
+\node[box, fill=white] (embed) at (-1.5,1.6) {Embeddings};
+\node[box, fill=white] (retrieval) at (1.5,1.6) {Hybrid Search};
+\node[box, fill=white] (context) at (4.5,1.6) {Context Assembly};
 
-All information types---code symbols, documentation sections, conversation messages, domain concepts---are represented as \textit{entities} with common attributes:
+% Storage layer
+\node[layer=green!8] (storage) at (0,-0.2) {};
+\node[font=\small\bfseries] at (-5.5,0.3) {Storage (SQLite)};
+\node[box, fill=white] (entities) at (-4.5,-0.4) {Entities};
+\node[box, fill=white] (vectors) at (-1.5,-0.4) {Vectors (vec0)};
+\node[box, fill=white] (fts) at (1.5,-0.4) {FTS5 Index};
+\node[box, fill=white] (rel) at (4.5,-0.4) {Relationships};
 
-\begin{itemize}
-    \item Unique identifiers and type classifications
-    \item Textual content with optional summaries
-    \item Vector embeddings for semantic search
-    \item Typed relationships to other entities
-    \item Rich metadata for filtering and ranking
-\end{itemize}
+% Arrows
+\draw[arrow] (claude) -- (search);
+\draw[arrow] (cursor) -- (index);
+\draw[arrow] (code) -- (memory);
+\draw[arrow, dashed, gray] (search) -- (retrieval);
+\draw[arrow, dashed, gray] (index) -- (ast);
+\draw[arrow, dashed, gray] (retrieval) -- (vectors);
+\draw[arrow, dashed, gray] (retrieval) -- (fts);
+\draw[arrow, dashed, gray] (retrieval) -- (rel);
+\draw[arrow, dashed, gray] (ast) -- (entities);
+\draw[arrow, dashed, gray] (embed) -- (vectors);
 
-This unification enables consistent retrieval across heterogeneous sources.
-
-\subsubsection{Strategy Plurality}
-
-No single retrieval strategy is optimal for all query types. The system supports multiple strategies:
-
-\begin{itemize}
-    \item \textbf{Vector/Semantic}: Best for conceptual, explanatory queries
-    \item \textbf{Keyword/FTS}: Best for exact symbol or identifier lookup
-    \item \textbf{Graph}: Best for dependency and relationship queries
-\end{itemize}
-
-Results are combined through configurable fusion algorithms.
-
-\subsubsection{Local-First Architecture}
-
-The system prioritizes local execution:
-
-\begin{itemize}
-    \item Native SQLite database (via better-sqlite3) with FTS5 full-text search for storage
-    \item Local embedding providers (Ollama) as primary option
-    \item Cloud providers as configurable fallbacks
-    \item Single-file portable database
-\end{itemize}
-
-This design ensures privacy, reduces latency, and enables offline operation.
-
-\subsection{System Components}
-
-Figure \ref{fig:architecture} illustrates the high-level system architecture.
-
-\begin{figure}[htbp]
-    \centering
-    \begin{tikzpicture}[
-        node distance=1.5cm,
-        box/.style={draw, rounded corners, minimum width=3cm, minimum height=0.8cm, align=center},
-        layer/.style={draw, dashed, rounded corners, inner sep=0.3cm},
-        arrow/.style={->, thick}
-    ]
-        % Integration Layer
-        \node[box, fill=blue!20] (vscode) {VS Code Extension};
-        \node[box, fill=blue!20, right=of vscode] (cli) {CLI Interface};
-        \node[box, fill=blue!20, right=of cli] (ai) {AI Assistants};
-
-        % MCP Server
-        \node[box, fill=green!20, below=of cli] (mcp) {MCP Server};
-
-        % Processing Layer
-        \node[box, fill=orange!20, below left=2cm and 0cm of mcp] (ast) {AST Parser};
-        \node[box, fill=orange!20, right=0.5cm of ast] (embed) {Embeddings};
-        \node[box, fill=orange!20, right=0.5cm of embed] (summary) {Summarizer};
-        \node[box, fill=orange!20, right=0.5cm of summary] (retrieval) {Retrieval};
-
-        % Storage Layer
-        \node[box, fill=yellow!20, below=2cm of embed] (sqlite) {SQLite + FTS5};
-        \node[box, fill=yellow!20, right=0.5cm of sqlite] (vectors) {Vector Store};
-        \node[box, fill=yellow!20, right=0.5cm of vectors] (graph) {Graph Store};
-
-        % Arrows
-        \draw[arrow] (vscode) -- (mcp);
-        \draw[arrow] (cli) -- (mcp);
-        \draw[arrow] (ai) -- (mcp);
-
-        \draw[arrow] (mcp) -- (ast);
-        \draw[arrow] (mcp) -- (embed);
-        \draw[arrow] (mcp) -- (summary);
-        \draw[arrow] (mcp) -- (retrieval);
-
-        \draw[arrow] (ast) -- (sqlite);
-        \draw[arrow] (embed) -- (vectors);
-        \draw[arrow] (summary) -- (sqlite);
-        \draw[arrow] (retrieval) -- (vectors);
-        \draw[arrow] (retrieval) -- (graph);
-
-        % Layer labels
-        \node[left=0.5cm of vscode, rotate=90, anchor=south] {\footnotesize Integration};
-        \node[left=0.5cm of ast, rotate=90, anchor=south] {\footnotesize Processing};
-        \node[left=0.5cm of sqlite, rotate=90, anchor=south] {\footnotesize Storage};
-
-    \end{tikzpicture}
-    \caption{High-level system architecture showing the three-layer design: integration, processing, and storage layers.}
-    \label{fig:architecture}
+\end{tikzpicture}
+\caption{ctx-sys system architecture. Developer tools connect via MCP. The processing layer handles indexing and retrieval. All data lives in a single SQLite database.}
+\label{fig:architecture}
 \end{figure}
 
-\subsubsection{Integration Layer}
+\subsection{Design Principles}
 
-The integration layer exposes ctx-sys functionality to external tools:
-
-\begin{description}
-    \item[MCP Server] The primary integration point, implementing the Model Context Protocol for compatibility with Claude, Copilot, and other MCP-aware assistants. Exposes tools for querying, indexing, and memory management.
-
-    \item[CLI Interface] Command-line tools for initialization, indexing, search, and server management. Used for setup, debugging, and automation scripts.
-
-    \item[VS Code Extension] (Planned) Native IDE integration with sidebar panel, hover information, and command palette access.
-\end{description}
-
-\subsubsection{Processing Layer}
-
-The processing layer transforms raw data into searchable representations:
+The architecture is guided by four principles:
 
 \begin{description}
-    \item[AST Parser] Multi-language source code parsing using tree-sitter. Extracts symbols, imports, exports, and structural relationships.
+    \item[Local-first] All processing happens on the developer's machine. Ollama provides local embeddings and summarization. The database is a single SQLite file. No API keys required for core functionality.
 
-    \item[Embedding Generator] Converts text content to dense vector representations. Supports multiple providers (Ollama, OpenAI) with automatic fallback.
+    \item[Incremental] Only changed files are re-indexed. Content hashing detects modifications. Embedding generation is hash-gated so unchanged entities skip expensive LLM calls.
 
-    \item[Summarizer] Generates natural language descriptions of code symbols and document sections using LLM inference (qwen3:0.6b via Ollama).
+    \item[Multi-strategy retrieval] No single search strategy works for all queries. Keyword search excels at exact identifiers. Semantic search handles conceptual queries. Graph traversal discovers structural relationships. Combining all three through RRF produces consistently better results than any single approach.
 
-    \item[Retrieval Engine] Orchestrates multi-strategy search, fusion, and context assembly.
+    \item[MCP-native] The primary interface is the Model Context Protocol---an open standard for connecting AI assistants to external data sources. This makes ctx-sys compatible with any MCP client without custom integration code.
 \end{description}
 
-\subsubsection{Storage Layer}
+\subsection{Storage Layer}
 
-The storage layer persists all indexed data:
-
-\begin{description}
-    \item[SQLite Database] Primary storage using better-sqlite3 (native SQLite bindings for Node.js) with FTS5 full-text search and BM25 ranking. Stores entities, metadata, sessions, and configuration.
-
-    \item[Vector Store] Embedding vectors stored alongside entities, with cosine similarity computation for semantic search.
-
-    \item[Graph Store] Entity relationships stored as edges with types and weights, supporting efficient traversal queries.
-\end{description}
-
-\subsection{Data Flow}
-
-\subsubsection{Indexing Flow}
-
-When indexing a codebase, data flows through the system as follows:
-
-\begin{enumerate}
-    \item \textbf{Discovery}: File system traversal identifies source files, filtered by language support and ignore patterns.
-
-    \item \textbf{Parsing}: Each file is parsed by the AST parser to extract symbols (functions, classes, methods) with their signatures, bodies, and positions.
-
-    \item \textbf{Relationship Extraction}: Import statements and inheritance declarations are analyzed to create relationship edges.
-
-    \item \textbf{Summarization}: (Optional) Each symbol is summarized by an LLM to generate natural language descriptions.
-
-    \item \textbf{Embedding}: Symbol content and summaries are embedded to dense vectors, using overlapping chunk embeddings for improved retrieval coverage.
-
-    \item \textbf{Storage}: Entities, vectors, and relationships are persisted to the database.
-\end{enumerate}
-
-\subsubsection{Query Flow}
-
-When processing a context query:
-
-\begin{enumerate}
-    \item \textbf{Query Analysis}: The natural language query is parsed to extract intent, keywords, and entity mentions. For complex queries, query decomposition breaks the query into sub-queries for more targeted retrieval.
-
-    \item \textbf{Retrieval Gating}: (Optional) A fast check determines if retrieval is necessary or if the query can be answered from general knowledge.
-
-    \item \textbf{HyDE Expansion}: (Optional) For conceptual queries, a hypothetical answer is generated and embedded.
-
-    \item \textbf{Multi-Strategy Search}: Parallel execution of vector similarity, keyword matching, and graph traversal.
-
-    \item \textbf{Fusion and Re-ranking}: Results from all strategies are combined using Reciprocal Rank Fusion, then optionally re-ranked using LLM-based relevance scoring.
-
-    \item \textbf{Smart Context Expansion}: Top results are expanded with surrounding context---related entities, parent scopes, and sibling definitions---to provide coherent context windows.
-
-    \item \textbf{Context Assembly}: Results are formatted with source attribution, respecting token budgets.
-
-    \item \textbf{Critique}: (Optional) The assembled context is verified against claimed facts.
-\end{enumerate}
-
-
-% ============================================================================
-% SECTION 4: DATA MODEL AND STORAGE
-% ============================================================================
-\section{Data Model and Storage}
-\label{sec:data-model}
-
-\subsection{Entity Model}
-
-The fundamental unit of storage in ctx-sys is the \textit{entity}. An entity represents any piece of information that may be relevant for context retrieval.
-
-\subsubsection{Entity Types}
-
-Entities are classified by type, enabling type-specific processing and filtering:
-
-\begin{table}[htbp]
-    \centering
-    \caption{Entity type taxonomy}
-    \label{tab:entity-types}
-    \begin{tabular}{lll}
-        \toprule
-        \textbf{Category} & \textbf{Type} & \textbf{Description} \\
-        \midrule
-        \multirow{7}{*}{Code}
-            & \texttt{file} & Source code file \\
-            & \texttt{module} & Module/namespace \\
-            & \texttt{class} & Class definition \\
-            & \texttt{function} & Function/procedure \\
-            & \texttt{method} & Class method \\
-            & \texttt{interface} & Interface/protocol \\
-            & \texttt{type} & Type alias/definition \\
-        \midrule
-        \multirow{4}{*}{Documentation}
-            & \texttt{document} & Document file \\
-            & \texttt{section} & Document section \\
-            & \texttt{requirement} & Extracted requirement \\
-            & \texttt{user\_story} & User story \\
-        \midrule
-        \multirow{4}{*}{Conversation}
-            & \texttt{session} & Conversation session \\
-            & \texttt{message} & Individual message \\
-            & \texttt{decision} & Extracted decision \\
-            & \texttt{question} & Unanswered question \\
-        \midrule
-        \multirow{4}{*}{Domain}
-            & \texttt{concept} & Domain concept \\
-            & \texttt{person} & Person/stakeholder \\
-            & \texttt{technology} & Technology reference \\
-            & \texttt{pattern} & Design pattern \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\subsubsection{Entity Schema}
-
-Each entity contains the following fields:
-
-\begin{lstlisting}[caption={Entity interface definition}]
-interface Entity {
-  id: string;              // Unique identifier (UUID)
-  type: EntityType;        // Classification type
-  name: string;            // Display name
-  qualifiedName?: string;  // Fully qualified name (e.g., module.Class.method)
-  content?: string;        // Full text content
-  summary?: string;        // Generated summary
-  metadata: Record<string, unknown>;  // Type-specific metadata
-  filePath?: string;       // Source file path (for code entities)
-  startLine?: number;      // Start line in source
-  endLine?: number;        // End line in source
-  hash?: string;           // Content hash for change detection
-  createdAt: Date;
-  updatedAt: Date;
-}
-\end{lstlisting}
-
-The \texttt{metadata} field accommodates type-specific information:
+Everything lives in a single SQLite database enhanced with two extensions:
 
 \begin{itemize}
-    \item \textbf{Functions}: Parameters, return type, async flag, exported flag
-    \item \textbf{Classes}: Base classes, implemented interfaces, member counts
-    \item \textbf{Documents}: Frontmatter, word count, heading structure
-    \item \textbf{Messages}: Role (user/assistant), session reference
+    \item \textbf{FTS5} --- SQLite's built-in full-text search with BM25 ranking for keyword queries
+    \item \textbf{sqlite-vec} --- native vector search extension providing \texttt{vec0} virtual tables for cosine similarity KNN queries
 \end{itemize}
 
-\subsection{Relationship Model}
-
-Entities are connected through typed, weighted relationships enabling graph traversal.
-
-\subsubsection{Relationship Types}
-
-\begin{table}[htbp]
-    \centering
-    \caption{Relationship type taxonomy}
-    \label{tab:relationship-types}
-    \begin{tabular}{llll}
-        \toprule
-        \textbf{Type} & \textbf{Source} & \textbf{Target} & \textbf{Meaning} \\
-        \midrule
-        \texttt{contains} & Parent & Child & Structural containment \\
-        \texttt{imports} & File & File/Module & Module dependency \\
-        \texttt{extends} & Class & Class & Inheritance \\
-        \texttt{implements} & Class & Interface & Interface implementation \\
-        \texttt{calls} & Function & Function & Function call \\
-        \texttt{defines} & File & Symbol & Symbol definition \\
-        \texttt{references} & Any & Any & Generic reference \\
-        \texttt{depends\_on} & Any & Any & Logical dependency \\
-        \texttt{relates\_to} & Any & Any & Semantic similarity \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\subsubsection{Relationship Schema}
-
-\begin{lstlisting}[caption={Relationship interface definition}]
-interface Relationship {
-  id: string;
-  sourceId: string;
-  targetId: string;
-  relationship: RelationshipType;
-  weight: number;           // Edge weight (0-1)
-  metadata?: Record<string, unknown>;
-  createdAt: Date;
-}
-\end{lstlisting}
-
-The \texttt{weight} field encodes relationship strength:
-\begin{itemize}
-    \item 1.0: Direct, definite relationship (explicit import, inheritance)
-    \item 0.5-0.9: Inferred relationship (likely call, type usage)
-    \item 0.1-0.5: Weak relationship (semantic similarity)
-\end{itemize}
-
-\subsection{Database Schema}
-
-The SQLite database uses a hybrid of global and per-project tables.
-
-\subsubsection{Global Tables}
-
-\begin{lstlisting}[style=sql,caption={Global schema}]
--- Project registry
-CREATE TABLE projects (
-  id TEXT PRIMARY KEY,
-  name TEXT UNIQUE NOT NULL,
-  path TEXT NOT NULL,
-  config JSON,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  last_indexed_at DATETIME,
-  last_sync_commit TEXT
-);
-
--- Embedding model registry
-CREATE TABLE embedding_models (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  provider TEXT NOT NULL,
-  dimensions INTEGER NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Global configuration
-CREATE TABLE config (
-  key TEXT PRIMARY KEY,
-  value JSON
-);
-\end{lstlisting}
-
-\subsubsection{Per-Project Tables}
-
-Each project has isolated tables with a sanitized project ID prefix:
-
-\begin{lstlisting}[style=sql,caption={Per-project schema (abbreviated)}]
--- Entities
-CREATE TABLE {prefix}_entities (
-  id TEXT PRIMARY KEY,
-  type TEXT NOT NULL,
-  name TEXT NOT NULL,
-  qualified_name TEXT,
-  content TEXT,
-  summary TEXT,
-  metadata JSON,
-  file_path TEXT,
-  start_line INTEGER,
-  end_line INTEGER,
-  hash TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Vector embeddings (stored as JSON)
-CREATE TABLE {prefix}_vectors (
-  id TEXT PRIMARY KEY,
-  entity_id TEXT NOT NULL,
-  model_id TEXT NOT NULL,
-  embedding JSON NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (entity_id) REFERENCES {prefix}_entities(id)
-);
-
--- Graph relationships
-CREATE TABLE {prefix}_relationships (
-  id TEXT PRIMARY KEY,
-  source_id TEXT NOT NULL,
-  target_id TEXT NOT NULL,
-  relationship TEXT NOT NULL,
-  weight REAL DEFAULT 1.0,
-  metadata JSON,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (source_id) REFERENCES {prefix}_entities(id),
-  FOREIGN KEY (target_id) REFERENCES {prefix}_entities(id)
-);
-
--- Conversation sessions
-CREATE TABLE {prefix}_sessions (
-  id TEXT PRIMARY KEY,
-  name TEXT,
-  status TEXT DEFAULT 'active',
-  summary TEXT,
-  message_count INTEGER DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Conversation messages
-CREATE TABLE {prefix}_messages (
-  id TEXT PRIMARY KEY,
-  session_id TEXT NOT NULL,
-  role TEXT NOT NULL,
-  content TEXT NOT NULL,
-  metadata JSON,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (session_id) REFERENCES {prefix}_sessions(id)
-);
-
--- FTS5 virtual table for full-text search with BM25 ranking
-CREATE VIRTUAL TABLE {prefix}_entities_fts USING fts5(
-  name, qualified_name, content, summary,
-  content={prefix}_entities, content_rowid=rowid
-);
-\end{lstlisting}
-
-\subsubsection{Indexing Strategy}
-
-Indexes are created for common query patterns:
-
-\begin{lstlisting}[style=sql,caption={Database indexes}]
--- Entity lookups
-CREATE INDEX idx_{prefix}_entities_type ON {prefix}_entities(type);
-CREATE INDEX idx_{prefix}_entities_file ON {prefix}_entities(file_path);
-CREATE INDEX idx_{prefix}_entities_name ON {prefix}_entities(name);
-CREATE INDEX idx_{prefix}_entities_hash ON {prefix}_entities(hash);
-
--- Vector lookups
-CREATE INDEX idx_{prefix}_vectors_entity ON {prefix}_vectors(entity_id);
-CREATE UNIQUE INDEX idx_{prefix}_vectors_entity_model
-  ON {prefix}_vectors(entity_id, model_id);
-
--- Relationship lookups
-CREATE INDEX idx_{prefix}_rel_source ON {prefix}_relationships(source_id);
-CREATE INDEX idx_{prefix}_rel_target ON {prefix}_relationships(target_id);
-CREATE INDEX idx_{prefix}_rel_type ON {prefix}_relationships(relationship);
-\end{lstlisting}
-
-\subsection{Vector Storage}
-
-Vector embeddings enable semantic similarity search. The storage design balances efficiency with portability.
-
-\subsubsection{Embedding Representation}
-
-Embeddings are stored as JSON-encoded arrays:
-
-\begin{lstlisting}[caption={Embedding storage}]
-// Storage: JSON string in database
-const embedding: number[] = [0.123, -0.456, 0.789, ...]; // 384-1536 dimensions
-const stored = JSON.stringify(embedding);
-
-// Retrieval and computation
-const retrieved = JSON.parse(stored) as number[];
-\end{lstlisting}
-
-The system uses better-sqlite3 with native SQLite bindings, providing significantly improved performance over WebAssembly-based alternatives. Overlapping chunk embeddings ensure that content spanning chunk boundaries is properly captured in the vector space.
-
-\subsubsection{Similarity Computation}
-
-Cosine similarity is computed in-memory after retrieving candidate embeddings:
-
-\begin{lstlisting}[caption={Cosine similarity computation}]
-function cosineSimilarity(a: number[], b: number[]): number {
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-
-  const denominator = Math.sqrt(normA) * Math.sqrt(normB);
-  return denominator === 0 ? 0 : dotProduct / denominator;
-}
-\end{lstlisting}
-
-\begin{algorithm}
-\caption{Vector similarity search}
-\label{alg:vector-search}
-\begin{algorithmic}[1]
-\Require Query embedding $q$, limit $k$, threshold $\tau$
-\Ensure Top-$k$ similar entities above threshold
-\State $results \gets []$
-\State $candidates \gets$ \Call{LoadAllEmbeddings}{}
-\For{each $(entityId, embedding)$ in $candidates$}
-    \State $sim \gets$ \Call{CosineSimilarity}{$q$, $embedding$}
-    \If{$sim \geq \tau$}
-        \State $results$.append($(entityId, sim)$)
-    \EndIf
-\EndFor
-\State \textbf{sort} $results$ by similarity descending
-\State \Return $results[0:k]$
-\end{algorithmic}
-\end{algorithm}
+The database stores entities (code symbols, document sections), their vector embeddings, a relationship graph, conversation history, and agent state---all in a portable, single-file format.
 
 
 % ============================================================================
-% SECTION 5: CODE INTELLIGENCE
+% SECTION 3: CODE INTELLIGENCE
 % ============================================================================
 \section{Code Intelligence}
 \label{sec:code-intelligence}
 
-\subsection{AST Parsing}
+\subsection{Multi-Language AST Parsing}
 
-The code intelligence pipeline begins with Abstract Syntax Tree (AST) parsing, which provides structural understanding of source code.
+ctx-sys uses tree-sitter to parse source code into Abstract Syntax Trees, extracting meaningful entities from five programming languages:
 
-\subsubsection{Tree-sitter Integration}
-
-We use tree-sitter through its WebAssembly variant (web-tree-sitter) for several reasons:
-
-\begin{itemize}
-    \item \textbf{Multi-language support}: Single API for TypeScript, Python, Go, Rust, Java, C/C++
-    \item \textbf{Error recovery}: Produces partial ASTs for syntactically invalid code
-    \item \textbf{Incremental parsing}: Efficiently re-parses after edits
-    \item \textbf{No native dependencies}: WebAssembly enables universal deployment
-\end{itemize}
-
-\begin{lstlisting}[caption={AST parser initialization and usage}]
-import * as TreeSitter from 'web-tree-sitter';
-
-export class ASTParser {
-  private languages: Map<string, Language> = new Map();
-
-  async initialize(): Promise<void> {
-    await TreeSitter.Parser.init();
-  }
-
-  async parseContent(
-    content: string,
-    language: SupportedLanguage
-  ): Promise<ParseResult> {
-    const parser = new TreeSitter.Parser();
-    const lang = await this.loadLanguage(language);
-    parser.setLanguage(lang);
-
-    const tree = parser.parse(content);
-    const extractor = this.getExtractor(language);
-
-    return {
-      symbols: extractor.extractSymbols(tree.rootNode),
-      imports: extractor.extractImports(tree.rootNode),
-      exports: extractor.extractExports(tree.rootNode),
-      errors: this.extractErrors(tree)
-    };
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Language-Specific Extractors}
-
-Each supported language has a dedicated extractor implementing a common interface:
-
-\begin{lstlisting}[caption={Language extractor interface}]
-interface LanguageExtractor {
-  extractSymbols(node: SyntaxNode, filePath?: string): Symbol[];
-  extractImports(node: SyntaxNode): ImportStatement[];
-  extractExports(node: SyntaxNode): string[];
-}
-\end{lstlisting}
-
-\paragraph{TypeScript Extractor}
-
-The TypeScript extractor handles JavaScript/TypeScript-specific constructs:
-
-\begin{lstlisting}[caption={TypeScript symbol extraction (simplified)}]
-class TypeScriptExtractor implements LanguageExtractor {
-  extractSymbols(node: SyntaxNode): Symbol[] {
-    const symbols: Symbol[] = [];
-
-    this.traverse(node, (child) => {
-      switch (child.type) {
-        case 'function_declaration':
-        case 'arrow_function':
-          symbols.push(this.extractFunction(child));
-          break;
-        case 'class_declaration':
-          symbols.push(this.extractClass(child));
-          break;
-        case 'interface_declaration':
-          symbols.push(this.extractInterface(child));
-          break;
-        case 'type_alias_declaration':
-          symbols.push(this.extractTypeAlias(child));
-          break;
-      }
-    });
-
-    return symbols;
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Symbol Representation}
-
-Extracted symbols capture structural information:
-
-\begin{lstlisting}[caption={Symbol interface}]
-interface Symbol {
-  type: SymbolType;
-  name: string;
-  qualifiedName: string;
-  signature?: string;       // Function/method signature
-  body?: string;            // Full body content
-  docstring?: string;       // Associated documentation
-  parameters?: Parameter[]; // For functions/methods
-  returnType?: string;      // For functions/methods
-  modifiers?: string[];     // public, private, static, async, etc.
-  children?: Symbol[];      // Nested symbols (class members)
-  startLine: number;
-  endLine: number;
-}
-\end{lstlisting}
-
-\subsection{Relationship Extraction}
-
-Beyond individual symbols, the code intelligence pipeline extracts relationships between code elements.
-
-\subsubsection{Import Analysis}
-
-Import statements establish module dependencies:
-
-\begin{lstlisting}[caption={Import relationship extraction}]
-extractImports(node: SyntaxNode): ImportStatement[] {
-  const imports: ImportStatement[] = [];
-
-  for (const child of node.children) {
-    if (child.type === 'import_statement') {
-      const source = this.findChild(child, 'string')?.text;
-      const specifiers = this.extractImportSpecifiers(child);
-
-      imports.push({
-        source: this.normalizeModulePath(source),
-        specifiers,
-        isTypeOnly: child.text.includes('import type'),
-        isDynamic: child.type === 'call_expression'
-      });
-    }
-  }
-
-  return imports;
-}
-\end{lstlisting}
-
-\subsubsection{Inheritance Relationships}
-
-Class hierarchies are extracted from extends/implements clauses:
-
-\begin{lstlisting}[caption={Inheritance extraction}]
-private extractInheritance(classNode: SyntaxNode): {
-  extends?: string;
-  implements?: string[];
-} {
-  const result: { extends?: string; implements?: string[] } = {};
-
-  const heritage = this.findChild(classNode, 'class_heritage');
-  if (heritage) {
-    const extendsClause = this.findChild(heritage, 'extends_clause');
-    if (extendsClause) {
-      result.extends = this.findChild(extendsClause, 'identifier')?.text;
-    }
-
-    const implementsClause = this.findChild(heritage, 'implements_clause');
-    if (implementsClause) {
-      result.implements = this.findChildren(implementsClause, 'type_identifier')
-        .map(n => n.text);
-    }
-  }
-
-  return result;
-}
-\end{lstlisting}
-
-\subsubsection{Relationship Graph Construction}
-
-The relationship extractor aggregates all relationships into a queryable graph:
-
-\begin{lstlisting}[caption={Relationship extraction from parse results}]
-class RelationshipExtractor {
-  extractFromParseResult(parseResult: ParseResult): Relationship[] {
-    const relationships: Relationship[] = [];
-
-    // Import relationships
-    for (const imp of parseResult.imports) {
-      relationships.push({
-        type: 'imports',
-        source: parseResult.filePath,
-        target: imp.source,
-        metadata: { isExternal: this.isExternalModule(imp.source) }
-      });
-    }
-
-    // Symbol definitions
-    for (const symbol of parseResult.symbols) {
-      relationships.push({
-        type: 'defines',
-        source: parseResult.filePath,
-        target: symbol.qualifiedName
-      });
-
-      // Inheritance
-      if (symbol.type === 'class' && symbol.metadata?.extends) {
-        relationships.push({
-          type: 'extends',
-          source: symbol.qualifiedName,
-          target: symbol.metadata.extends
-        });
-      }
-    }
-
-    return relationships;
-  }
-}
-\end{lstlisting}
-
-\subsection{Symbol Summarization}
-
-Raw code content is often too verbose for efficient retrieval. LLM-powered summarization generates concise descriptions.
-
-\subsubsection{Summarization Strategy}
-
-Different symbol types receive tailored summarization prompts:
-
-\begin{lstlisting}[caption={Summarization prompt generation}]
-class SymbolSummarizer {
-  private buildPrompt(symbol: Symbol): string {
-    switch (symbol.type) {
-      case 'function':
-        return `Summarize this function in 1-2 sentences.
-What does it do, what inputs does it take, what does it return?
-
-Function: ${symbol.name}
-Signature: ${symbol.signature}
-Body:
-${symbol.body}`;
-
-      case 'class':
-        return `Summarize this class in 2-3 sentences.
-What is its purpose? What are its main responsibilities?
-
-Class: ${symbol.name}
-${symbol.metadata?.extends ? `Extends: ${symbol.metadata.extends}` : ''}
-Members: ${symbol.children?.map(c => c.name).join(', ')}`;
-
-      default:
-        return `Summarize this code element briefly:\n${symbol.body}`;
-    }
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Batch Processing}
-
-For efficiency, symbols are summarized in batches with progress tracking:
-
-\begin{lstlisting}[caption={Batch summarization with progress}]
-async summarizeBatch(
-  symbols: Symbol[],
-  options?: { onProgress?: (done: number, total: number) => void }
-): Promise<SymbolSummary[]> {
-  const results: SymbolSummary[] = [];
-
-  for (let i = 0; i < symbols.length; i++) {
-    const summary = await this.summarize(symbols[i]);
-    results.push(summary);
-    options?.onProgress?.(i + 1, symbols.length);
-  }
-
-  return results;
-}
-\end{lstlisting}
-
-
-% ============================================================================
-% SECTION 6: EMBEDDING AND RETRIEVAL
-% ============================================================================
-\section{Embedding and Retrieval}
-\label{sec:retrieval}
-
-\subsection{Embedding Pipeline}
-
-The embedding pipeline transforms textual content into dense vector representations suitable for semantic similarity search.
-
-\subsubsection{Provider Architecture}
-
-The system supports multiple embedding providers through a common interface:
-
-\begin{lstlisting}[caption={Embedding provider interface}]
-interface EmbeddingProvider {
-  readonly name: string;
-  readonly modelId: string;
-  readonly dimensions: number;
-
-  embed(text: string): Promise<number[]>;
-  embedBatch(texts: string[], options?: BatchOptions): Promise<number[][]>;
-}
-\end{lstlisting}
-
-\paragraph{Ollama Provider}
-
-The primary provider uses locally-hosted Ollama with the nomic-embed-text model:
-
-\begin{lstlisting}[caption={Ollama embedding provider}]
-class OllamaEmbeddingProvider implements EmbeddingProvider {
-  readonly name = 'ollama';
-  readonly modelId = 'nomic-embed-text';
-  readonly dimensions = 768;
-
-  async embed(text: string): Promise<number[]> {
-    const response = await fetch(`${this.baseUrl}/api/embeddings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: this.modelId,
-        prompt: text
-      })
-    });
-
-    const data = await response.json();
-    return data.embedding;
-  }
-}
-\end{lstlisting}
-
-\paragraph{OpenAI Provider}
-
-Cloud fallback using OpenAI's text-embedding-3-small:
-
-\begin{lstlisting}[caption={OpenAI embedding provider}]
-class OpenAIEmbeddingProvider implements EmbeddingProvider {
-  readonly name = 'openai';
-  readonly modelId = 'text-embedding-3-small';
-  readonly dimensions = 1536;
-
-  async embedBatch(texts: string[]): Promise<number[][]> {
-    const response = await this.client.embeddings.create({
-      model: this.modelId,
-      input: texts
-    });
-
-    return response.data.map(d => d.embedding);
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Embedding Manager}
-
-The EmbeddingManager coordinates embedding generation, storage, and retrieval:
-
-\begin{lstlisting}[caption={Embedding manager}]
-class EmbeddingManager {
-  constructor(
-    private db: DatabaseConnection,
-    private projectId: string,
-    private provider: EmbeddingProvider
-  ) {}
-
-  async embed(entityId: string, content: string): Promise<void> {
-    const embedding = await this.provider.embed(content);
-    this.store(entityId, embedding);
-  }
-
-  async findSimilar(
-    query: string,
-    options?: { limit?: number; threshold?: number }
-  ): Promise<SimilarityResult[]> {
-    const queryEmbedding = await this.provider.embed(query);
-    return this.findSimilarByVector(queryEmbedding, options);
-  }
-
-  findSimilarByVector(
-    embedding: number[],
-    options?: { limit?: number; threshold?: number }
-  ): SimilarityResult[] {
-    const candidates = this.loadAllEmbeddings();
-
-    const scored = candidates.map(c => ({
-      entityId: c.entityId,
-      similarity: this.cosineSimilarity(embedding, c.embedding)
-    }));
-
-    return scored
-      .filter(s => s.similarity >= (options?.threshold ?? 0))
-      .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, options?.limit ?? 10);
-  }
-}
-\end{lstlisting}
-
-\subsection{Query Parsing}
-
-Before retrieval, queries are parsed to extract structured information that guides search strategy selection.
-
-\subsubsection{Query Intent Detection}
-
-Queries are classified by intent to optimize retrieval strategy:
-
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
-    \caption{Query intent classification}
-    \label{tab:query-intents}
-    \begin{tabular}{lll}
+    \caption{Supported languages and extracted entities}
+    \label{tab:languages}
+    \begin{tabular}{llp{8cm}}
         \toprule
-        \textbf{Intent} & \textbf{Example Query} & \textbf{Preferred Strategy} \\
+        \textbf{Language} & \textbf{Parser} & \textbf{Extracted Entities} \\
         \midrule
-        \texttt{find} & ``where is the auth controller?'' & Keyword \\
-        \texttt{explain} & ``how does authentication work?'' & Semantic + Graph \\
-        \texttt{list} & ``show all API endpoints'' & Keyword + Type filter \\
-        \texttt{compare} & ``difference between v1 and v2 API'' & Semantic \\
-        \texttt{how} & ``how to implement caching?'' & Semantic + HyDE \\
-        \texttt{why} & ``why is this function async?'' & Graph (context) \\
-        \texttt{debug} & ``error in login function'' & Keyword + Graph \\
+        TypeScript/JS & tree-sitter-typescript & Functions, classes, methods, interfaces, type aliases, enums, imports \\
+        Python & tree-sitter-python & Functions, classes, methods, decorators, imports \\
+        Rust & tree-sitter-rust & Functions, structs, impls, traits, enums, imports \\
+        Go & tree-sitter-go & Functions, structs, methods, interfaces, imports \\
+        Java & tree-sitter-java & Classes, methods, interfaces, imports \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\begin{lstlisting}[caption={Intent detection patterns}]
-private buildIntentPatterns(): IntentPattern[] {
-  return [
-    { pattern: /^(find|search|locate|where\s+is)/i,
-      intent: 'find', weight: 0.9 },
-    { pattern: /^(explain|what\s+is|what\s+does)/i,
-      intent: 'explain', weight: 0.9 },
-    { pattern: /\bhow\s+does\b.*\bwork\b/i,
-      intent: 'explain', weight: 0.85 },
-    { pattern: /^how\s+(do|can|to)/i,
-      intent: 'how', weight: 0.9 },
-    { pattern: /\b(error|bug|issue|problem)/i,
-      intent: 'debug', weight: 0.85 },
-    // ... additional patterns
-  ];
-}
-\end{lstlisting}
+Each extracted entity includes its full source code, file path, line range, and a content hash for incremental change detection. The parser is incremental: only files that have changed since the last index are re-parsed.
 
-\subsubsection{Entity Mention Extraction}
+\subsection{Automatic Relationship Extraction}
 
-Code entity mentions (marked with backticks or following naming conventions) are extracted for targeted lookup:
+Beyond extracting individual symbols, the parser builds a relationship graph connecting entities:
 
-\begin{lstlisting}[caption={Entity mention extraction}]
-extractEntityMentions(query: string): EntityMention[] {
-  const mentions: EntityMention[] = [];
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    entity/.style={rectangle, draw, rounded corners=3pt, fill=white, minimum width=2cm, minimum height=0.7cm, font=\small},
+    rel/.style={font=\footnotesize\itshape, text=ctxcyan!80!black},
+    arrow/.style={-{Stealth[length=5pt]}, thick, ctxcyan!70!black}
+]
 
-  // Backtick-quoted identifiers
-  const backtickPattern = /`([^`]+)`/g;
-  let match;
-  while ((match = backtickPattern.exec(query)) !== null) {
-    mentions.push({
-      text: match[1],
-      type: this.classifyMention(match[1]),
-      start: match.index,
-      end: match.index + match[0].length
-    });
-  }
+% File level
+\node[entity, fill=blue!5] (file1) at (0,3) {auth.ts};
+\node[entity, fill=blue!5] (file2) at (6,3) {user.ts};
 
-  // CamelCase/PascalCase identifiers
-  const identifierPattern = /\b([A-Z][a-zA-Z0-9]*(?:\.[A-Z][a-zA-Z0-9]*)*)\b/g;
-  // ... extraction logic
+% Symbol level
+\node[entity, fill=green!5] (login) at (-2,1) {login()};
+\node[entity, fill=green!5] (verify) at (2,1) {verifyToken()};
+\node[entity, fill=orange!5] (authm) at (0,-1) {AuthMiddleware};
+\node[entity, fill=orange!5] (user) at (6,1) {UserService};
+\node[entity, fill=purple!5] (iauth) at (6,-1) {IAuthProvider};
 
-  return mentions;
-}
+% Relationships
+\draw[arrow] (file1) -- node[rel, right] {CONTAINS} (login);
+\draw[arrow] (file1) -- node[rel, left] {CONTAINS} (verify);
+\draw[arrow] (file1) -- node[rel, right] {CONTAINS} (authm);
+\draw[arrow] (file2) -- node[rel, left] {CONTAINS} (user);
+\draw[arrow] (file2) -- node[rel, right] {CONTAINS} (iauth);
+\draw[arrow] (login) -- node[rel, above] {CALLS} (verify);
+\draw[arrow] (authm) -- node[rel, below, sloped] {IMPLEMENTS} (iauth);
+\draw[arrow] (file1) -- node[rel, above] {IMPORTS} (file2);
+\draw[arrow] (login) -- node[rel, above, sloped] {CALLS} (user);
 
-private classifyMention(text: string): MentionType {
-  if (text.includes('.') || text.includes('/')) return 'file';
-  if (text.match(/^[A-Z]/)) return 'class';
-  if (text.includes('(')) return 'function';
-  return 'unknown';
-}
-\end{lstlisting}
+\end{tikzpicture}
+\caption{Example entity relationship graph. Relationships are extracted from AST analysis: CONTAINS from nesting, IMPORTS from import statements, CALLS from function invocations, IMPLEMENTS from interface usage.}
+\label{fig:relationships}
+\end{figure}
 
-\subsection{Multi-Strategy Search}
+Five relationship types are automatically extracted:
 
-The multi-strategy search system combines multiple retrieval approaches for comprehensive coverage.
+\begin{table}[H]
+    \centering
+    \caption{Automatically extracted relationship types}
+    \begin{tabular}{llp{7cm}}
+        \toprule
+        \textbf{Relationship} & \textbf{Source} & \textbf{How Detected} \\
+        \midrule
+        CONTAINS & AST nesting & File contains function/class, class contains method \\
+        IMPORTS & Import statements & \texttt{import \{X\} from './file'} parsed from AST \\
+        CALLS & Function bodies & Identifier references matching known function names \\
+        EXTENDS & Class declarations & \texttt{class X extends Y} parsed from AST \\
+        IMPLEMENTS & Class declarations & \texttt{class X implements Y} parsed from AST \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
-\subsubsection{Search Strategies}
+\subsection{Document Indexing}
 
-Three primary strategies are implemented:
+Beyond code, ctx-sys indexes documentation in any text format: Markdown, HTML, YAML, JSON, TOML, and plain text. Documents are split into semantic chunks at paragraph boundaries with configurable overlap, ensuring that each chunk is self-contained for embedding.
 
-\paragraph{Keyword Search}
-
-Pattern-based matching against entity names and content, leveraging FTS5 with BM25 ranking:
-
-\begin{lstlisting}[caption={Keyword search implementation}]
-private async keywordSearch(
-  parsed: ParsedQuery,
-  options: SearchOptions
-): Promise<RawResult[]> {
-  const results: RawResult[] = [];
-
-  // Search with keywords using FTS5 + BM25
-  if (parsed.keywords.length > 0) {
-    const searchQuery = parsed.keywords.join(' ');
-    const ftsResults = await this.entityStore.search(searchQuery, {
-      type: options.entityTypes?.[0],
-      limit: options.limit * 2
-    });
-
-    // Convert to ranked results
-    for (let i = 0; i < ftsResults.length; i++) {
-      results.push({
-        entityId: ftsResults[i].id,
-        score: 1 / (i + 1),  // Rank-based scoring
-        source: 'keyword'
-      });
-    }
-  }
-
-  return results;
-}
-\end{lstlisting}
-
-\paragraph{Semantic Search}
-
-Vector similarity search using embeddings:
-
-\begin{lstlisting}[caption={Semantic search implementation}]
-private async semanticSearch(
-  parsed: ParsedQuery,
-  options: SearchOptions
-): Promise<RawResult[]> {
-  const similar = await this.embeddingManager.findSimilar(
-    parsed.normalizedQuery,
-    {
-      limit: options.limit * 2,
-      entityTypes: options.entityTypes
-    }
-  );
-
-  return similar.map(s => ({
-    entityId: s.entityId,
-    score: s.similarity,
-    source: 'semantic'
-  }));
-}
-\end{lstlisting}
-
-\paragraph{Graph Search}
-
-Traversal from mentioned entities to related nodes:
-
-\begin{lstlisting}[caption={Graph search implementation}]
-private async graphSearch(
-  parsed: ParsedQuery,
-  options: SearchOptions
-): Promise<RawResult[]> {
-  const results: RawResult[] = [];
-
-  // Start from mentioned entities
-  for (const mention of parsed.entityMentions) {
-    const entity = await this.findEntityByMention(mention);
-    if (!entity) continue;
-
-    // Get neighborhood
-    const subgraph = await this.graphTraversal.getNeighborhood(entity.id, {
-      maxDepth: options.graphDepth ?? 2
-    });
-
-    // Score by distance from start
-    for (const neighbor of subgraph.entities) {
-      const distance = this.calculateDistance(entity.id, neighbor.id, subgraph);
-      results.push({
-        entityId: neighbor.id,
-        score: 1 / (distance + 1),
-        source: 'graph'
-      });
-    }
-  }
-
-  return results;
-}
-\end{lstlisting}
-
-\subsubsection{Reciprocal Rank Fusion}
-
-Results from multiple strategies are combined using Reciprocal Rank Fusion (RRF):
-
-\begin{definition}[Reciprocal Rank Fusion]
-Given $n$ ranked lists $L_1, \ldots, L_n$ and a constant $k$ (typically 60), the RRF score for document $d$ is:
-\[
-\text{RRF}(d) = \sum_{i=1}^{n} \frac{w_i}{k + \text{rank}_i(d)}
-\]
-where $w_i$ is the weight for list $i$ and $\text{rank}_i(d)$ is the rank of $d$ in list $i$ (or $\infty$ if absent).
-\end{definition}
-
-\begin{lstlisting}[caption={RRF implementation}]
-private reciprocalRankFusion(
-  results: RawResult[],
-  weights: StrategyWeights
-): FusedResult[] {
-  const K = 60;
-  const scoreMap = new Map<string, number>();
-
-  // Group results by source and rank
-  const bySource = new Map<SearchStrategy, RawResult[]>();
-  for (const r of results) {
-    const list = bySource.get(r.source) ?? [];
-    list.push(r);
-    bySource.set(r.source, list);
-  }
-
-  // Sort each list by score and apply RRF
-  for (const [source, list] of bySource) {
-    const weight = weights[source] ?? 1.0;
-    const sorted = list.sort((a, b) => b.score - a.score);
-
-    for (let rank = 0; rank < sorted.length; rank++) {
-      const entityId = sorted[rank].entityId;
-      const rrfScore = weight / (K + rank + 1);
-      scoreMap.set(entityId, (scoreMap.get(entityId) ?? 0) + rrfScore);
-    }
-  }
-
-  return Array.from(scoreMap.entries())
-    .map(([entityId, score]) => ({ entityId, score }))
-    .sort((a, b) => b.score - a.score);
-}
-\end{lstlisting}
-
-\begin{algorithm}
-\caption{Multi-strategy search with RRF fusion}
-\label{alg:multi-search}
-\begin{algorithmic}[1]
-\Require Query $q$, strategies $S$, weights $W$, limit $k$
-\Ensure Fused top-$k$ results
-\State $parsed \gets$ \Call{ParseQuery}{$q$}
-\State $allResults \gets []$
-\For{each strategy $s$ in $S$}
-    \State $results_s \gets$ \Call{ExecuteStrategy}{$s$, $parsed$}
-    \State $allResults$.extend($results_s$)
-\EndFor
-\State $fused \gets$ \Call{ReciprocalRankFusion}{$allResults$, $W$}
-\State $deduped \gets$ \Call{Deduplicate}{$fused$}
-\State \Return $deduped[0:k]$
-\end{algorithmic}
-\end{algorithm}
-
-\subsection{Context Assembly}
-
-Retrieved results must be formatted for LLM consumption within token budgets.
-
-\subsubsection{Token Estimation}
-
-Token counts are estimated using character-based approximation:
-
-\begin{lstlisting}[caption={Token estimation}]
-function estimateTokens(text: string): number {
-  // Approximation: ~4 characters per token
-  return Math.ceil(text.length / 4);
-}
-\end{lstlisting}
-
-\subsubsection{Context Formatting}
-
-Results are formatted with source attribution:
-
-\begin{lstlisting}[caption={Context assembly}]
-class ContextAssembler {
-  assemble(results: SearchResult[], options: AssemblyOptions): AssembledContext {
-    const maxTokens = options.maxTokens ?? 4000;
-    const sections: string[] = [];
-    const sources: ContextSource[] = [];
-    let tokenCount = 0;
-
-    // Sort by relevance
-    const sorted = results.sort((a, b) => b.score - a.score);
-
-    for (const result of sorted) {
-      const formatted = this.formatEntity(result.entity, options);
-      const tokens = estimateTokens(formatted);
-
-      if (tokenCount + tokens > maxTokens) {
-        break;  // Token budget exhausted
-      }
-
-      sections.push(formatted);
-      tokenCount += tokens;
-      sources.push({
-        entityId: result.entity.id,
-        name: result.entity.name,
-        type: result.entity.type,
-        relevance: result.score
-      });
-    }
-
-    return {
-      context: sections.join('\n\n---\n\n'),
-      sources,
-      tokenCount,
-      truncated: sorted.length > sources.length
-    };
-  }
-
-  private formatEntity(entity: Entity, options: AssemblyOptions): string {
-    if (options.format === 'markdown') {
-      return `### ${entity.name} (${entity.type})
-${entity.filePath ? `*File: ${entity.filePath}*` : ''}
-
-${entity.summary ?? entity.content}`;
-    }
-    // ... other formats
-  }
-}
-\end{lstlisting}
+The indexing pipeline is:
+\begin{enumerate}
+    \item Parse document structure (headings, sections, paragraphs)
+    \item Split into overlapping chunks (target: 1500 chars, max: 3000 chars, overlap: 200 chars)
+    \item Create entities for each chunk with parent-child CONTAINS relationships
+    \item Generate embeddings for each chunk
+\end{enumerate}
 
 
 % ============================================================================
-% SECTION 7: ADVANCED RETRIEVAL TECHNIQUES
+% SECTION 4: HYBRID RETRIEVAL
 % ============================================================================
-\section{Advanced Retrieval Techniques}
-\label{sec:advanced-retrieval}
+\section{Hybrid Retrieval Pipeline}
+\label{sec:retrieval}
 
-\subsection{HyDE Query Expansion}
+The core of ctx-sys is its hybrid retrieval pipeline, which combines three independent search strategies and merges their results using Reciprocal Rank Fusion.
 
-HyDE (Hypothetical Document Embeddings) addresses the \textit{vocabulary mismatch} problem---users often phrase queries differently from how information is stored.
+\subsection{Pipeline Overview}
 
-\subsubsection{Motivation}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.6cm,
+    box/.style={rectangle, draw, rounded corners=4pt, minimum width=3cm, minimum height=0.8cm, font=\small, fill=white},
+    strategy/.style={rectangle, draw, rounded corners=4pt, minimum width=3.5cm, minimum height=1.4cm, font=\small, fill=#1},
+    merge/.style={rectangle, draw, rounded corners=6pt, minimum width=4cm, minimum height=0.8cm, font=\small\bfseries, fill=ctxcyan!15},
+    arrow/.style={-{Stealth[length=6pt]}, thick},
+    label/.style={font=\footnotesize, text=gray}
+]
 
-Consider the query ``how does the system handle user logins?'' The codebase might contain a function \texttt{authenticateCredentials} with no occurrence of ``login.'' Direct embedding similarity may fail to connect these semantically related terms.
+% Query input
+\node[box, fill=yellow!10] (query) at (0,5) {User Query};
 
-HyDE generates a \textit{hypothetical answer} to the query, then uses its embedding for retrieval. The hypothetical, being generated by an LLM with broad language understanding, bridges vocabulary gaps.
+% Optional HyDE
+\node[box, fill=purple!8, dashed] (hyde) at (5,5) {HyDE Expansion};
+\draw[arrow, dashed] (query) -- node[label, above] {optional} (hyde);
 
-\subsubsection{Implementation}
+% Three strategies
+\node[strategy=blue!8] (fts) at (-4,2.5) {\begin{tabular}{c}\textbf{FTS5 + BM25}\\Keyword Search\end{tabular}};
+\node[strategy=green!8] (semantic) at (0,2.5) {\begin{tabular}{c}\textbf{Vector Search}\\Cosine Similarity\end{tabular}};
+\node[strategy=orange!8] (graph) at (4,2.5) {\begin{tabular}{c}\textbf{Graph Traversal}\\Relationship Walk\end{tabular}};
 
-\begin{lstlisting}[caption={HyDE query expander}]
-class HyDEQueryExpander {
-  async expandQuery(context: HyDEQueryContext): Promise<HyDEResult> {
-    const startTime = Date.now();
+% Arrows from query to strategies
+\draw[arrow] (query) -- (fts);
+\draw[arrow] (query) -- (semantic);
+\draw[arrow] (query) -- (graph);
+\draw[arrow, dashed] (hyde) -- (semantic);
 
-    // Always compute direct embedding as fallback
-    const directEmbedding = await this.embeddingManager.embedText(context.query);
+% RRF merge
+\node[merge] (rrf) at (0,0.5) {Reciprocal Rank Fusion};
+\draw[arrow] (fts) -- (rrf);
+\draw[arrow] (semantic) -- (rrf);
+\draw[arrow] (graph) -- (rrf);
 
-    // Check if HyDE should be used
-    if (!this.shouldUseHyDE(context.query)) {
-      return {
-        originalQuery: context.query,
-        hypotheticalAnswer: '',
-        hypotheticalEmbedding: directEmbedding,
-        directEmbedding,
-        usedHyDE: false,
-        generationTimeMs: Date.now() - startTime
-      };
-    }
+% Post-processing
+\node[box, fill=red!5] (rerank) at (0,-0.8) {Heuristic Reranking};
+\node[box, fill=cyan!8] (assemble) at (0,-2.1) {Context Assembly};
 
-    // Generate hypothetical answer
-    const hypothetical = await this.hypotheticalProvider.generate(
-      context.query,
-      { entityTypes: context.entityTypes }
-    );
+\draw[arrow] (rrf) -- (rerank);
+\draw[arrow] (rerank) -- (assemble);
 
-    // Embed the hypothetical
-    const hypotheticalEmbedding = await this.embeddingManager.embedText(hypothetical);
+% Output
+\node[box, fill=green!10] (result) at (0,-3.4) {Formatted Context + Sources};
+\draw[arrow] (assemble) -- (result);
 
-    return {
-      originalQuery: context.query,
-      hypotheticalAnswer: hypothetical,
-      hypotheticalEmbedding,
-      directEmbedding,
-      usedHyDE: true,
-      generationTimeMs: Date.now() - startTime
-    };
-  }
+% Labels
+\node[label, right] at (5.5,2.5) {\begin{tabular}{l}Each strategy returns\\ranked entity lists\\with scores\end{tabular}};
 
-  shouldUseHyDE(query: string): boolean {
-    const parsed = this.queryParser.parse(query);
+\end{tikzpicture}
+\caption{Hybrid retrieval pipeline. Three independent strategies search in parallel, results are fused with RRF, reranked, and assembled into formatted context with source attribution.}
+\label{fig:pipeline}
+\end{figure}
 
-    // Skip for short queries
-    if (query.length < this.config.minQueryLength) return false;
+\subsection{Strategy 1: Full-Text Search (FTS5 + BM25)}
 
-    // Skip for specific entity mentions
-    if (parsed.entityMentions.some(m =>
-      m.type === 'file' || m.type === 'function')) return false;
+SQLite's FTS5 extension provides keyword-based search with BM25 relevance scoring. The FTS index covers entity names, summaries, and content. A custom tokenizer splits camelCase and PascalCase identifiers (e.g., \texttt{getUserById} becomes ``get'', ``User'', ``By'', ``Id'') so that natural language queries match code identifiers.
 
-    // Use for conceptual intents
-    return this.config.hydeIntents.includes(parsed.intent);
-  }
-}
-\end{lstlisting}
+\textbf{Best for}: exact identifier lookups, error messages, known symbol names.
 
-\subsubsection{Prompt Engineering}
+\subsection{Strategy 2: Vector Search (Semantic Similarity)}
 
-The hypothetical generation prompt is crucial for quality:
+Each entity is embedded using Ollama's \texttt{mxbai-embed-large} model (1024 dimensions). At query time, the query is embedded and compared against all entity vectors using cosine similarity via sqlite-vec's native KNN search.
 
-\begin{lstlisting}[caption={Hypothetical generation prompt}]
-function buildHypotheticalPrompt(query: string, entityTypes?: string[]): string {
-  const typeHint = entityTypes?.length
-    ? `Focus on ${entityTypes.join(', ')} entities.`
-    : '';
+Large entities are split into overlapping chunks with entity headers prepended to each chunk, so every vector is self-describing. At search time, results are deduplicated by taking the best-scoring chunk per entity.
 
-  return `Given this question about a codebase, write a short hypothetical
-answer (2-3 sentences) that would be found in the actual code or documentation.
-Do not make up specific function names unless they're in the question.
-${typeHint}
+\textbf{Best for}: conceptual queries, natural language questions, finding functionally similar code.
 
-Question: ${query}
+\subsubsection{Multi-Vector Chunking}
 
-Hypothetical answer:`;
-}
-\end{lstlisting}
+A 500-line class cannot be meaningfully represented by a single 1024-character embedding. ctx-sys addresses this with multi-vector chunking:
 
-\subsubsection{Selective Application}
+\begin{enumerate}
+    \item Each entity gets a \textit{header}: type, name (with identifier splitting), file path, and summary
+    \item If header + content fits in the model's context window (1024 chars for mxbai-embed-large), produce one chunk
+    \item Otherwise, split content into overlapping chunks at line boundaries, prepend the header to each
+    \item Embed each chunk separately, storing chunk index metadata
+    \item At search time, deduplicate by taking the highest-scoring chunk per entity
+\end{enumerate}
 
-HyDE adds latency (LLM generation + additional embedding), so it is selectively applied:
+This ensures that implementation details deep in a function body are searchable, not just signatures and comments.
+
+\subsection{Strategy 3: Graph Traversal}
+
+The relationship graph enables structural search that neither keyword nor semantic approaches can provide. Given a query, the system:
+
+\begin{enumerate}
+    \item Identifies seed entities from keyword or semantic matches
+    \item Traverses the relationship graph outward (configurable depth, default: 2 hops)
+    \item Scores neighbors by relationship type and distance
+    \item Returns structurally related entities that may not match the query text at all
+\end{enumerate}
+
+\textbf{Best for}: ``what calls this function?'', ``what does this file import?'', understanding dependency chains.
+
+\subsection{Reciprocal Rank Fusion}
+
+The three strategy results are combined using Reciprocal Rank Fusion (RRF), which is robust to score incomparability between strategies:
+
+$$\text{RRF}(d) = \sum_{s \in \text{strategies}} \frac{1}{k + \text{rank}_s(d)}$$
+
+where $k$ is a constant (default: 60) that controls the influence of high-ranked vs.\ low-ranked results. RRF is preferred over linear score combination because the score distributions from FTS5, vector similarity, and graph traversal are on fundamentally different scales.
+
+\subsection{Heuristic Reranking}
+
+After fusion, a heuristic reranker adjusts scores based on:
 
 \begin{itemize}
-    \item \textbf{Applied}: Conceptual queries (``how does X work?''), explanation requests, why questions
-    \item \textbf{Skipped}: Specific lookups (``find \texttt{UserController}''), short queries, debugging with exact error messages
+    \item \textbf{Entity type preference}: Functions and classes score higher than file stubs
+    \item \textbf{Relevance floor}: Results below a minimum score threshold are filtered out
+    \item \textbf{Result cap}: Only the top-$k$ results are retained (quality over quantity)
 \end{itemize}
+
+
+% ============================================================================
+% SECTION 5: ADVANCED TECHNIQUES
+% ============================================================================
+\section{Advanced Retrieval Techniques}
+\label{sec:advanced}
+
+\subsection{HyDE: Hypothetical Document Embeddings}
+
+When a user asks ``how does error handling work?'', the query embedding may be distant from actual error-handling code in vector space---a vocabulary mismatch problem. HyDE addresses this by:
+
+\begin{enumerate}
+    \item Taking the user's query
+    \item Asking a local LLM (default: \texttt{gemma3:12b}) to generate a \textit{hypothetical} code snippet that would answer the query
+    \item Embedding the hypothetical snippet instead of (or alongside) the original query
+    \item Using this enriched embedding for vector search
+\end{enumerate}
+
+The hypothetical document is closer to actual code in embedding space, significantly improving recall for conceptual queries. A quality guard discards hypothetical matches if their similarity to the query is below a threshold, preventing bad hypotheticals from degrading results.
 
 \subsection{Retrieval Gating}
 
-Retrieval gating determines whether context retrieval is necessary before executing expensive search operations.
-
-\subsubsection{Motivation}
-
-Not all queries benefit from retrieved context:
+Not every query needs the full retrieval pipeline. The retrieval gate classifies queries as:
 
 \begin{itemize}
-    \item \textbf{General knowledge}: ``What is a promise in JavaScript?''---answerable from training data
-    \item \textbf{Simple tasks}: ``Write a function to reverse a string''---no project context needed
-    \item \textbf{Clarification requests}: ``Can you explain that more?''---needs conversation history, not code search
+    \item \textbf{Trivial}: greetings, meta-questions (``what can you do?'') --- skip retrieval entirely
+    \item \textbf{Standard}: typical code questions --- run the full hybrid pipeline
 \end{itemize}
 
-Unnecessary retrieval wastes compute and may introduce noise into the context.
-
-\subsubsection{Decision Process}
-
-The gate uses a two-phase decision process:
-
-\begin{enumerate}
-    \item \textbf{Fast path}: Pattern-based rules for clear cases (< 1ms)
-    \item \textbf{Slow path}: Model-based classification for ambiguous cases (100-500ms)
-\end{enumerate}
-
-\begin{lstlisting}[caption={Retrieval gate decision logic}]
-class RetrievalGate {
-  async shouldRetrieve(context: GateContext): Promise<GateDecision> {
-    // Check cache
-    const cached = this.getCached(context.query);
-    if (cached) return cached;
-
-    // Fast path: pattern-based
-    const fastDecision = this.fastPathDecision(context.query);
-    if (fastDecision) return fastDecision;
-
-    // Slow path: model-based
-    if (this.modelProvider) {
-      return this.modelBasedDecision(context);
-    }
-
-    // Default: retrieve
-    return { shouldRetrieve: true, confidence: 0.5, reason: 'default' };
-  }
-
-  private fastPathDecision(query: string): GateDecision | null {
-    const parsed = this.queryParser.parse(query);
-
-    // Always retrieve for code entity mentions
-    if (parsed.entityMentions.some(m =>
-      ['file', 'function', 'class'].includes(m.type))) {
-      return {
-        shouldRetrieve: true,
-        confidence: 0.95,
-        reason: 'Query mentions specific code entities',
-        suggestedStrategy: 'keyword'
-      };
-    }
-
-    // Skip for general programming questions
-    if (this.isGeneralProgrammingQuestion(query)) {
-      return {
-        shouldRetrieve: false,
-        confidence: 0.8,
-        reason: 'General programming question'
-      };
-    }
-
-    return null;  // Defer to slow path
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Gating Patterns}
-
-Table \ref{tab:gating-patterns} summarizes the fast-path patterns:
-
-\begin{table}[htbp]
-    \centering
-    \caption{Retrieval gating patterns}
-    \label{tab:gating-patterns}
-    \begin{tabular}{lll}
-        \toprule
-        \textbf{Pattern} & \textbf{Decision} & \textbf{Confidence} \\
-        \midrule
-        Backtick entity mention & Retrieve & 0.95 \\
-        ``this project/codebase'' & Retrieve & 0.9 \\
-        ``our implementation'' & Retrieve & 0.85 \\
-        General JS/Python question & Skip & 0.8 \\
-        ``what is a [concept]'' & Skip & 0.75 \\
-        Error with stack trace & Retrieve & 0.9 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+This reduces unnecessary computation by approximately 30\% of queries in practice.
 
 \subsection{Smart Context Expansion}
 
-Smart context expansion enriches retrieval results by automatically including surrounding context that improves comprehension.
-
-\subsubsection{Expansion Strategy}
-
-When a retrieved entity is a function or method, the expansion system automatically includes:
+When a function is retrieved, understanding it often requires seeing its type definitions, parent class, or imported modules. Smart context expansion automatically includes:
 
 \begin{itemize}
-    \item \textbf{Parent scope}: The containing class or module definition
-    \item \textbf{Type dependencies}: Referenced types, interfaces, and enums
-    \item \textbf{Sibling definitions}: Related functions in the same file or class
-    \item \textbf{Import context}: Key imports needed to understand the code
+    \item Parent class/interface for retrieved methods
+    \item Type definitions referenced in function signatures
+    \item Import targets for retrieved modules
 \end{itemize}
 
-This ensures that retrieved code snippets are self-contained and comprehensible without requiring additional round-trips.
+Expansion is token-budgeted (default: 2000 tokens) to prevent context bloat.
 
-\subsection{Query Decomposition and LLM Re-ranking}
+\subsection{Query Decomposition}
 
-Complex queries are decomposed into targeted sub-queries, and results are re-ranked using LLM-based relevance scoring.
-
-\subsubsection{Query Decomposition}
-
-Multi-faceted queries such as ``how does the authentication system validate tokens and handle expired sessions?'' are decomposed into focused sub-queries:
+Complex queries like ``how does the authentication middleware validate tokens and handle expired sessions?'' are decomposed into sub-queries:
 
 \begin{enumerate}
-    \item ``authentication system token validation''
+    \item ``authentication middleware token validation''
     \item ``expired session handling''
 \end{enumerate}
 
-Each sub-query is executed independently, and results are merged using weighted RRF with de-duplication.
+Each sub-query runs through the full pipeline independently, and results are merged. This improves recall for multi-faceted questions.
 
-\subsubsection{LLM Re-ranking}
 
-After initial retrieval and fusion, the top-$N$ candidates are optionally re-ranked by an LLM that scores each result's relevance to the original query. This addresses cases where surface-level similarity scores fail to capture true relevance, particularly for nuanced or domain-specific queries.
+% ============================================================================
+% SECTION 6: EMBEDDING PIPELINE
+% ============================================================================
+\section{Embedding Pipeline}
+\label{sec:embeddings}
 
-\subsection{Overlapping Chunk Embeddings}
+\subsection{Embedding Generation}
 
-Documents and large code entities are split into overlapping chunks before embedding, ensuring that content near chunk boundaries is captured in multiple embeddings. This addresses the common problem where relevant information spanning a chunk boundary is missed by both adjacent chunk embeddings.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.5cm,
+    box/.style={rectangle, draw, rounded corners=3pt, minimum width=3cm, minimum height=0.7cm, font=\small, fill=white},
+    arrow/.style={-{Stealth[length=5pt]}, thick},
+    decision/.style={diamond, draw, aspect=2, minimum width=2cm, font=\small, fill=yellow!10}
+]
 
-\subsection{Draft-Critique Loop}
+% Flow
+\node[box, fill=blue!8] (entity) at (0,4) {Entity from index};
+\node[decision] (changed) at (0,2.5) {Content changed?};
+\node[box, fill=orange!8] (chunk) at (0,1) {Chunk if needed};
+\node[box, fill=green!8] (embed) at (0,-0.5) {Embed via Ollama};
+\node[box, fill=purple!8] (store) at (0,-2) {Store in vec0};
+\node[box, fill=gray!15] (skip) at (4.5,2.5) {Skip (use cached)};
 
-The draft-critique loop verifies LLM responses against retrieved context to detect hallucinations.
+\draw[arrow] (entity) -- (changed);
+\draw[arrow] (changed) -- node[font=\footnotesize, right] {yes} (chunk);
+\draw[arrow] (changed) -- node[font=\footnotesize, above] {no} (skip);
+\draw[arrow] (chunk) -- (embed);
+\draw[arrow] (embed) -- (store);
 
-\subsubsection{Hallucination Problem}
+% Details
+\node[font=\footnotesize, text=gray, right] at (2.5,1) {\begin{tabular}{l}Header + content\\$\leq$ 1024 chars: 1 chunk\\$>$ 1024 chars: overlapping chunks\end{tabular}};
+\node[font=\footnotesize, text=gray, right] at (2.5,-0.5) {\begin{tabular}{l}mxbai-embed-large\\1024 dimensions\\batch of 10\end{tabular}};
 
-LLMs may generate confident but incorrect claims about codebases:
+\end{tikzpicture}
+\caption{Embedding pipeline with content-hash-based change detection and multi-vector chunking.}
+\label{fig:embedding-pipeline}
+\end{figure}
+
+The embedding pipeline is designed for efficiency:
 
 \begin{itemize}
-    \item Inventing function names or parameters
-    \item Misattributing behavior to wrong modules
-    \item Describing deprecated or non-existent features
-    \item Conflating similar but distinct concepts
+    \item \textbf{Incremental}: SHA-256 content hashing detects changes. Unchanged entities keep their existing embeddings.
+    \item \textbf{Model-aware}: Embedding dimensions and context length are auto-detected from Ollama's model metadata. No manual configuration needed.
+    \item \textbf{Batched}: Entities are embedded in batches of 10 with progress reporting. Failed individual embeddings get zero vectors rather than failing the entire batch.
+    \item \textbf{Model-prefixed}: Some models (like mxbai-embed-large) perform better with task-specific prefixes. Query embeddings get ``Represent this sentence for searching relevant passages:'' while document embeddings get no prefix.
 \end{itemize}
 
-\subsubsection{Critique Process}
+\subsection{Supported Embedding Models}
 
-The critique loop operates iteratively:
-
-\begin{enumerate}
-    \item Generate initial draft response
-    \item Extract factual claims from draft
-    \item Verify each claim against retrieved context
-    \item Flag unsupported or contradicted claims
-    \item Optionally revise and re-critique
-\end{enumerate}
-
-\begin{lstlisting}[caption={Draft critique implementation}]
-class DraftCritique {
-  async critique(options: CritiqueOptions): Promise<DraftCritiqueOutput> {
-    const iterations: CritiqueIteration[] = [];
-    let currentDraft = options.draft;
-
-    for (let i = 0; i < this.config.maxIterations; i++) {
-      // Run critique
-      const result = await this.runCritique(
-        currentDraft,
-        options.query,
-        options.context
-      );
-
-      // Extract claims
-      const claims = this.extractClaims(currentDraft, options.context);
-
-      iterations.push({ iteration: i, draft: currentDraft, result, claims });
-
-      // Check if passed
-      if (result.passed) break;
-
-      // Optionally revise
-      if (options.revisionCallback) {
-        currentDraft = await options.revisionCallback(currentDraft, result);
-      } else {
-        break;
-      }
-    }
-
-    return this.buildOutput(iterations);
-  }
-
-  private extractClaims(
-    draft: string,
-    context: AssembledContext
-  ): ExtractedClaim[] {
-    const claims: ExtractedClaim[] = [];
-    const sentences = this.splitSentences(draft);
-
-    for (const sentence of sentences) {
-      const claimType = this.classifyClaimType(sentence);
-      if (claimType === 'opinion') continue;
-
-      const supported = this.verifyAgainstContext(sentence, context);
-      claims.push({
-        claim: sentence,
-        type: claimType,
-        supported,
-        source: supported ? this.findSupportingSource(sentence, context) : undefined
-      });
-    }
-
-    return claims;
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Issue Classification}
-
-Detected issues are classified by severity:
-
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
-    \caption{Critique issue types and severities}
-    \label{tab:critique-issues}
-    \begin{tabular}{llp{6cm}}
+    \caption{Embedding model characteristics}
+    \begin{tabular}{llll}
         \toprule
-        \textbf{Type} & \textbf{Severity} & \textbf{Description} \\
+        \textbf{Model} & \textbf{Dimensions} & \textbf{Context} & \textbf{Notes} \\
         \midrule
-        \texttt{hallucination} & High & Claim contradicts or has no basis in context \\
-        \texttt{unsupported} & Medium & Claim cannot be verified from provided context \\
-        \texttt{incomplete} & Low & Relevant information exists but was not included \\
-        \texttt{outdated} & Medium & Information may be stale based on timestamps \\
+        mxbai-embed-large (default) & 1024 & 512 tokens & Best quality for code \\
+        nomic-embed-text & 768 & 2048 tokens & Longer context window \\
+        all-minilm & 384 & 256 tokens & Smallest, fastest \\
+        OpenAI text-embedding-3-small & 1536 & 8191 tokens & Cloud fallback \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 
 % ============================================================================
-% SECTION 8: CONVERSATION MANAGEMENT
+% SECTION 7: CONVERSATION MEMORY
 % ============================================================================
-\section{Conversation Management}
-\label{sec:conversation}
+\section{Conversation Memory and Agent Patterns}
+\label{sec:memory}
 
 \subsection{Session Management}
 
-Conversations are organized into sessions that track context and state across multiple messages.
+ctx-sys provides persistent conversation memory across sessions. Messages are stored with full metadata, indexed for full-text search, and organized into named sessions.
 
-\subsubsection{Session Lifecycle}
-
-Sessions progress through defined states:
-
-\begin{figure}[htbp]
-    \centering
-    \begin{tikzpicture}[
-        node distance=2.5cm,
-        state/.style={draw, rounded corners, minimum width=2cm, minimum height=0.8cm},
-        arrow/.style={->, thick}
-    ]
-        \node[state, fill=green!20] (active) {Active};
-        \node[state, fill=yellow!20, right=of active] (archived) {Archived};
-        \node[state, fill=blue!20, right=of archived] (summarized) {Summarized};
-
-        \draw[arrow] (active) -- node[above] {archive()} (archived);
-        \draw[arrow] (archived) -- node[above] {summarize()} (summarized);
-        \draw[arrow, bend left=30] (active) to node[below] {summarize()} (summarized);
-    \end{tikzpicture}
-    \caption{Session state transitions}
-    \label{fig:session-states}
-\end{figure}
-
-\begin{lstlisting}[caption={Session manager implementation}]
-class SessionManager {
-  create(name?: string): Session {
-    const id = generateId();
-    this.db.run(
-      `INSERT INTO ${this.sessionsTable} (id, name, status, message_count)
-       VALUES (?, ?, 'active', 0)`,
-      [id, name ?? null]
-    );
-    return this.get(id)!;
-  }
-
-  getCurrent(): Session {
-    // Return existing current session
-    if (this.currentSessionId) {
-      const session = this.get(this.currentSessionId);
-      if (session?.status === 'active') return session;
-    }
-
-    // Find most recent active session
-    const recent = this.db.get<SessionRow>(
-      `SELECT * FROM ${this.sessionsTable}
-       WHERE status = 'active'
-       ORDER BY updated_at DESC LIMIT 1`
-    );
-
-    if (recent) {
-      this.currentSessionId = recent.id;
-      return this.rowToSession(recent);
-    }
-
-    // Create new session
-    return this.create();
-  }
-
-  archive(id: string): Session {
-    return this.update(id, { status: 'archived' });
-  }
-
-  markSummarized(id: string, summary: string): Session {
-    return this.update(id, { status: 'summarized', summary });
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Message Storage}
-
-Messages are stored with role classification and metadata:
-
-\begin{lstlisting}[caption={Message storage}]
-interface Message {
-  id: string;
-  sessionId: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  metadata?: {
-    model?: string;
-    tokenCount?: number;
-    responseTimeMs?: number;
-    toolCalls?: string[];
-  };
-  createdAt: Date;
-}
-
-class MessageStore {
-  add(
-    sessionId: string,
-    role: Message['role'],
-    content: string,
-    metadata?: Record<string, unknown>
-  ): Message {
-    const id = generateId();
-
-    this.db.run(
-      `INSERT INTO ${this.messagesTable}
-       (id, session_id, role, content, metadata)
-       VALUES (?, ?, ?, ?, ?)`,
-      [id, sessionId, role, content, JSON.stringify(metadata ?? {})]
-    );
-
-    // Update session message count
-    this.db.run(
-      `UPDATE ${this.sessionsTable}
-       SET message_count = message_count + 1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ?`,
-      [sessionId]
-    );
-
-    return this.get(id)!;
-  }
-}
-\end{lstlisting}
-
-\subsection{Conversation Summarization}
-
-Long conversations are summarized to preserve essential information while reducing token consumption.
-
-\subsubsection{Summarization Strategy}
-
-The summarizer produces structured summaries capturing:
-
+Key capabilities:
 \begin{itemize}
-    \item Main topics discussed
-    \item Key decisions made
-    \item Unresolved questions
-    \item Important context for future reference
+    \item \textbf{Message storage}: Store user, assistant, and system messages with metadata
+    \item \textbf{Session organization}: Group messages into named sessions for different tasks
+    \item \textbf{Full-text search}: Search across all messages using FTS5
+    \item \textbf{Decision extraction}: Automatically identify and tag architectural decisions from conversations
+    \item \textbf{Session summarization}: LLM-generated summaries with incremental versioning
 \end{itemize}
 
-\begin{lstlisting}[caption={Session summarizer}]
-class SessionSummarizer {
-  async summarize(sessionId: string): Promise<string> {
-    const messages = this.messageStore.getBySession(sessionId);
+\subsection{Decision Tracking}
 
-    if (messages.length === 0) {
-      return 'Empty session with no messages.';
-    }
+Architectural decisions---``we chose JWT over sessions'', ``the API uses snake\_case''---are extracted from conversations and stored as first-class entities. This means future sessions can query past decisions:
 
-    const prompt = this.buildSummarizationPrompt(messages);
-    const summary = await this.provider.summarize(prompt);
-
-    // Update session with summary
-    this.sessionManager.markSummarized(sessionId, summary);
-
-    return summary;
-  }
-
-  private buildSummarizationPrompt(messages: Message[]): string {
-    const transcript = messages
-      .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-      .join('\n\n');
-
-    return `Summarize this conversation, capturing:
-1. Main topics discussed
-2. Key decisions made
-3. Unresolved questions
-4. Important context for future reference
-
-CONVERSATION:
-${transcript}
-
-SUMMARY:`;
-  }
-}
+\begin{lstlisting}[style=terminal]
+$ ctx-sys session search-decisions "authentication approach"
+> Decision: Use JWT tokens with short expiry and refresh tokens
+> Session: architecture-review (3 days ago)
+> Context: Discussed trade-offs between JWT and session cookies...
 \end{lstlisting}
 
-\subsection{Decision Extraction}
+\subsection{Agent Memory Patterns}
 
-The system automatically extracts decisions from conversations for future reference.
-
-\subsubsection{Decision Detection}
-
-Pattern matching identifies potential decision statements:
-
-\begin{lstlisting}[caption={Decision detection patterns}]
-const DECISION_PATTERNS = [
-  /we('ll| will| should| decided| agreed| chose)/i,
-  /let's (go with|use|implement|do|try)/i,
-  /the (decision|plan|approach|strategy) is/i,
-  /i('ll| will) (use|implement|go with|choose)/i,
-  /decided to/i,
-  /agreed (on|to|that)/i,
-  /going (to|with)/i,
-  /settled on/i
-];
-
-class DecisionExtractor {
-  mightContainDecision(content: string): boolean {
-    return DECISION_PATTERNS.some(p => p.test(content));
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Structured Extraction}
-
-Potential decisions are processed by an LLM to extract structured information:
-
-\begin{lstlisting}[caption={Decision extraction}]
-interface Decision {
-  id: string;
-  sessionId: string;
-  messageId: string;
-  description: string;
-  context?: string;
-  alternatives?: string[];
-  relatedEntities: string[];
-  createdAt: Date;
-}
-
-class DecisionExtractor {
-  async extractFromMessage(message: Message): Promise<Decision[]> {
-    if (!this.mightContainDecision(message.content)) {
-      return [];
-    }
-
-    const prompt = `Extract any decisions from this message.
-For each decision, provide:
-- DECISION: (the decision itself)
-- CONTEXT: (why it was made)
-- ALTERNATIVES: (other options considered)
-
-If no decisions, respond with "NO_DECISIONS".
-
-MESSAGE:
-${message.content}`;
-
-    const response = await this.provider.summarize(prompt);
-    return this.parseDecisions(response, message);
-  }
-}
-\end{lstlisting}
-
-
-% ============================================================================
-% SECTION 9: AGENT PATTERNS
-% ============================================================================
-\section{Agent Patterns}
-\label{sec:agent-patterns}
-
-This section describes patterns for supporting long-running AI agent workflows that exceed single conversation boundaries.
-
-\subsection{Checkpointing}
-
-Checkpointing enables saving and restoring agent execution state for failure recovery and task resumption.
-
-\subsubsection{Checkpoint Data Model}
-
-\begin{lstlisting}[caption={Agent state and checkpoint interfaces}]
-interface AgentState {
-  query: string;           // Original task
-  plan: PlanStep[];        // Execution plan
-  currentStepIndex: number;
-  results: StepResult[];   // Completed step results
-  context: Record<string, unknown>;  // Working context
-  lastError?: {
-    stepIndex: number;
-    message: string;
-    timestamp: Date;
-  };
-}
-
-interface Checkpoint {
-  id: string;
-  sessionId: string;
-  projectId: string;
-  stepNumber: number;
-  createdAt: Date;
-  state: AgentState;
-  metadata: {
-    description?: string;
-    triggerType: 'auto' | 'manual' | 'error';
-    durationMs: number;
-    tokenUsage?: number;
-  };
-}
-\end{lstlisting}
-
-\subsubsection{Checkpoint Management}
-
-\begin{lstlisting}[caption={Checkpoint manager}]
-class CheckpointManager {
-  async save(
-    sessionId: string,
-    state: AgentState,
-    options: SaveOptions = {}
-  ): Promise<Checkpoint> {
-    const checkpoint: Checkpoint = {
-      id: generateId('ckpt'),
-      sessionId,
-      projectId: this.projectId,
-      stepNumber: state.currentStepIndex,
-      createdAt: new Date(),
-      state,
-      metadata: {
-        triggerType: options.triggerType ?? 'auto',
-        durationMs: options.durationMs ?? 0
-      }
-    };
-
-    this.db.run(
-      `INSERT INTO ${this.prefix}_checkpoints (...)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [/* checkpoint fields */]
-    );
-
-    // Prune old checkpoints
-    await this.pruneOldCheckpoints(sessionId);
-
-    return checkpoint;
-  }
-
-  async loadLatest(sessionId: string): Promise<Checkpoint | null> {
-    const row = this.db.get<CheckpointRow>(
-      `SELECT * FROM ${this.prefix}_checkpoints
-       WHERE session_id = ?
-       ORDER BY step_number DESC, created_at DESC
-       LIMIT 1`,
-      [sessionId]
-    );
-    return row ? this.rowToCheckpoint(row) : null;
-  }
-
-  async resume(sessionId: string): Promise<AgentState | null> {
-    const checkpoint = await this.loadLatest(sessionId);
-    return checkpoint?.state ?? null;
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Automatic Checkpointing}
-
-Checkpoints are created automatically at key points:
-
-\begin{itemize}
-    \item After each completed step
-    \item Before potentially risky operations
-    \item On error (for debugging)
-    \item When explicitly requested
-\end{itemize}
-
-\subsection{Hot/Cold Memory Tiering}
-
-Memory tiering provides explicit control over what information remains in active context versus cold storage.
-
-\subsubsection{Memory Tiers}
+For long-running AI agent workflows, ctx-sys provides three memory management tools:
 
 \begin{description}
-    \item[Hot] Immediately available in context; highest token cost
-    \item[Warm] Recently accessed; quickly recallable
-    \item[Cold] Archived; requires explicit recall with embedding search
+    \item[Checkpointing] Save and restore agent state at any point. Enables resumable tasks that survive context resets.
+
+    \item[Hot/Cold Memory Tiering] Explicitly spill items from ``hot'' memory (current context) to ``cold'' storage (database). Recall relevant items later using semantic search. This lets agents manage their own context budget.
+
+    \item[Reflection Storage] Store lessons learned from agent experience---what worked, what failed, what to try differently. Reflections are tagged and searchable, enabling cross-session learning.
 \end{description}
-
-\begin{lstlisting}[caption={Memory tier configuration}]
-interface MemoryConfig {
-  hotTokenLimit: number;      // Max tokens in hot memory (default: 4000)
-  warmAccessThreshold: number; // Accesses before promote to hot (default: 3)
-  promoteThreshold: number;    // Relevance score to auto-promote (default: 0.85)
-  maxColdItems: number;        // Maximum cold storage items (default: 1000)
-  autoSpillEnabled: boolean;   // Auto-spill when hot is full
-  autoPromoteEnabled: boolean; // Auto-promote frequently accessed
-}
-\end{lstlisting}
-
-\subsubsection{Memory Operations}
-
-\begin{lstlisting}[caption={Memory tier manager}]
-class MemoryTierManager {
-  async addToHot(
-    sessionId: string,
-    content: string,
-    type: MemoryItemType,
-    options?: AddMemoryOptions
-  ): Promise<MemoryItem> {
-    const tokenCount = estimateTokens(content);
-
-    // Auto-spill if hot would exceed limit
-    if (this.config.autoSpillEnabled) {
-      const status = await this.getStatus(sessionId);
-      if (status.hot.tokens + tokenCount > this.config.hotTokenLimit) {
-        await this.spillToWarm(sessionId);
-      }
-    }
-
-    // Create and store item
-    const item = this.createItem(sessionId, content, type, 'hot', options);
-    await this.storeItem(item);
-
-    return item;
-  }
-
-  async spillToWarm(
-    sessionId: string,
-    options?: SpillOptions
-  ): Promise<SpillResult> {
-    // Get hot items sorted by relevance (lowest first)
-    const hotItems = await this.getHot(sessionId);
-    const sorted = hotItems.sort((a, b) => a.relevanceScore - b.relevanceScore);
-
-    // Determine items to spill
-    const toSpill = options?.itemIds
-      ? sorted.filter(i => options.itemIds!.includes(i.id))
-      : sorted.slice(0, options?.count ?? Math.ceil(sorted.length / 2));
-
-    // Move to warm tier
-    for (const item of toSpill) {
-      await this.updateTier(item.id, 'warm');
-    }
-
-    return {
-      spilledCount: toSpill.length,
-      spilledIds: toSpill.map(i => i.id),
-      targetTier: 'warm'
-    };
-  }
-
-  async recall(
-    sessionId: string,
-    query: string,
-    options?: RecallOptions
-  ): Promise<RecallResult> {
-    // Embed query
-    const queryEmbedding = await this.embeddingProvider?.embed(query);
-
-    // Search cold/warm items
-    const candidates = await this.searchColdWarm(sessionId, queryEmbedding, options);
-
-    // Optionally promote high-relevance items
-    const promoted: string[] = [];
-    if (options?.autoPromote ?? this.config.autoPromoteEnabled) {
-      for (const item of candidates) {
-        if (item.relevanceScore >= this.config.promoteThreshold) {
-          await this.promoteToHot(item.id);
-          promoted.push(item.id);
-        }
-      }
-    }
-
-    return { items: candidates, promoted };
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Access Pattern Tracking}
-
-The system tracks access patterns to inform tier management:
-
-\begin{lstlisting}[caption={Access tracking}]
-async recordAccess(itemId: string): Promise<void> {
-  this.db.run(
-    `UPDATE ${this.prefix}_memory_items
-     SET access_count = access_count + 1,
-         last_accessed_at = CURRENT_TIMESTAMP
-     WHERE id = ?`,
-    [itemId]
-  );
-
-  // Check for auto-promotion
-  if (this.config.autoPromoteEnabled) {
-    const item = await this.getItem(itemId);
-    if (item &&
-        item.tier !== 'hot' &&
-        item.accessCount >= this.config.warmAccessThreshold) {
-      await this.promoteToHot(itemId);
-    }
-  }
-}
-\end{lstlisting}
-
-\subsection{Reflection Storage}
-
-The reflection storage system enables agents to learn from past experiences across sessions. This is particularly valuable for long-running agent tasks where similar problems may recur.
-
-\subsubsection{Reflection Model}
-
-Reflections capture lessons learned with structured outcome tracking:
-
-\begin{lstlisting}[caption={Reflection interface}]
-interface Reflection {
-  id: string;
-  sessionId: string;
-  content: string;           // The lesson learned
-  outcome: ReflectionOutcome; // success | failure | partial | unknown
-  context: string;           // Situation where lesson applies
-  confidence: number;        // 0-1 confidence score
-  tags: string[];           // Categorization tags
-  accessCount: number;       // Usage tracking
-  createdAt: Date;
-}
-\end{lstlisting}
-
-\subsubsection{Storage and Retrieval}
-
-The \texttt{ReflectionStore} provides embedding-based retrieval of relevant past experiences:
-
-\begin{lstlisting}[caption={Reflection store operations}]
-class ReflectionStore {
-  async addReflection(input: ReflectionInput): Promise<Reflection> {
-    const embedding = await this.embeddingProvider?.embed(
-      `${input.content} ${input.context}`
-    );
-
-    return this.db.insert('reflections', {
-      ...input,
-      embedding,
-      accessCount: 0
-    });
-  }
-
-  async findRelevant(query: ReflectionQuery): Promise<Reflection[]> {
-    const queryEmbedding = await this.embeddingProvider?.embed(query.context);
-
-    const candidates = await this.db.query(`
-      SELECT * FROM ${this.prefix}_reflections
-      WHERE session_id = ? OR ? = true
-      ORDER BY created_at DESC
-    `, [query.sessionId, query.crossSession]);
-
-    // Rank by embedding similarity
-    return this.rankBySimilarity(candidates, queryEmbedding, query.limit);
-  }
-
-  async getSummary(sessionId?: string): Promise<ReflectionSummary> {
-    const reflections = await this.getAll(sessionId);
-    return {
-      total: reflections.length,
-      byOutcome: this.groupByOutcome(reflections),
-      topTags: this.extractTopTags(reflections),
-      avgConfidence: this.calculateAvgConfidence(reflections)
-    };
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Cross-Session Learning}
-
-Reflections can be shared across sessions within a project, enabling pattern recognition:
-
-\begin{itemize}
-    \item Successful approaches are surfaced for similar problems
-    \item Failed attempts inform what to avoid
-    \item Confidence scores evolve based on outcome consistency
-    \item Tags enable filtering by problem domain
-\end{itemize}
-
-\subsection{Proactive Context}
-
-The proactive context system pushes relevant information to the agent based on detected triggers rather than waiting for explicit queries.
-
-\subsubsection{Subscription Model}
-
-Agents subscribe to context updates through defined patterns:
-
-\begin{lstlisting}[caption={Context subscription interface}]
-interface ContextSubscription {
-  id: string;
-  sessionId: string;
-  pattern: WatchPattern;          // What to watch
-  triggerType: ProactiveTriggerType; // When to trigger
-  callback?: (suggestion: ContextSuggestion) => void;
-  status: 'active' | 'paused' | 'completed';
-}
-
-interface WatchPattern {
-  type: WatchPatternType;  // file_pattern | entity_type | keyword
-  value: string;           // Glob pattern, entity type, or keyword
-  scope?: string;          // Optional scope limitation
-}
-
-type ProactiveTriggerType =
-  | 'file_change'          // File modified/created
-  | 'cursor_proximity'     // Cursor near relevant code
-  | 'context_mention'      // Entity mentioned in conversation
-  | 'schedule';            // Time-based
-\end{lstlisting}
-
-\subsubsection{Suggestion Generation}
-
-When a trigger fires, the system generates contextual suggestions:
-
-\begin{lstlisting}[caption={Proactive context provider}]
-class ProactiveContextProvider {
-  async subscribe(input: SubscriptionInput): Promise<ContextSubscription> {
-    const subscription = await this.store.create(input);
-
-    // Register with appropriate watcher
-    if (input.triggerType === 'file_change') {
-      this.fileWatcher.addPattern(input.pattern.value, (event) => {
-        this.handleTrigger(subscription, event);
-      });
-    }
-
-    return subscription;
-  }
-
-  private async handleTrigger(
-    subscription: ContextSubscription,
-    event: TriggerEvent
-  ): Promise<void> {
-    // Generate suggestion based on trigger context
-    const suggestion = await this.generateSuggestion(subscription, event);
-
-    if (suggestion.relevanceScore >= this.config.minRelevance) {
-      await this.deliverSuggestion(subscription, suggestion);
-    }
-  }
-
-  async getSuggestions(query: ProactiveQuery): Promise<ContextSuggestion[]> {
-    return this.store.getPendingSuggestions(query.sessionId, {
-      status: query.includeDelivered ? undefined : 'pending',
-      limit: query.limit
-    });
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Integration with File Watching}
-
-The proactive system integrates with the file watching infrastructure to detect relevant changes:
-
-\begin{itemize}
-    \item File modifications trigger re-indexing and suggestion generation
-    \item Subscribed patterns are matched against changed file paths
-    \item Related entities are automatically included in suggestions
-    \item Usage statistics track which suggestions are acted upon
-\end{itemize}
 
 
 % ============================================================================
-% SECTION 10: SYSTEM INTEGRATION
+% SECTION 8: SYSTEM INTEGRATION
 % ============================================================================
 \section{System Integration}
 \label{sec:integration}
 
 \subsection{Model Context Protocol}
 
-The primary integration mechanism is the Model Context Protocol (MCP), an open standard for connecting AI assistants to external data sources.
+ctx-sys integrates with AI assistants through the Model Context Protocol (MCP), an open standard for connecting LLMs to external data sources. The MCP server exposes 30 tools organized into categories:
 
-\subsubsection{MCP Architecture}
-
-\begin{lstlisting}[caption={MCP server implementation}]
-class CtxSysMcpServer {
-  private server: Server;
-  private db: DatabaseConnection;
-  private toolRegistry: ToolRegistry;
-
-  constructor(config: McpServerConfig) {
-    this.server = new Server({
-      name: config.name ?? 'ctx-sys',
-      version: config.version ?? '0.1.0'
-    }, {
-      capabilities: {
-        tools: {}
-      }
-    });
-
-    this.setupHandlers();
-    this.registerTools();
-  }
-
-  private setupHandlers(): void {
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: this.toolRegistry.list()
-    }));
-
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const tool = this.toolRegistry.get(request.params.name);
-      if (!tool) throw new Error(`Unknown tool: ${request.params.name}`);
-
-      const result = await tool.execute(request.params.arguments);
-      return { content: [{ type: 'text', text: JSON.stringify(result) }] };
-    });
-  }
-
-  async start(): Promise<void> {
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
-  }
-}
-\end{lstlisting}
-
-\subsubsection{Tool Interface}
-
-MCP tools expose ctx-sys functionality:
-
-\begin{lstlisting}[caption={Tool registration}]
-interface Tool {
-  name: string;
-  description: string;
-  inputSchema: JSONSchema;
-  execute(args: unknown): Promise<unknown>;
-}
-
-// Example: context_query tool
-const contextQueryTool: Tool = {
-  name: 'context_query',
-  description: 'Search for relevant context in the codebase',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      query: { type: 'string', description: 'Search query' },
-      max_tokens: { type: 'number', description: 'Maximum tokens in response' },
-      include_sources: { type: 'boolean', description: 'Include source attribution' }
-    },
-    required: ['query']
-  },
-  async execute(args) {
-    const { query, max_tokens, include_sources } = args as QueryArgs;
-    const results = await multiSearch.search(query);
-    const context = contextAssembler.assemble(results, {
-      maxTokens: max_tokens,
-      includeSources: include_sources
-    });
-    return context;
-  }
-};
-\end{lstlisting}
-
-\subsubsection{Available Tools}
-
-Table \ref{tab:mcp-tools} summarizes the MCP tools exposed by ctx-sys:
-
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
-    \caption{MCP tools}
+    \caption{MCP tools by category}
     \label{tab:mcp-tools}
-    \begin{tabular}{lp{7cm}}
+    \begin{tabular}{lll}
         \toprule
-        \textbf{Tool} & \textbf{Description} \\
+        \textbf{Category} & \textbf{Tools} & \textbf{Key Capabilities} \\
         \midrule
-        \texttt{context\_query} & Search for relevant context \\
-        \texttt{index\_codebase} & Index a codebase \\
-        \texttt{index\_document} & Index a single document \\
-        \texttt{store\_message} & Store a conversation message \\
-        \texttt{get\_history} & Retrieve conversation history \\
-        \texttt{add\_entity} & Add a custom entity \\
-        \texttt{link\_entities} & Create entity relationship \\
-        \texttt{query\_graph} & Query the entity graph \\
-        \texttt{checkpoint\_save} & Save agent checkpoint \\
-        \texttt{checkpoint\_load} & Load agent checkpoint \\
-        \texttt{memory\_spill} & Spill hot memory to cold \\
-        \texttt{memory\_recall} & Recall from cold storage \\
+        Search & 2 & Hybrid RAG retrieval, entity search \\
+        Indexing & 4 & Codebase indexing, document indexing, git sync \\
+        Graph & 3 & Relationship traversal, graph statistics \\
+        Memory & 5 & Message storage, history, session summaries \\
+        Agent & 7 & Checkpoints, memory tiers, reflections \\
+        Project & 4 & Project management, entity operations \\
+        Git Hooks & 2 & Auto-indexing, impact analysis \\
+        Other & 3 & Search decisions, index status, graph stats \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \subsection{Command Line Interface}
 
-The CLI provides management and debugging capabilities:
+The CLI provides 7 core commands plus 9 subcommand groups:
 
-\begin{lstlisting}[caption={CLI command structure}]
-ctx-sys
-  init [directory]     Initialize project configuration
-    --name <name>      Project name
-    --force            Overwrite existing config
-    --global           Initialize global config
+\begin{lstlisting}[style=terminal]
+# Core workflow
+$ ctx-sys init                    # Initialize project
+$ ctx-sys index                   # Index code + docs + embeddings
+$ ctx-sys search "query"          # Hybrid search
+$ ctx-sys context "query"         # Assembled context with expansion
+$ ctx-sys status --check          # Health diagnostics
+$ ctx-sys serve                   # Start MCP server
+$ ctx-sys watch                   # Auto-reindex on changes
 
-  index <path>         Index a codebase
-    --depth <level>    full|signatures|selective
-    --summarize        Generate AI summaries
-    --languages <list> Limit to specific languages
-
-  search <query>       Search the index
-    --limit <n>        Maximum results
-    --format <fmt>     Output format (json|text|markdown)
-
-  watch                Watch for file changes
-    --debounce <ms>    Debounce interval
-
-  serve                Start MCP server
-    --db <path>        Database path
-    --name <name>      Server name
-
-  config               Manage configuration
-    get <key>          Get config value
-    set <key> <value>  Set config value
-
-  status               Show project status
+# Subcommands: entity, graph, embed, summarize,
+#   session, config, debug, kb, instruction
 \end{lstlisting}
 
-\subsection{Configuration System}
+\subsection{Configuration}
 
-Configuration is managed at global and per-project levels:
-
-\begin{lstlisting}[caption={Configuration schema}]
-// Global configuration (~/.ctx-sys/config.yaml)
-interface GlobalConfig {
-  database: {
-    path: string;  // Default database location
-  };
-  providers: {
-    ollama?: { base_url: string };
-    openai?: { api_key: string };
-    anthropic?: { api_key: string };
-  };
-  defaults: {
-    summarization_provider: string;
-    embedding_provider: string;
-  };
-}
-
-// Project configuration (.ctx-sys.yaml)
-interface ProjectConfig {
-  project: {
-    name: string;
-    description?: string;
-  };
-  indexing: {
-    include: string[];
-    exclude: string[];
-    languages: string[];
-  };
-  embeddings: {
-    provider: string;
-    model: string;
-  };
-  retrieval: {
-    default_max_tokens: number;
-    strategies: string[];
-  };
-}
-\end{lstlisting}
-
-\subsubsection{Configuration Resolution}
-
-Configuration values are resolved with precedence:
+Configuration follows a hierarchy with increasing specificity:
 
 \begin{enumerate}
-    \item Environment variables (highest priority)
-    \item Project configuration file
-    \item Global configuration file
-    \item Built-in defaults (lowest priority)
+    \item \textbf{Built-in defaults} --- sensible defaults for all settings
+    \item \textbf{Global config} (\texttt{\textasciitilde/.ctx-sys/config.yaml}) --- provider settings, database path
+    \item \textbf{Project config} (\texttt{.ctx-sys/config.yaml}) --- ignore patterns, model choices
+    \item \textbf{Environment variables} --- override any setting
 \end{enumerate}
+
+Key configuration options include embedding model selection, summarization provider, ignore patterns, and HyDE model choice.
 
 
 % ============================================================================
-% SECTION 11: EVALUATION
+% SECTION 9: EVALUATION
 % ============================================================================
 \section{Evaluation}
 \label{sec:evaluation}
 
-\subsection{Evaluation Methodology}
+\subsection{Implementation Metrics}
 
-\subsubsection{Test Coverage}
-
-The implementation includes comprehensive unit and integration testing:
-
-\begin{itemize}
-    \item \textbf{Test Count}: 1,555 passing tests across 56 test suites spanning 10 implementation phases
-    \item \textbf{Code Coverage}: Approximately 85\% line coverage
-    \item \textbf{Test Categories}:
-    \begin{itemize}
-        \item Unit tests for individual components
-        \item Integration tests for component interactions
-        \item End-to-end tests for CLI and MCP interface
-    \end{itemize}
-\end{itemize}
-
-\subsubsection{Codebase Metrics}
-
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
     \caption{Implementation metrics}
-    \label{tab:implementation-metrics}
+    \label{tab:metrics}
     \begin{tabular}{lr}
         \toprule
         \textbf{Metric} & \textbf{Value} \\
         \midrule
         Source lines of code & $\sim$20,000 \\
         Test lines of code & $\sim$16,000 \\
-        Number of modules & 52 \\
-        External dependencies & 10 \\
         Passing tests & 1,555 \\
         Test suites & 56 \\
         Implementation phases & 10 \\
+        External dependencies & 10 \\
+        MCP tools exposed & 30 \\
+        Supported languages & 5 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \subsection{Retrieval Quality}
 
-\subsubsection{Qualitative Assessment}
-
-Testing on sample codebases demonstrates:
+Qualitative assessment on real codebases demonstrates:
 
 \begin{itemize}
-    \item \textbf{Keyword queries}: High precision for exact symbol lookup, enhanced by FTS5 with BM25 ranking
-    \item \textbf{Conceptual queries}: Good recall with semantic search, improved by overlapping chunk embeddings
-    \item \textbf{Dependency queries}: Effective graph traversal for import chains
-    \item \textbf{Complex queries}: Query decomposition with LLM re-ranking significantly improves results for multi-faceted queries
+    \item \textbf{Keyword queries}: High precision for exact symbol lookup, enhanced by FTS5 with BM25 ranking and camelCase identifier splitting
+    \item \textbf{Conceptual queries}: Good recall with semantic search, significantly improved by multi-vector chunking of large entities
+    \item \textbf{Dependency queries}: Effective graph traversal for import chains and call graphs
+    \item \textbf{Complex queries}: Query decomposition with multi-strategy fusion handles multi-faceted questions well
+    \item \textbf{HyDE benefit}: Measurable improvement for vocabulary-mismatched queries (e.g., ``error handling'' finding \texttt{try/catch} blocks)
 \end{itemize}
 
-\subsubsection{Strategy Comparison}
+Multi-strategy fusion consistently outperforms any single strategy approach. The combination of keyword precision, semantic recall, and structural understanding from graph traversal covers query types that no single strategy handles well alone.
 
-Evaluation suggests:
-\begin{itemize}
-    \item Multi-strategy fusion outperforms single-strategy approaches
-    \item HyDE provides measurable improvement for vocabulary-mismatched queries
-    \item Retrieval gating reduces unnecessary computation by approximately 30\%
-    \item Smart context expansion reduces follow-up queries by providing more complete context windows
-    \item LLM re-ranking improves precision@10 over RRF-only fusion
-\end{itemize}
+\subsection{Performance}
 
-\subsection{Performance Characteristics}
-
-\subsubsection{Indexing Performance}
-
-Measurements on medium-sized codebases (10,000-50,000 lines):
-\begin{itemize}
-    \item AST parsing: $\sim$100 files/second
-    \item Embedding generation (local Ollama): $\sim$10 entities/second
-    \item Embedding generation (OpenAI API): $\sim$50 entities/second (with batching)
-    \item Incremental document updates: sub-second for single file changes
-\end{itemize}
-
-\subsubsection{Query Performance}
-
-\begin{itemize}
-    \item Query parsing: < 1ms
-    \item FTS5 keyword search with BM25: < 5ms
-    \item Vector similarity search: 10-50ms (depends on corpus size)
-    \item Graph traversal: 5-20ms for depth 2
-    \item Full retrieval pipeline: 50-200ms (without HyDE)
-    \item With HyDE: +500-2000ms (LLM generation)
-\end{itemize}
+\begin{table}[H]
+    \centering
+    \caption{Performance characteristics on medium-sized codebases (10K--50K lines)}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Operation} & \textbf{Performance} \\
+        \midrule
+        AST parsing & $\sim$100 files/second \\
+        Embedding generation (Ollama) & $\sim$10 entities/second \\
+        Embedding generation (OpenAI) & $\sim$50 entities/second \\
+        FTS5 keyword search & $<$ 5ms \\
+        Vector similarity search (sqlite-vec) & 10--50ms \\
+        Graph traversal (depth 2) & 5--20ms \\
+        Full retrieval pipeline & 50--200ms \\
+        Full pipeline + HyDE & +500--2000ms (LLM generation) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \subsection{Limitations}
 
-Current limitations include:
-
 \begin{enumerate}
-    \item \textbf{Vector Search Scalability}: In-memory similarity computation limits corpus size for very large codebases. Future work may integrate dedicated vector extensions for further scaling.
-
-    \item \textbf{Summarization Latency}: LLM-based summarization is slow; should be performed asynchronously.
-
-    \item \textbf{Language Support}: AST parsing limited to languages with available tree-sitter grammars.
-
-    \item \textbf{Evaluation Depth}: Comprehensive benchmarks against baseline systems not yet completed.
+    \item \textbf{Language support}: AST parsing limited to TypeScript, Python, Rust, Go, Java. Other languages get document-level indexing only.
+    \item \textbf{Summarization latency}: LLM-based summarization is slow and should be run asynchronously or as a background task.
+    \item \textbf{Embedding model dependency}: Changing embedding models requires re-embedding all entities. Model version tracking detects this but the re-embedding cost is significant for large codebases.
+    \item \textbf{Single-machine}: Currently designed for single-developer use. Multi-user or team scenarios would require shared database access or replication.
 \end{enumerate}
 
 
 % ============================================================================
-% SECTION 12: CONCLUSION
+% SECTION 10: RELATED WORK
+% ============================================================================
+\section{Related Work}
+\label{sec:related-work}
+
+\subsection{Retrieval-Augmented Generation}
+
+Retrieval-Augmented Generation (RAG) has emerged as a fundamental paradigm for extending LLM capabilities beyond training data. The core insight is that LLMs can effectively utilize external knowledge when provided in context, enabling factual grounding without model retraining.
+
+Standard RAG implementations retrieve text chunks by vector similarity. ctx-sys extends this with graph-aware retrieval and code-specific heuristics, recognizing that code has structural relationships (imports, inheritance, calls) that flat text retrieval misses.
+
+\subsection{Code Intelligence}
+
+Tools like Language Server Protocol (LSP) implementations, GitHub's code search, and Sourcegraph provide structural code understanding. ctx-sys differs by focusing on \textit{retrieval for AI assistants} rather than developer navigation---the goal is to assemble relevant context within token budgets, not to provide exhaustive cross-references.
+
+\subsection{Graph RAG}
+
+Recent work on Graph RAG combines knowledge graphs with retrieval-augmented generation. ctx-sys builds its graph automatically from AST analysis (imports, calls, inheritance) rather than requiring manual knowledge graph construction, making it practical for any codebase without upfront investment.
+
+\subsection{Context Management}
+
+Systems like Mem0, LangChain Memory, and LlamaIndex provide context management for LLM applications. ctx-sys is distinguished by its focus on code-specific retrieval (AST parsing, relationship extraction), its fully local architecture, and its MCP-native integration that works with any compatible AI assistant.
+
+
+% ============================================================================
+% SECTION 11: CONCLUSION
 % ============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-\subsection{Summary}
+This paper presented ctx-sys, an intelligent context management system for AI-assisted software development. The system addresses the fundamental problem of context limitations in LLM-based coding assistants through a practical, local-first hybrid RAG architecture.
 
-This paper presented ctx-sys, an intelligent context management system for AI-assisted software development. The system addresses the fundamental problem of context limitations in LLM-based coding assistants through a comprehensive architecture integrating:
+Key takeaways:
 
 \begin{itemize}
-    \item A unified entity model supporting heterogeneous information types
-    \item Multi-language AST parsing for structural code understanding
-    \item Hybrid retrieval combining vector similarity, graph traversal, and FTS5 keyword search with BM25 ranking
-    \item Advanced techniques including HyDE query expansion, retrieval gating, smart context expansion, query decomposition, and LLM re-ranking
-    \item Verification mechanisms through draft-critique loops
-    \item Agent-oriented memory management with checkpointing and tiering
-    \item Overlapping chunk embeddings and incremental document updates for improved retrieval quality
+    \item \textbf{Multi-strategy retrieval works}: Combining keyword, semantic, and graph search through RRF consistently outperforms single-strategy approaches for code retrieval.
+
+    \item \textbf{Code structure matters}: AST-extracted relationships (imports, calls, inheritance) provide retrieval signals that text-only approaches miss. A query about a function benefits from seeing its callers, its types, and its documentation.
+
+    \item \textbf{Local-first is viable}: Running embeddings and summarization locally via Ollama provides quality competitive with cloud APIs while keeping all code on the developer's machine.
+
+    \item \textbf{MCP enables broad compatibility}: By implementing the Model Context Protocol, ctx-sys works with Claude Desktop, Cursor, Claude Code, and any future MCP-compatible tool without custom integration.
+
+    \item \textbf{Incremental design is essential}: Content hashing, hash-gated embedding, and git-aware sync ensure that re-indexing a project after minor changes takes seconds, not minutes.
 \end{itemize}
 
-The implementation demonstrates that practical context management for AI coding assistants is achievable with reasonable complexity, enabling significantly improved context relevance compared to naive approaches.
-
-\subsection{Contributions Revisited}
-
-The key contributions of this work include:
-
-\begin{enumerate}
-    \item A practical architecture for context-aware code retrieval that balances multiple strategies for comprehensive coverage
-
-    \item Integration of established techniques (RAG, tree-sitter AST parsing, dense embeddings) into a cohesive system
-
-    \item Implementation of advanced patterns (HyDE, retrieval gating, draft-critique, smart context expansion, query decomposition, LLM re-ranking) adapted for code-specific use cases
-
-    \item A complete, tested reference implementation with 1,555 passing tests across 56 test suites and MCP integration for practical deployment
-\end{enumerate}
+The implementation is available as an open-source npm package (\texttt{npm install -g ctx-sys}) with documentation at \url{https://ctx-sys.dev}.
 
 \subsection{Future Work}
 
-Several directions remain for future investigation:
-
-\subsubsection{Completed Features (Phases 1--10)}
-
-The implementation is feature-complete across all planned phases:
-
-\textbf{Phases 1--7: Core Infrastructure}
-\begin{itemize}
-    \item Database infrastructure and project management
-    \item Entity storage and embedding pipeline
-    \item MCP server implementation
-    \item AST parsing and code summarization
-    \item Relationship extraction and graph storage
-    \item Conversation management and decision extraction
-    \item Document intelligence and requirement extraction
-    \item Multi-strategy search and context assembly
-    \item HyDE, retrieval gating, and draft-critique
-    \item Configuration system and CLI
-    \item File watching with incremental updates
-\end{itemize}
-
-\textbf{Phase 8: Agent Patterns}
-\begin{itemize}
-    \item Agent checkpointing with save/restore and auto-pruning
-    \item Hot/cold memory tiering with explicit spill/recall APIs
-    \item Reflection storage for lessons learned
-    \item Proactive context with subscriptions and suggestions
-\end{itemize}
-
-\textbf{Phase 9: Integrations \& Analytics}
-\begin{itemize}
-    \item Token analytics with query logging and ROI dashboards
-    \item Git hooks for automatic indexing with impact analysis
-    \item Support documentation in MDX format
-    \item Product website scaffold with Next.js
-    \item NPM distribution configuration
-\end{itemize}
-
-\textbf{Phase 10: Performance \& Quality}
-\begin{itemize}
-    \item Migration from sql.js to better-sqlite3 with native FTS5 and BM25 ranking
-    \item Migration from qwen2.5-coder to qwen3:0.6b for summarization
-    \item Smart context expansion for enriched retrieval results
-    \item Query decomposition with LLM re-ranking for complex queries
-    \item Incremental document updates for efficient re-indexing
-    \item Overlapping chunk embeddings for improved boundary coverage
-\end{itemize}
-
-\subsubsection{Future Enhancements}
-
-Several directions remain for future work:
-
 \begin{enumerate}
-    \item \textbf{VS Code Extension UI}: While MCP tools are complete, a native VS Code extension with sidebar panel and hover information would improve developer experience
-
-    \item \textbf{Team Knowledge Base}: Cross-team sharing of decisions and context repositories
-
-    \item \textbf{Adaptive Strategy Selection}: Learning optimal strategy weights based on query characteristics and feedback
-
-    \item \textbf{Code-Specific Embeddings}: Training or fine-tuning embedding models specifically for code retrieval
-
-    \item \textbf{Multi-Repository Context}: Methods for retrieving context across related repositories
+    \item \textbf{VS Code Extension}: Native sidebar UI for browsing entities and relationships
+    \item \textbf{Adaptive Strategy Weights}: Learning optimal RRF weights based on query characteristics and user feedback
+    \item \textbf{Multi-Repository Context}: Retrieval across related repositories for monorepo and microservice architectures
+    \item \textbf{Code-Specific Embeddings}: Fine-tuning embedding models specifically for code retrieval tasks
+    \item \textbf{Formal Benchmarks}: Quantitative evaluation against established code retrieval benchmarks
 \end{enumerate}
-
-\subsection{Closing Remarks}
-
-As AI coding assistants become integral to software development workflows, effective context management will be increasingly critical. The ``smart librarian'' paradigm embodied by ctx-sys---knowing where information exists rather than hoarding everything---provides a scalable foundation for context-aware AI assistance.
-
-This paper represents both a practical contribution (a deployable system) and a reference architecture for future work in this rapidly evolving space.
 
 
 \end{document}
