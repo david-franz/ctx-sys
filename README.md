@@ -1,527 +1,228 @@
 # ctx-sys
 
-**Context System** - An intelligent context management framework for AI coding assistants.
+**Local hybrid RAG for AI coding assistants.** Index your codebase, search with semantic + keyword + graph retrieval, and give your AI assistant deep project understanding — all running locally with Ollama.
+
+```bash
+npm install -g ctx-sys
+```
 
 ## Why ctx-sys?
 
-Modern AI coding assistants are limited by context windows. Long conversations lose important details, codebases are too large to fit in context, and relevant information is scattered across files, docs, and past conversations.
+AI coding assistants are limited by context windows. They can't see your whole codebase, they forget what you discussed yesterday, and they miss connections between files. ctx-sys fixes this by acting as a *smart librarian* — it indexes your code, understands relationships between symbols, and retrieves exactly the right context when your AI needs it.
 
-**ctx-sys** solves this with a sophisticated hybrid RAG approach that combines:
+- **Hybrid RAG** — combines vector search, keyword/FTS5, and graph traversal with reciprocal rank fusion
+- **Local-first** — your code never leaves your machine. Ollama handles embeddings and summarization
+- **Code-aware** — tree-sitter AST parsing extracts functions, classes, imports, and relationships
+- **Works with any MCP client** — Claude Desktop, Claude Code, Cursor, or any MCP-compatible tool
 
-- **Graph RAG** - Understand code structure and relationships, not just text similarity
-- **Local-first** - Your code never leaves your machine. Use Ollama for embeddings and summarization
-- **Multi-source retrieval** - Search code, docs, and conversation history together
-- **Token efficiency** - Retrieve only what matters, minimizing context window usage
+## Quick Start (5 minutes)
 
-### Key Benefits
-
-| Problem | ctx-sys Solution |
-|---------|------------------|
-| "The AI forgot what we discussed" | Conversation memory with decision tracking |
-| "It doesn't understand my codebase" | Graph-aware indexing with relationship extraction |
-| "Context windows are too small" | Smart retrieval with token budgets |
-| "I don't want my code in the cloud" | 100% local with Ollama - no API keys required |
-| "Generic RAG misses important connections" | Hybrid search: vector + graph + keyword |
-
-## How It Works
-
-**ctx-sys** acts as a *smart librarian* rather than a *hoarder*. Instead of stuffing everything into context, it:
-
-1. **Indexes** your codebase, documentation, and conversations
-2. **Extracts** entities, relationships, and semantic meaning
-3. **Retrieves** precisely the right context when needed
-4. **Minimizes** token usage while maximizing relevance
-
-The result: AI assistants that remember everything but only surface what matters.
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                   Developer Integrations                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
-│  │  VS Code     │  │  Git Hooks   │  │  AI Assistants       │   │
-│  │  Extension   │  │  (auto-sync) │  │  (Claude/Copilot)    │   │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘   │
-└─────────┼──────────────────┼─────────────────────┼───────────────┘
-          │                  │                     │
-          └──────────────────┼─────────────────────┘
-                             │ MCP Protocol
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                      ctx-sys MCP Server                           │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │                      Tool Interface                         │  │
-│  │  • context_query     • index_codebase    • store_message   │  │
-│  │  • sync_from_git     • query_graph       • get_history     │  │
-│  │  • search_entities   • checkpoint_save   • hooks_install   │  │
-│  └────────────────────────────────────────────────────────────┘  │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│                     Processing Layer                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐  │
-│  │ AST Parser   │  │  Summarizer  │  │  Entity Extractor      │  │
-│  │ (tree-sitter)│  │ (Ollama/Cloud│  │  (NER + semantic)      │  │
-│  └──────────────┘  └──────────────┘  └────────────────────────┘  │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐  │
-│  │  Embedding   │  │ Relationship │  │  Query Expansion       │  │
-│  │  Generator   │  │  Extractor   │  │  & Ranking             │  │
-│  └──────────────┘  └──────────────┘  └────────────────────────┘  │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐  │
-│  │   Impact     │  │  Heuristic   │  │  Proactive Context     │  │
-│  │  Analyzer    │  │  Reranker    │  │  Subscription          │  │
-│  └──────────────┘  └──────────────┘  └────────────────────────┘  │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │
-┌─────────────────────────▼────────────────────────────────────────┐
-│                    Storage Layer (SQLite)                         │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐  │
-│  │  Entities   │ │   Vectors   │ │    Graph    │ │  Messages  │  │
-│  │  (+ AST)    │ │ (+ FTS5)    │ │   (edges)   │ │ (sessions) │  │
-│  └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘  │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐  │
-│  │ Checkpoints │ │   Memory    │ │Hook History │ │ Reflections│  │
-│  │  (agent)    │ │  (hot/cold) │ │  (git ops)  │ │ (lessons)  │  │
-│  └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘  │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-## Current Status
-
-> **Beta Release** - Core functionality complete through Phase 10h. Simplified CLI (7 core commands), smarter defaults, native sqlite-vec vector search, and production-ready bug fixes.
-
-### What Works Now
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| **CLI** | ✅ Working | 7 core commands + 9 subcommand groups |
-| **MCP Server** | ✅ Working | All tools available for Claude/AI assistants |
-| **AST Parsing** | ✅ Working | TypeScript, JavaScript, Python via tree-sitter |
-| **Entity Storage** | ✅ Working | Functions, classes, methods with full source code |
-| **Embedding Search** | ✅ Working | Incremental, hash-based with Ollama |
-| **Multi-Strategy Search** | ✅ Working | Keyword + semantic + graph with RRF fusion |
-| **Conversation Memory** | ✅ Working | Store/retrieve messages across sessions |
-| **Graph Traversal** | ✅ Working | Auto-extracted relationships |
-| **Database Persistence** | ✅ Working | SQLite with streaming batches |
-| **LLM Summaries** | ✅ Working | Ollama, OpenAI, or Anthropic providers |
-| **Smart Context** | ✅ Working | Assemble context with source code and token budgets |
-
-### Phase 10 Enhancements (Completed)
-
-| Enhancement | Description |
-|-------------|-------------|
-| **F10.1: Code Content Storage** | Store actual source code, not just descriptions |
-| **F10.2: Incremental Embedding** | Hash-based change detection, skip unchanged entities |
-| **F10.3: Scalable Indexing** | Streaming batches for 100k+ entity codebases |
-| **F10.4: Smart Context Assembly** | Include source code in context with token budgets |
-| **F10.5: Auto Relationship Extraction** | Extract imports, calls, extends, implements from AST |
-| **F10.6: LLM Summaries** | Multi-provider summarization (Ollama/OpenAI/Anthropic) |
-| **F10.7: CLI Completeness** | Full CLI coverage (simplified in F10h.5) |
-| **F10.8: Robustness** | Replace hand-rolled glob/YAML/import parsers with picomatch, yaml |
-| **F10.9: Universal Document Indexing** | Index markdown, HTML, YAML, JSON, TOML, plain text + LLM extraction |
-| **F10.10: Native SQLite + FTS5** | Migrate to better-sqlite3 with FTS5 full-text search |
-| **F10.11: Smart Context Expansion** | Auto-include parent classes, imports, and type definitions |
-| **F10.12: Advanced Query Pipeline** | Query decomposition + LLM re-ranking |
-| **F10.13: Incremental Doc Updates** | Hash-based change detection + directory indexing for docs |
-| **F10.14: Embedding Quality** | Overlapping chunks prevent silent truncation of long entities |
-
-See [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) for architecture details.
-
-### Phase 10b: MCP Tool Fixes (Complete)
-
-Systematic testing of all 33 MCP tools revealed 15 issues — 10 bugs and 5 placeholder stubs. All fixed.
-
-| Fix | Issue | Status |
-|-----|-------|--------|
-| **F10b.1** | context_query returns empty results (3 root causes) | Done |
-| **F10b.2** | search_entities type filter misses exact matches | Done |
-| **F10b.3** | link_entities resolves names to wrong entities | Done |
-| **F10b.4** | get_graph_stats reports 0 nodes with 54 edges | Done |
-| **F10b.5** | search_decisions ignores decision metadata | Done |
-| **F10b.6** | store_message FK error on new sessions | Done |
-| **F10b.7** | summarize_session wired to LLM providers | Done |
-| **F10b.8-9** | checkpoint step numbering + state nesting | Done |
-| **F10b.10** | reflection_query type/outcome filters | Done |
-| **F10b.11** | Analytics inflated savings for empty results | Done |
-| **F10b.12** | Memory tier tools wired to MemoryTierManager | Done |
-| **F10b.13** | hooks_install writes actual git hooks | Done |
-| **F10b.14** | hooks_impact_report git diff analysis | Done |
-| **F10b.15** | analytics_dashboard entity type breakdown | Done |
-
-### Phase 10c: Retrieval Quality Improvements (Complete)
-
-Improvements to search quality, document RAG, and analytics honesty:
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **F10c.1** | FTS5 camelCase/PascalCase identifier splitting | Done |
-| **F10c.2** | Embedding model quality & query/document prefixes | Done |
-| **F10c.3** | Heuristic reranking pipeline | Done |
-| **F10c.4** | Document chunking with size constraints + overlap | Done |
-| **F10c.5** | Query-adaptive search strategy auto-tuning | Done |
-| **F10c.6** | Realistic analytics baselines (grep+read comparison) | Done |
-| **F10c.7** | Query expansion with bidirectional synonyms | Done |
-| **F10c.8** | Code-aware context assembly (signatures over bodies) | Done |
-
-### Phase 10d: Bug Fixes & Cleanup (Complete)
-
-Full end-to-end system testing revealed critical issues. Analytics removed, core tools fixed.
-
-| Fix | Issue | Status |
-|-----|-------|--------|
-| **F10d.1** | Remove dishonest analytics system entirely | Done |
-| **F10d.2** | Unify CLI/MCP database (were using different DBs) | Done |
-| **F10d.3** | Fix context_query returning empty results | Done |
-| **F10d.4** | Fix reflection_query multi-word search | Done |
-| **F10d.5** | Wire embed CLI to actually generate embeddings | Done |
-| **F10d.6** | Fix search_entities case-insensitive exact matching | Done |
-| **F10d.7** | CLI `context` command (mirrors MCP context_query) | Done |
-| **F10d.8** | HTML document indexing (.html/.htm support) | Done |
-
-### Phase 10e: Knowledge Bases & Long-Term Context (Complete)
-
-Shareable knowledge bases, full retrieval pipeline, conversation intelligence, and team instructions.
-
-| Feature | Description | Status |
-| ------- | ----------- | ------ |
-| **F10e.1** | Wire full retrieval pipeline (gate, expander, decomposer, HyDE) as opt-in | Done |
-| **F10e.2** | Fix export/import to include vectors, content, and metadata | Done |
-| **F10e.3** | Embedding model version tracking for stale vector detection | Done |
-| **F10e.4** | Knowledge base packaging (.ctx-kb create/install/info) | Done |
-| **F10e.5** | Conversation intelligence (message FTS5, persistent decisions) | Done |
-| **F10e.6** | Incremental session summaries with version history | Done |
-| **F10e.7** | Team instructions with scope-based priority boosting | Done |
-
-### Phase 10f: Retrieval Quality
-
-Fix retrieval quality issues: noise filtering, broken confidence metrics, missing file paths, and result capping.
-
-| Feature | Description | Status |
-| ------- | ----------- | ------ |
-| **F10f.1** | Relevance floor — stop returning noise results | Done |
-| **F10f.2** | Fix confidence metric (weighted top-k, not simple average) | Done |
-| **F10f.3** | Fix source file paths (property name mismatch bug) | Done |
-| **F10f.4** | Cap result count — quality over quantity | Done |
-| **F10f.5** | HyDE quality guard — discard bad hypothetical matches | Done |
-| **F10f.6** | Entity type scoring — prefer code over file stubs | Done |
-
-### Phase 10g: Retrieval Foundations (Complete)
-
-Structural improvements: ignore patterns, score normalization, richer relationships, cleaner display, configurable HyDE.
-
-| Feature | Description | Status |
-| ------- | ----------- | ------ |
-| **F10g.1** | .ctxignore + .gitignore support (centralized IgnoreResolver) | Done |
-| **F10g.2** | Score normalization (multiplicative reranking, [0,1] normalized) | Done |
-| **F10g.3** | Richer relationship extraction (CALLS, EXTENDS, IMPLEMENTS from AST) | Done |
-| **F10g.4** | Improve extractCodeSummary (clean signatures, no body leakage) | Done |
-| **F10g.5** | HyDE model selection (--hyde-model flag, CTX_HYDE_MODEL env var) | Done |
-
-### Phase 10h: Infrastructure & Performance (Complete)
-
-Bug fixes, smarter defaults, CLI simplification, and native vector search.
-
-| Feature | Description | Status |
-| ------- | ----------- | ------ |
-| **F10h.1** | `ctx-sys doctor` — environment health checks (now `status --check`) | Done |
-| **F10h.2** | Native vector search with sqlite-vec (~75x faster semantic search) | Done |
-| **F10h.3** | Bug fixes: 135% coverage, doctor "not indexed", fake FTS scores | Done |
-| **F10h.4** | Smarter defaults: doc, embed, semantic, expand all ON by default | Done |
-| **F10h.5** | CLI simplification: 36 commands → 7 core + 9 subcommand groups | Done |
-| **F10h.6** | MCP context_query defaults: expand=true, gate=true | Done |
-
----
-
-## Features
-
-### Hybrid RAG Retrieval
-
-ctx-sys combines multiple retrieval strategies for superior results:
-
-- **Vector Search** - Semantic similarity using embeddings (Ollama or OpenAI)
-- **Graph Traversal** - Follow relationships: `Function → calls → Function → imports → Module`
-- **Keyword/FTS** - Full-text search for exact matches
-- **Reciprocal Rank Fusion** - Intelligently merge results from all strategies
-
-### Code Intelligence
-
-- **AST Parsing** - Deep understanding of code structure via tree-sitter
-- **Relationship Extraction** - Automatically discover imports, calls, inheritance
-- **Symbol Summarization** - AI-generated summaries of functions and classes
-- **Git Integration** - Track changes and auto-index on commit
-
-### Conversation Memory
-
-- **Session Tracking** - Remember what was discussed across sessions
-- **Decision Extraction** - Automatically identify and store architectural decisions
-- **Summarization** - Compress long conversations while preserving key points
-
-### Agent Patterns
-
-Designed for long-running AI agent workflows:
-
-- **Checkpointing** - Save/restore agent state for resumable tasks
-- **Hot/Cold Memory** - Automatic memory management with token budgets
-- **Reflection Storage** - Learn from past attempts, store lessons learned
-- **Proactive Context** - Push relevant context based on file changes
-
-### Privacy & Local-First
-
-- **No cloud required** - Run entirely locally with Ollama
-- **Your data stays yours** - Single SQLite file, no external services
-- **Optional cloud** - Use OpenAI/Anthropic only if you choose to
-
-## Installation
+### 1. Install
 
 ```bash
-# Install globally
+# Install ctx-sys
 npm install -g ctx-sys
 
-# Or clone and build
-git clone https://github.com/davidfranz/ctx-sys.git
-cd ctx-sys
-npm install
-npm run build
-npm link
+# Install and start Ollama (for embeddings)
+# macOS: brew install ollama
+# Linux: curl -fsSL https://ollama.com/install.sh | sh
+ollama serve &
+ollama pull mxbai-embed-large:latest
 ```
 
-## Quick Start
+### 2. Index your project
 
 ```bash
-# Initialize a project
+cd your-project
 ctx-sys init
-
-# Index codebase — includes docs + embeddings by default
 ctx-sys index
-
-# Start the MCP server for Claude Desktop
-ctx-sys serve
-
-# Or watch for changes and auto-index
-ctx-sys watch
 ```
 
-## CLI Commands
+This parses your code with tree-sitter, generates embeddings with Ollama, and indexes any markdown docs — all in one command.
 
-### Core Commands
+### 3. Search
 
 ```bash
-ctx-sys init              # Initialize project configuration
-ctx-sys index             # Index code + docs + embeddings (use --no-doc, --no-embed to skip)
-ctx-sys index . --doc-path docs/api.md  # Index specific doc file
-ctx-sys search <query>    # Semantic + keyword search (--no-semantic for keyword-only)
-ctx-sys context <query>   # Assembled context with expansion (--no-expand to disable)
-ctx-sys status            # Project info (add --check for full health diagnostics)
-ctx-sys serve             # Start MCP server
-ctx-sys watch             # Watch and auto-index on changes
+# Semantic + keyword hybrid search
+ctx-sys search "how does authentication work"
+
+# Assembled context with source expansion
+ctx-sys context "error handling in the API layer"
+
+# Use HyDE for better conceptual search
+ctx-sys search "database connection pooling" --hyde
 ```
 
-### Subcommand Groups
+### 4. Connect to your AI assistant
 
-```bash
-# Entity management
-ctx-sys entity list       # List all entities
-ctx-sys entity get <id>   # Show entity details
-ctx-sys entity stats      # Entity type statistics
-
-# Graph operations
-ctx-sys graph query <entity>      # Traverse relationship graph
-ctx-sys graph stats               # Graph statistics
-ctx-sys graph relationships       # List relationships
-ctx-sys graph link <src> <type> <tgt>  # Create relationship
-
-# Embeddings
-ctx-sys embed run         # Generate embeddings
-ctx-sys embed status      # Embedding coverage status
-ctx-sys embed cleanup     # Clean up orphaned vectors
-
-# Summarization
-ctx-sys summarize run     # Generate LLM summaries
-ctx-sys summarize status  # Summarization coverage
-
-# Sessions
-ctx-sys session list      # List conversation sessions
-ctx-sys session messages  # View session messages
-
-# Knowledge bases
-ctx-sys kb create <name>  # Package project as .ctx-kb
-ctx-sys kb install <file> # Install a knowledge base
-ctx-sys kb list           # List installed knowledge bases
-
-# Team instructions
-ctx-sys instruction add <name>  # Add a team instruction
-ctx-sys instruction list        # List all instructions
-
-# Debug & maintenance
-ctx-sys debug health      # System health check
-ctx-sys debug inspect     # Inspect database tables
-ctx-sys debug query <sql> # Execute SQL query
-ctx-sys debug export <f>  # Export project data
-ctx-sys debug import <f>  # Import project data
-```
-
-### With Claude Desktop
-
-Add to your Claude Desktop MCP configuration:
+Add ctx-sys as an MCP server. For **Claude Desktop**, add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "ctx-sys": {
       "command": "ctx-sys",
-      "args": ["serve"],
-      "env": {}
+      "args": ["serve"]
     }
   }
 }
 ```
 
-## Core Concepts
+For **Claude Code**, add to your MCP settings:
 
-### Entities
-
-Everything is an entity. Entities have types, content, metadata, and vector embeddings.
-
-| Category | Entity Types |
-|----------|-------------|
-| **Code** | File, Module, Class, Function, Method, Interface, Type |
-| **Docs** | Document, Section, Requirement, Feature, UserStory |
-| **Conversation** | Session, Message, Decision, Question |
-| **Domain** | Person, Concept, Technology, Pattern, Component |
-| **Team** | Instruction (with scope and priority) |
-
-### Relationships (Graph RAG)
-
-Entities are connected through typed relationships, enabling graph traversal for context discovery.
-
-| Relationship | Example |
-|-------------|---------|
-| `CONTAINS` | File → Function, Document → Section |
-| `CALLS` | Function → Function |
-| `IMPORTS` | File → File |
-| `IMPLEMENTS` | Class → Interface |
-| `EXTENDS` | Class → Class |
-| `MENTIONS` | Message → any entity |
-| `RELATES_TO` | Concept → Concept (semantic) |
-
-### Context Retrieval
-
-When you query `"how does authentication work?"`, ctx-sys:
-
-1. **Parses** the query to extract intent and entities
-2. **Searches** using multiple strategies (vector similarity, graph traversal, keyword/FTS)
-3. **Ranks** results by relevance, recency, and connectivity
-4. **Assembles** context with source attribution, respecting token budgets
-
-## MCP Tools Interface
-
-### Core Retrieval
-
-```typescript
-context_query({
-  query: string,           // The search query
-  project?: string,        // Target project (default: active)
-  max_tokens?: number,     // Token budget for response
-  include_sources?: boolean
-}) → {
-  context: string,         // Formatted context for LLM
-  sources: Source[],       // Attribution
-  confidence: number
+```json
+{
+  "mcpServers": {
+    "ctx-sys": {
+      "command": "ctx-sys",
+      "args": ["serve"]
+    }
+  }
 }
 ```
 
-### Indexing
+Now your AI assistant has access to 30 tools for searching your codebase, querying the relationship graph, managing conversation memory, and more.
 
-```typescript
-// Full codebase indexing
-index_codebase({
-  path: string,
-  project: string,
-  options?: {
-    depth?: 'full' | 'signatures' | 'selective',
-    ignore?: string[],
-    languages?: string[],
-    summarize?: boolean
-  }
-})
+## How It Works
 
-// Incremental update from git
-sync_from_git({
-  project: string,
-  since?: string,          // Commit SHA or 'last_sync'
-  summarize?: boolean
-})
+```
+Your Code                  ctx-sys                         AI Assistant
+─────────                  ───────                         ────────────
+  .ts .py .rs    ──→   AST Parse (tree-sitter)
+  .md .html      ──→   Document Chunking
+                        ↓
+                   Entity Extraction
+                   (functions, classes, imports)
+                        ↓
+                   Embed with Ollama              ←──  "How does auth work?"
+                   (mxbai-embed-large)                        ↓
+                        ↓                              context_query
+                   ┌─────────────┐                          ↓
+                   │  SQLite DB  │               ┌─────────────────────┐
+                   │  + FTS5     │──────────────→│  Hybrid Search      │
+                   │  + vec0     │               │  • Vector similarity│
+                   │  + Graph    │               │  • FTS5 keyword     │
+                   └─────────────┘               │  • Graph traversal  │
+                                                 └─────────┬───────────┘
+                                                           ↓
+                                                    Rank & Assemble
+                                                           ↓
+                                                  Relevant context with
+                                                  source attribution
 ```
 
-### Conversation Memory
+## CLI Reference
 
-```typescript
-store_message({
-  content: string,
-  role: 'user' | 'assistant' | 'system',
-  session?: string,
-  metadata?: object
-})
+### Core Commands
 
-get_history({
-  session?: string,
-  limit?: number,
-  before?: string
-})
+```bash
+ctx-sys init [directory]          # Initialize project config
+ctx-sys index [directory]         # Index code + docs + embeddings
+ctx-sys search <query>            # Hybrid search (semantic + keyword)
+ctx-sys context <query>           # Assembled context with expansion
+ctx-sys status [directory]        # Project info and health checks
+ctx-sys serve                     # Start MCP server
+ctx-sys watch [directory]         # Watch files and auto-reindex
 ```
 
-### Graph Operations
+### Key Flags
 
-```typescript
-query_graph({
-  entity: string,          // Starting entity
-  depth?: number,          // Hops (default: 2)
-  relationships?: string[], // Filter by type
-  direction?: 'in' | 'out' | 'both'
-})
+```bash
+# Index
+ctx-sys index --no-doc            # Skip document indexing
+ctx-sys index --no-embed          # Skip embedding generation
+ctx-sys index --force             # Re-index everything from scratch
+
+# Search
+ctx-sys search "query" --hyde     # Use HyDE for conceptual queries
+ctx-sys search "query" --limit 20 # Control result count
+ctx-sys search "query" --no-semantic  # Keyword-only search
+
+# Context
+ctx-sys context "query" --max-tokens 8000  # Token budget
+ctx-sys context "query" --no-expand        # Skip context expansion
+ctx-sys context "query" --hyde             # HyDE-enhanced retrieval
+
+# Status
+ctx-sys status --check            # Full health diagnostics
 ```
+
+### Subcommands
+
+```bash
+# Entity management
+ctx-sys entity list               # List indexed entities
+ctx-sys entity stats              # Type breakdown
+ctx-sys entity get <id>           # Entity details
+
+# Relationship graph
+ctx-sys graph query <entity>      # Traverse relationships
+ctx-sys graph stats               # Graph statistics
+
+# Embeddings
+ctx-sys embed run                 # Generate/update embeddings
+ctx-sys embed status              # Coverage report
+
+# Summarization
+ctx-sys summarize run             # Generate LLM summaries
+ctx-sys summarize status          # Coverage report
+
+# Sessions & memory
+ctx-sys session list              # Conversation sessions
+ctx-sys session messages [id]     # View session messages
+
+# Knowledge bases
+ctx-sys kb create <name>          # Package as shareable .ctx-kb
+ctx-sys kb install <file>         # Install a knowledge base
+
+# Debug
+ctx-sys debug health              # System health check
+ctx-sys debug inspect             # Database tables
+ctx-sys debug export <file>       # Export project data
+```
+
+## MCP Tools
+
+When connected as an MCP server, ctx-sys exposes 30 tools organized into these categories:
+
+| Category | Key Tools | What They Do |
+| -------- | --------- | ------------ |
+| **Search** | `context_query`, `search_entities` | Hybrid RAG retrieval with source attribution |
+| **Indexing** | `index_codebase`, `index_document`, `sync_from_git` | Parse and index code and docs |
+| **Graph** | `query_graph`, `link_entities`, `get_graph_stats` | Navigate entity relationships |
+| **Memory** | `store_message`, `get_history`, `summarize_session` | Conversation context across sessions |
+| **Agent** | `checkpoint_save/load`, `memory_spill/recall`, `reflection_store` | Long-running agent workflows |
+| **Project** | `create_project`, `set_active_project` | Multi-project management |
 
 ## Configuration
 
-### Project Configuration
+### Project Config (`.ctx-sys/config.yaml`)
 
 ```yaml
-# .ctx-sys/config.yaml (per-project)
 project:
   name: my-project
 
 indexing:
-  mode: incremental
-  watch: true
   ignore:
     - node_modules
     - dist
-  languages:
-    - typescript
-    - python
-
-summarization:
-  enabled: true
-  provider: ollama
-  model: qwen2.5-coder:7b
+    - .git
 
 embeddings:
   provider: ollama
-  model: nomic-embed-text
+  model: mxbai-embed-large:latest
 
-retrieval:
-  default_max_tokens: 4000
-  strategies:
-    - vector
-    - graph
-    - fts
+summarization:
+  provider: ollama
+  model: qwen3:0.6b
+
+hyde:
+  model: gemma3:12b
 ```
 
-### Global Configuration
+### Global Config (`~/.ctx-sys/config.yaml`)
 
 ```yaml
-# ~/.ctx-sys/config.yaml (global)
 database:
   path: ~/.ctx-sys/ctx-sys.db
 
@@ -529,45 +230,54 @@ providers:
   ollama:
     base_url: http://localhost:11434
   openai:
-    api_key: ${OPENAI_API_KEY}
+    api_key: ${OPENAI_API_KEY}  # Optional cloud fallback
 ```
 
-## Tech Stack
+## Supported Languages
 
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| **Language** | TypeScript | MCP SDK compatibility, type safety |
-| **Database** | better-sqlite3 + FTS5 | Native performance, full-text search with BM25 |
-| **AST Parsing** | tree-sitter | Multi-language, fast, accurate |
-| **Embeddings (local)** | Ollama + nomic-embed-text | Quality local embeddings |
-| **Embeddings (cloud)** | OpenAI text-embedding-3-small | Fallback option |
-| **Summaries (local)** | Ollama + qwen3:0.6b | Fast local summarization |
-| **Summaries (cloud)** | OpenAI gpt-4o-mini, Anthropic claude-3-haiku | Cloud fallback options |
-| **MCP Framework** | @modelcontextprotocol/sdk | Official protocol SDK |
+| Language | Parsing | Entities Extracted |
+| -------- | ------- | ------------------ |
+| TypeScript/JavaScript | tree-sitter | Functions, classes, methods, interfaces, types, imports |
+| Python | tree-sitter | Functions, classes, methods, imports |
+| Rust | tree-sitter | Functions, structs, impls, traits, imports |
+| Go | tree-sitter | Functions, structs, methods, interfaces, imports |
+| Java | tree-sitter | Classes, methods, interfaces, imports |
 
-## Use Cases
+Documents (Markdown, HTML, YAML, JSON, TOML, plain text) are also indexed with semantic chunking.
 
-### For Individual Developers
+## Requirements
 
-- **Context-aware coding assistance** - AI that understands your codebase structure
-- **Conversation continuity** - Pick up where you left off, even days later
-- **Documentation search** - Find relevant docs alongside code
+- **Node.js** 18+
+- **Ollama** (for local embeddings and summarization)
+  - `mxbai-embed-large:latest` — embedding model (1024 dimensions, auto-detected)
+  - `qwen3:0.6b` — summarization (optional)
+  - `gemma3:12b` — HyDE query expansion (optional)
 
-### For Teams
+## Architecture
 
-- **Shared knowledge base** - Capture decisions and context across the team
-- **Onboarding acceleration** - New members get context from past discussions
-- **Impact analysis** - Understand how changes affect the codebase
+ctx-sys stores everything in a single SQLite database with:
 
-### For AI Agent Builders
+- **Entities** — code symbols, document sections, conversation messages
+- **Relationships** — CONTAINS, IMPORTS, CALLS, EXTENDS, IMPLEMENTS (auto-extracted from AST)
+- **Vectors** — embeddings via sqlite-vec for fast KNN search
+- **FTS5** — full-text search with BM25 ranking
+- **Sessions** — conversation history with decision tracking
 
-- **Long-running tasks** - Checkpoint and resume complex operations
-- **Memory management** - Automatic hot/cold tiering for context
-- **Learning loops** - Store reflections and lessons learned
+Search combines all four retrieval strategies (vector, FTS, graph, heuristic reranking) using reciprocal rank fusion. Advanced features include HyDE query expansion, query decomposition, retrieval gating, and smart context expansion.
+
+## Building from Source
+
+```bash
+git clone https://github.com/davidfranz/ctx-sys.git
+cd ctx-sys
+npm install
+npm run build
+npm link    # Makes ctx-sys available globally
+```
 
 ## Contributing
 
-Contributions are welcome! Please see the documentation in [docs/](./docs/) for architecture details.
+Contributions welcome. See the [whitepaper](https://ctx-sys.dev/whitepaper.pdf) for architecture details and the [website](https://ctx-sys.dev) for full documentation.
 
 ## License
 
