@@ -637,10 +637,13 @@ export class CoreService {
       }
     }
 
+    // F10f.4: Configurable result cap (default 15)
+    const maxResults = options?.maxResults ?? 15;
+
     // Build common search options
     const searchOpts = {
       strategies: options?.strategies,
-      limit: 20,
+      limit: maxResults,
       entityTypes: options?.includeTypes as EntityType[],
       queryEmbedding
     };
@@ -667,7 +670,7 @@ export class CoreService {
             }
           }
         }
-        results = Array.from(allResults.values()).sort((a, b) => b.score - a.score).slice(0, 20);
+        results = Array.from(allResults.values()).sort((a, b) => b.score - a.score).slice(0, maxResults);
       } else {
         results = await searchService.search(query, searchOpts);
       }

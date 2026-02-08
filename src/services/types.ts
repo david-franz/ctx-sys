@@ -97,6 +97,7 @@ export interface QueryOptions {
   decompose?: boolean;        // Enable QueryDecomposer (break complex queries)
   gate?: boolean;             // Enable RetrievalGate (skip trivial queries)
   hyde?: boolean;             // Enable HyDE (Hypothetical Document Embeddings)
+  maxResults?: number;        // Max results to assemble (default: 15)
 }
 
 export interface ContextResult {

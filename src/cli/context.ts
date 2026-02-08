@@ -30,6 +30,7 @@ export function createContextCommand(output: CLIOutput = defaultOutput): Command
     .option('--decompose', 'Break complex queries into sub-queries')
     .option('--gate', 'Skip retrieval for trivial queries')
     .option('--hyde', 'Use HyDE (Hypothetical Document Embeddings) for better semantic search')
+    .option('--max-results <n>', 'Maximum number of results to include', '15')
     .option('--format <format>', 'Output format (markdown, json, text)', 'markdown')
     .option('-d, --db <path>', 'Custom database path')
     .action(async (query: string, options) => {
@@ -62,6 +63,7 @@ async function runContext(
     decompose?: boolean;
     gate?: boolean;
     hyde?: boolean;
+    maxResults?: string;
     format?: string;
     db?: string;
   },
@@ -98,7 +100,8 @@ async function runContext(
       expandTokens,
       decompose: options.decompose,
       gate: options.gate,
-      hyde: options.hyde
+      hyde: options.hyde,
+      maxResults: options.maxResults ? parseInt(options.maxResults, 10) : undefined
     });
 
     // JSON output
