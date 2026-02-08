@@ -119,7 +119,7 @@ The result: AI assistants that remember everything but only surface what matters
 | **F10.6: LLM Summaries** | Multi-provider summarization (Ollama/OpenAI/Anthropic) |
 | **F10.7: CLI Completeness** | 30+ commands covering all functionality |
 | **F10.8: Robustness** | Replace hand-rolled glob/YAML/import parsers with picomatch, yaml |
-| **F10.9: Universal Document Indexing** | Index markdown, YAML, JSON, TOML, plain text + LLM extraction |
+| **F10.9: Universal Document Indexing** | Index markdown, HTML, YAML, JSON, TOML, plain text + LLM extraction |
 | **F10.10: Native SQLite + FTS5** | Migrate to better-sqlite3 with FTS5 full-text search |
 | **F10.11: Smart Context Expansion** | Auto-include parent classes, imports, and type definitions |
 | **F10.12: Advanced Query Pipeline** | Query decomposition + LLM re-ranking |
@@ -176,6 +176,8 @@ Full end-to-end system testing revealed critical issues. Analytics removed, core
 | **F10d.4** | Fix reflection_query multi-word search | Done |
 | **F10d.5** | Wire embed CLI to actually generate embeddings | Done |
 | **F10d.6** | Fix search_entities case-insensitive exact matching | Done |
+| **F10d.7** | CLI `context` command (mirrors MCP context_query) | Planned |
+| **F10d.8** | HTML document indexing (.html/.htm support) | Planned |
 
 ---
 
@@ -256,6 +258,7 @@ ctx-sys watch
 ctx-sys init              # Initialize project configuration
 ctx-sys index             # Index codebase (with streaming for large projects)
 ctx-sys search <query>    # Search entities
+ctx-sys context <query>   # Query assembled context (like MCP context_query)
 ctx-sys status            # Show indexing status
 ctx-sys serve             # Start MCP server
 ctx-sys watch             # Watch and auto-index on changes
