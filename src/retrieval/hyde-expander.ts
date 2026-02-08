@@ -132,14 +132,17 @@ export class OllamaHypotheticalProvider implements HypotheticalProvider {
   }
 
   async generate(query: string, options?: HypotheticalOptions): Promise<string> {
-    const prompt = buildHypotheticalPrompt(query, options);
+    const { system, user } = buildHypotheticalMessages(query, options);
 
-    const response = await fetch(`${this.baseUrl}/api/generate`, {
+    const response = await fetch(`${this.baseUrl}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: this.model,
-        prompt: `/no_think\n${prompt}`,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user }
+        ],
         stream: false,
         options: {
           temperature: 0.3,
@@ -152,9 +155,9 @@ export class OllamaHypotheticalProvider implements HypotheticalProvider {
       throw new Error(`Ollama error: ${response.statusText}`);
     }
 
-    const data = await response.json() as { response: string };
-    // Strip <think> blocks from Qwen3
-    let cleaned = data.response.replace(/<think>[\s\S]*?<\/think>/g, '');
+    const data = await response.json() as { message: { content: string } };
+    // Strip <think> blocks from reasoning models (Qwen3, etc.)
+    let cleaned = data.message.content.replace(/<think>[\s\S]*?<\/think>/g, '');
     cleaned = cleaned.replace(/^<think>[\s\S]*$/, '');
     return cleaned.trim();
   }
@@ -334,28 +337,36 @@ export class HyDEQueryExpander {
 }
 
 /**
+ * Build system + user messages for hypothetical document generation.
+ * Using chat format gives small models much better instruction following.
+ */
+export function buildHypotheticalMessages(
+  query: string,
+  options?: HypotheticalOptions
+): { system: string; user: string } {
+  const typeHint = options?.entityTypes?.length
+    ? ` Focus on ${options.entityTypes.join(', ')} entities.`
+    : '';
+
+  const contextHint = options?.recentContext
+    ? `\nRecent context: ${options.recentContext}`
+    : '';
+
+  const system = `You are a code documentation writer. When given a question, write a brief technical answer (2-3 sentences) as if you know the codebase. Use specific class names, function names, parameter types, and implementation patterns. Never ask questions or request code — just write the hypothetical answer directly.${typeHint}`;
+
+  const user = `${contextHint}${query}`;
+
+  return { system, user };
+}
+
+/**
  * Build a prompt for generating hypothetical documents.
- * Useful for real LLM providers.
+ * Legacy single-prompt format, kept for compatibility.
  */
 export function buildHypotheticalPrompt(
   query: string,
   options?: HypotheticalOptions
 ): string {
-  const typeHint = options?.entityTypes?.length
-    ? `Focus on ${options.entityTypes.join(', ')} entities.`
-    : '';
-
-  const contextHint = options?.recentContext
-    ? `Recent context: ${options.recentContext}\n`
-    : '';
-
-  return `You are a code documentation expert. Write a brief technical description (2-3 sentences) answering this question about a codebase. Include specific class names, function names, parameter types, and implementation patterns.
-
-${contextHint}Question: ${query}
-
-${typeHint}
-
-Write as if you know the codebase. Use concrete technical terms, not generic descriptions. Mention specific types, modules, and patterns.
-
-Answer:`;
+  const { system, user } = buildHypotheticalMessages(query, options);
+  return `${system}\n\n${user}\n\nAnswer:`;
 }
