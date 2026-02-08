@@ -51,7 +51,7 @@ export interface DocumentIndexResult {
   skipped?: boolean;
 }
 
-type DocumentType = 'markdown' | 'yaml' | 'json' | 'toml' | 'text';
+type DocumentType = 'markdown' | 'yaml' | 'json' | 'toml' | 'html' | 'text';
 
 const EXTENSION_MAP: Record<string, DocumentType> = {
   '.md': 'markdown',
@@ -60,6 +60,8 @@ const EXTENSION_MAP: Record<string, DocumentType> = {
   '.yml': 'yaml',
   '.json': 'json',
   '.toml': 'toml',
+  '.html': 'html',
+  '.htm': 'html',
   '.txt': 'text',
   '.log': 'text',
 };
@@ -108,6 +110,8 @@ export class DocumentIndexer {
         return this.indexJson(absolutePath, content, hash);
       case 'toml':
         return this.indexToml(absolutePath, content, hash);
+      case 'html':
+        return this.indexHtml(absolutePath, content, hash);
       default:
         return this.indexPlainText(absolutePath, content, hash);
     }
@@ -466,6 +470,128 @@ export class DocumentIndexer {
     }
 
     return { documentId: docEntity.id, entitiesCreated, relationshipsCreated, crossDocLinks: 0, embeddingsGenerated: 0 };
+  }
+
+  private async indexHtml(
+    filePath: string,
+    content: string,
+    hash: string
+  ): Promise<DocumentIndexResult> {
+    let entitiesCreated = 0;
+    let relationshipsCreated = 0;
+    let crossDocLinks = 0;
+
+    // Extract title
+    const titleMatch = content.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : path.basename(filePath);
+
+    // Strip script, style, and comments
+    const cleaned = content
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+
+    // Extract text content (strip all tags)
+    const textContent = cleaned.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+    // Create document entity
+    const docEntity = await this.entityStore.upsert({
+      type: 'document',
+      name: title,
+      qualifiedName: filePath,
+      content: textContent,
+      summary: `HTML: ${title}`,
+      filePath,
+      metadata: { hash, docType: 'html' },
+    });
+    entitiesCreated++;
+
+    // Split by heading tags into sections
+    const headingRegex = /<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi;
+    const sections: Array<{ level: number; title: string; content: string }> = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = headingRegex.exec(cleaned)) !== null) {
+      if (sections.length > 0) {
+        const between = cleaned.slice(lastIndex, match.index);
+        const betweenText = between.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (betweenText) {
+          sections[sections.length - 1].content = betweenText;
+        }
+      }
+
+      const level = parseInt(match[1], 10);
+      const headingText = match[2].replace(/<[^>]+>/g, '').trim();
+      sections.push({ level, title: headingText, content: '' });
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Capture trailing content after last heading
+    if (sections.length > 0) {
+      const trailing = cleaned.slice(lastIndex);
+      const trailingText = trailing.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (trailingText) {
+        sections[sections.length - 1].content = trailingText;
+      }
+    }
+
+    // Create section entities
+    for (const section of sections) {
+      if (!section.title) continue;
+
+      const sectionId = section.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const sectionEntity = await this.entityStore.upsert({
+        type: 'section',
+        name: section.title,
+        qualifiedName: `${filePath}::${sectionId}`,
+        content: section.content || section.title,
+        summary: section.title,
+        filePath,
+        metadata: { level: section.level },
+      });
+      entitiesCreated++;
+
+      await this.relationshipStore.upsert({
+        sourceId: docEntity.id,
+        targetId: sectionEntity.id,
+        relationship: 'CONTAINS',
+      });
+      relationshipsCreated++;
+    }
+
+    // Resolve code references from text content
+    const fakeDoc: MarkdownDocument = {
+      filePath,
+      title,
+      sections: [{
+        id: 'root',
+        title,
+        level: 0,
+        content: textContent,
+        startLine: 0,
+        endLine: 0,
+        codeBlocks: [],
+        links: [],
+        children: [],
+      }],
+    };
+
+    const codeRefs = this.documentLinker.findCodeReferences(fakeDoc);
+    for (const ref of codeRefs) {
+      const resolved = await this.documentLinker.resolveReference(ref.text);
+      if (resolved) {
+        await this.relationshipStore.upsert({
+          sourceId: docEntity.id,
+          targetId: resolved.id,
+          relationship: 'DOCUMENTS',
+        });
+        relationshipsCreated++;
+        crossDocLinks++;
+      }
+    }
+
+    return { documentId: docEntity.id, entitiesCreated, relationshipsCreated, crossDocLinks, embeddingsGenerated: 0 };
   }
 
   private async indexPlainText(
