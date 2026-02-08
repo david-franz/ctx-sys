@@ -11,7 +11,7 @@ import {
   HyDEConfig,
   DEFAULT_HYDE_CONFIG,
   QueryParser,
-  buildHypotheticalPrompt
+  buildHypotheticalMessages
 } from '../../src';
 
 describe('F6.5 - HyDE Query Expansion', () => {
@@ -298,26 +298,26 @@ describe('F6.5 - HyDE Query Expansion', () => {
     });
   });
 
-  describe('buildHypotheticalPrompt', () => {
-    it('should build basic prompt', () => {
-      const prompt = buildHypotheticalPrompt('How does auth work?');
-      expect(prompt).toContain('How does auth work?');
-      expect(prompt).toContain('documentation expert');
+  describe('buildHypotheticalMessages', () => {
+    it('should build system and user messages', () => {
+      const { system, user } = buildHypotheticalMessages('How does auth work?');
+      expect(user).toContain('How does auth work?');
+      expect(system).toContain('documentation writer');
     });
 
-    it('should include entity type hint', () => {
-      const prompt = buildHypotheticalPrompt('How does auth work?', {
+    it('should include entity type hint in system message', () => {
+      const { system } = buildHypotheticalMessages('How does auth work?', {
         entityTypes: ['function', 'class']
       });
-      expect(prompt).toContain('function');
-      expect(prompt).toContain('class');
+      expect(system).toContain('function');
+      expect(system).toContain('class');
     });
 
-    it('should include recent context', () => {
-      const prompt = buildHypotheticalPrompt('How does auth work?', {
+    it('should include recent context in user message', () => {
+      const { user } = buildHypotheticalMessages('How does auth work?', {
         recentContext: 'Working on login flow'
       });
-      expect(prompt).toContain('Working on login flow');
+      expect(user).toContain('Working on login flow');
     });
   });
 

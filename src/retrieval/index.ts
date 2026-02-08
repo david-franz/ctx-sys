@@ -44,7 +44,7 @@ export {
   MockHypotheticalProvider,
   OllamaHypotheticalProvider,
   DEFAULT_HYDE_CONFIG,
-  buildHypotheticalPrompt
+  buildHypotheticalMessages
 } from './hyde-expander';
 
 // Retrieval Gating

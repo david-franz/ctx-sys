@@ -359,14 +359,3 @@ export function buildHypotheticalMessages(
   return { system, user };
 }
 
-/**
- * Build a prompt for generating hypothetical documents.
- * Legacy single-prompt format, kept for compatibility.
- */
-export function buildHypotheticalPrompt(
-  query: string,
-  options?: HypotheticalOptions
-): string {
-  const { system, user } = buildHypotheticalMessages(query, options);
-  return `${system}\n\n${user}\n\nAnswer:`;
-}

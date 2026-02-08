@@ -209,7 +209,7 @@ export {
   HyDEQueryContext,
   MockHypotheticalProvider,
   DEFAULT_HYDE_CONFIG,
-  buildHypotheticalPrompt,
+  buildHypotheticalMessages,
   SearchResult,
   SearchStrategy,
   SearchConfig,
