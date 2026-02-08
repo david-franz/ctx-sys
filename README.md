@@ -176,8 +176,8 @@ Full end-to-end system testing revealed critical issues. Analytics removed, core
 | **F10d.4** | Fix reflection_query multi-word search | Done |
 | **F10d.5** | Wire embed CLI to actually generate embeddings | Done |
 | **F10d.6** | Fix search_entities case-insensitive exact matching | Done |
-| **F10d.7** | CLI `context` command (mirrors MCP context_query) | Planned |
-| **F10d.8** | HTML document indexing (.html/.htm support) | Planned |
+| **F10d.7** | CLI `context` command (mirrors MCP context_query) | Done |
+| **F10d.8** | HTML document indexing (.html/.htm support) | Done |
 
 ---
 

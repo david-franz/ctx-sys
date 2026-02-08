@@ -311,8 +311,8 @@ Full system testing (CLI + MCP) revealed that the core `context_query` tool was 
 | **F10d.4** | Fix reflection_query Search | [F10d.4-fix-reflection-query.md](phase-10d/F10d.4-fix-reflection-query.md) | ✅ Done |
 | **F10d.5** | Fix embed CLI Stub | [F10d.5-fix-embed-cli.md](phase-10d/F10d.5-fix-embed-cli.md) | ✅ Done |
 | **F10d.6** | Fix search_entities Ranking | [F10d.6-fix-search-ranking.md](phase-10d/F10d.6-fix-search-ranking.md) | ✅ Done |
-| **F10d.7** | CLI `context` Command | [F10d.7-cli-context-command.md](phase-10d/F10d.7-cli-context-command.md) | Planned |
-| **F10d.8** | HTML Document Indexing | [F10d.8-html-document-support.md](phase-10d/F10d.8-html-document-support.md) | Planned |
+| **F10d.7** | CLI `context` Command | [F10d.7-cli-context-command.md](phase-10d/F10d.7-cli-context-command.md) | ✅ Done |
+| **F10d.8** | HTML Document Indexing | [F10d.8-html-document-support.md](phase-10d/F10d.8-html-document-support.md) | ✅ Done |
 
 ---
 
