@@ -63,12 +63,9 @@ async function runDocIndex(
       try {
         await projectManager.create(projectId, projectPath);
       } catch {
-        // Name validation failed — just register tables
+        db.createProject(projectId);  // fallback if name validation fails
       }
     }
-
-    // Always ensure name-based project tables exist
-    db.createProject(projectId);
 
     const entityStore = new EntityStore(db, projectId);
     const relationshipStore = new RelationshipStore(db, projectId);

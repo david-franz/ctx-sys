@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { DatabaseConnection } from '../db/connection';
-import { generateId } from '../utils/id';
+
 import {
   Project,
   ProjectConfig,
@@ -44,7 +44,7 @@ export class ProjectManager {
       throw new Error(`Path does not exist or is not a directory: ${resolvedPath}`);
     }
 
-    const id = generateId();
+    const id = name;
     const mergedConfig = this.mergeConfig(config);
 
     this.db.run(
