@@ -254,7 +254,7 @@ export function myFunc() {
 
       expect(context.sources.length).toBe(1);
       expect(context.sources[0].name).toBe('myFunc');
-      expect(context.sources[0].file).toBe('src/test.ts');
+      expect(context.sources[0].filePath).toBe('src/test.ts');
       expect(context.sources[0].line).toBe(10);
       expect(context.sources[0].relevance).toBe(0.85);
     });

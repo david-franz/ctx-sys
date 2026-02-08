@@ -95,7 +95,7 @@ describe('F6.3 - Context Assembly', () => {
       const context = assembler.assemble(results, { includeSources: true });
 
       expect(context.sources.length).toBe(1);
-      expect(context.sources[0].file).toBe('src/utils.ts');
+      expect(context.sources[0].filePath).toBe('src/utils.ts');
       expect(context.sources[0].line).toBe(42);
       expect(context.context).toContain('Sources');
     });
@@ -447,7 +447,7 @@ describe('F6.3 - Context Assembly', () => {
       const context = assembler.assemble(results);
 
       expect(context.context).toContain('Concept');
-      expect(context.sources[0].file).toBeUndefined();
+      expect(context.sources[0].filePath).toBeUndefined();
     });
 
     it('should handle entities without content', () => {

@@ -25,7 +25,7 @@ describe('DraftCritique', () => {
           entityId: 'user-service',
           name: 'UserService',
           type: 'class',
-          file: 'src/services/user.ts',
+          filePath: 'src/services/user.ts',
           line: 10,
           relevance: 0.9
         },
@@ -33,7 +33,7 @@ describe('DraftCritique', () => {
           entityId: 'login-method',
           name: 'login',
           type: 'method',
-          file: 'src/services/user.ts',
+          filePath: 'src/services/user.ts',
           line: 25,
           relevance: 0.85
         }

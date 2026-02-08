@@ -735,7 +735,8 @@ export class CoreService {
       totalWeight += weight;
     }
 
-    return totalWeight > 0 ? weightedSum / totalWeight : 0;
+    const raw = totalWeight > 0 ? weightedSum / totalWeight : 0;
+    return Math.min(1.0, raw);
   }
 
   // ─────────────────────────────────────────────────────────
