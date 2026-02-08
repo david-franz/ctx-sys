@@ -343,8 +343,14 @@ async function deleteEntity(
   // Delete relationships
   db.run(`DELETE FROM ${prefix}_relationships WHERE source_id = ? OR target_id = ?`, [id, id]);
 
-  // Delete embeddings
-  db.run(`DELETE FROM ${prefix}_vectors WHERE entity_id = ?`, [id]);
+  // Delete embeddings (F10h.2: delete from vec0 first, then metadata)
+  const vecMetas = db.all<{ id: number }>(
+    `SELECT id FROM ${prefix}_vector_meta WHERE entity_id = ?`, [id]
+  );
+  for (const vm of vecMetas) {
+    db.run(`DELETE FROM ${prefix}_vec WHERE rowid = ?`, [BigInt(vm.id)]);
+  }
+  db.run(`DELETE FROM ${prefix}_vector_meta WHERE entity_id = ?`, [id]);
 
   // Delete entity
   db.run(`DELETE FROM ${prefix}_entities WHERE id = ?`, [id]);

@@ -24,7 +24,20 @@ export class KnowledgeBasePackager {
 
     // Export all project data
     const entities = this.db.all(`SELECT * FROM ${prefix}_entities`);
-    const vectors = this.db.all(`SELECT * FROM ${prefix}_vectors`);
+    // F10h.2: export from vec0 + metadata, serialize as JSON arrays
+    const vectorMetas = this.db.all<{ id: number; entity_id: string; model_id: string; content_hash: string | null; created_at: string }>(
+      `SELECT id, entity_id, model_id, content_hash, created_at FROM ${prefix}_vector_meta`
+    );
+    const vectors = vectorMetas.map(vm => {
+      const vec = this.db.get<{ embedding: Buffer }>(`SELECT embedding FROM ${prefix}_vec WHERE rowid = ?`, [BigInt(vm.id)]);
+      return {
+        entity_id: vm.entity_id,
+        model_id: vm.model_id,
+        embedding: vec ? Array.from(new Float32Array(vec.embedding.buffer, vec.embedding.byteOffset, vec.embedding.byteLength / 4)) : [],
+        content_hash: vm.content_hash,
+        created_at: vm.created_at
+      };
+    });
     const relationships = this.db.all(`SELECT * FROM ${prefix}_relationships`);
     const sessions = this.db.all(`SELECT * FROM ${prefix}_sessions`);
     const messages = this.db.all(`SELECT * FROM ${prefix}_messages`);
@@ -126,7 +139,14 @@ export class KnowledgeBasePackager {
     // Clear existing data if not merging
     if (!options.merge) {
       // Tables may or may not have data; DELETE is safe
-      try { this.db.run(`DELETE FROM ${prefix}_vectors`); } catch { /* table may not exist yet */ }
+      // F10h.2: clear vec0 + metadata
+      try {
+        const allVm = this.db.all<{ id: number }>(`SELECT id FROM ${prefix}_vector_meta`);
+        for (const vm of allVm) {
+          this.db.run(`DELETE FROM ${prefix}_vec WHERE rowid = ?`, [BigInt(vm.id)]);
+        }
+        this.db.run(`DELETE FROM ${prefix}_vector_meta`);
+      } catch { /* table may not exist yet */ }
       try { this.db.run(`DELETE FROM ${prefix}_relationships`); } catch { /* */ }
       try { this.db.run(`DELETE FROM ${prefix}_messages`); } catch { /* */ }
       try { this.db.run(`DELETE FROM ${prefix}_sessions`); } catch { /* */ }
@@ -158,20 +178,30 @@ export class KnowledgeBasePackager {
       counts.entities = count;
     }
 
-    // Import vectors
+    // Import vectors (F10h.2: into vector_meta + vec0)
     if (data.vectors) {
       let count = 0;
       for (const v of data.vectors as Record<string, unknown>[]) {
         try {
+          const embedding: number[] = typeof v.embedding === 'string'
+            ? JSON.parse(v.embedding as string)
+            : v.embedding as number[];
+
           this.db.run(`
-            INSERT OR REPLACE INTO ${prefix}_vectors
-            (id, entity_id, model_id, embedding, content_hash, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-          `, [
-            v.id, v.entity_id, v.model_id,
-            typeof v.embedding === 'string' ? v.embedding : JSON.stringify(v.embedding),
-            v.content_hash, v.created_at
-          ]);
+            INSERT OR REPLACE INTO ${prefix}_vector_meta
+            (entity_id, model_id, content_hash, created_at)
+            VALUES (?, ?, ?, ?)
+          `, [v.entity_id, v.model_id, v.content_hash, v.created_at]);
+
+          const meta = this.db.get<{ id: number }>(
+            `SELECT id FROM ${prefix}_vector_meta WHERE entity_id = ? AND model_id = ?`,
+            [v.entity_id, v.model_id]
+          );
+          if (meta && embedding.length > 0) {
+            this.db.run(`DELETE FROM ${prefix}_vec WHERE rowid = ?`, [BigInt(meta.id)]);
+            const buf = Buffer.from(new Float32Array(embedding).buffer);
+            this.db.run(`INSERT INTO ${prefix}_vec (rowid, embedding) VALUES (?, ?)`, [BigInt(meta.id), buf]);
+          }
           count++;
         } catch { /* skip orphaned */ }
       }

@@ -290,7 +290,20 @@ async function exportData(
   // Export entities and their vectors
   if (!options.relationships) {
     data.entities = db.all(`SELECT * FROM ${prefix}_entities`);
-    data.vectors = db.all(`SELECT * FROM ${prefix}_vectors`);
+    // F10h.2: export vectors from vec0 + metadata, serialize as JSON arrays
+    const vectorMetas = db.all<{ id: number; entity_id: string; model_id: string; content_hash: string | null; created_at: string }>(
+      `SELECT id, entity_id, model_id, content_hash, created_at FROM ${prefix}_vector_meta`
+    );
+    data.vectors = vectorMetas.map(vm => {
+      const vec = db.get<{ embedding: Buffer }>(`SELECT embedding FROM ${prefix}_vec WHERE rowid = ?`, [BigInt(vm.id)]);
+      return {
+        entity_id: vm.entity_id,
+        model_id: vm.model_id,
+        embedding: vec ? Array.from(new Float32Array(vec.embedding.buffer, vec.embedding.byteOffset, vec.embedding.byteLength / 4)) : [],
+        content_hash: vm.content_hash,
+        created_at: vm.created_at
+      };
+    });
   }
 
   // Export relationships
@@ -346,7 +359,7 @@ async function exportData(
     // Map data keys to actual table names
     const tableMap: Record<string, string> = {
       entities: `${prefix}_entities`,
-      vectors: `${prefix}_vectors`,
+      vectors: `${prefix}_vector_meta`,
       relationships: `${prefix}_relationships`,
       sessions: `${prefix}_sessions`,
       messages: `${prefix}_messages`,
@@ -416,7 +429,12 @@ async function importData(
 
   // Clear existing data if not merging (order matters for foreign keys)
   if (!options.merge) {
-    db.run(`DELETE FROM ${prefix}_vectors`);
+    // F10h.2: delete from vec0 first, then metadata
+    const allVecMeta = db.all<{ id: number }>(`SELECT id FROM ${prefix}_vector_meta`);
+    for (const vm of allVecMeta) {
+      db.run(`DELETE FROM ${prefix}_vec WHERE rowid = ?`, [BigInt(vm.id)]);
+    }
+    db.run(`DELETE FROM ${prefix}_vector_meta`);
     db.run(`DELETE FROM ${prefix}_relationships`);
     db.run(`DELETE FROM ${prefix}_messages`);
     db.run(`DELETE FROM ${prefix}_sessions`);
@@ -451,20 +469,34 @@ async function importData(
     counts.entities = entityCount;
   }
 
-  // Import vectors
+  // Import vectors (F10h.2: into vector_meta + vec0)
   if (data.vectors) {
     let vectorCount = 0;
     for (const v of data.vectors) {
       try {
-        db.run(`
-          INSERT OR REPLACE INTO ${prefix}_vectors
-          (id, entity_id, model_id, embedding, content_hash, created_at)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `, [
-          v.id, v.entity_id, v.model_id,
-          typeof v.embedding === 'string' ? v.embedding : JSON.stringify(v.embedding),
-          v.content_hash, v.created_at
-        ]);
+        // Parse embedding from old JSON string or new array format
+        const embedding: number[] = typeof v.embedding === 'string'
+          ? JSON.parse(v.embedding)
+          : v.embedding;
+
+        // Insert metadata
+        const result = db.run(`
+          INSERT OR REPLACE INTO ${prefix}_vector_meta
+          (entity_id, model_id, content_hash, created_at)
+          VALUES (?, ?, ?, ?)
+        `, [v.entity_id, v.model_id, v.content_hash, v.created_at]);
+
+        // Get rowid and insert vector
+        const meta = db.get<{ id: number }>(
+          `SELECT id FROM ${prefix}_vector_meta WHERE entity_id = ? AND model_id = ?`,
+          [v.entity_id, v.model_id]
+        );
+        if (meta && embedding.length > 0) {
+          // Delete existing vec0 entry if any (from OR REPLACE)
+          db.run(`DELETE FROM ${prefix}_vec WHERE rowid = ?`, [BigInt(meta.id)]);
+          const buf = Buffer.from(new Float32Array(embedding).buffer);
+          db.run(`INSERT INTO ${prefix}_vec (rowid, embedding) VALUES (?, ?)`, [BigInt(meta.id), buf]);
+        }
         vectorCount++;
       } catch {
         // Skip orphaned vectors (entity_id not found)
@@ -661,7 +693,7 @@ async function checkHealth(
     const embeddingStats = db.get<{ total: number; embedded: number }>(`
       SELECT
         (SELECT COUNT(*) FROM ${prefix}_entities WHERE hash IS NOT NULL) as total,
-        (SELECT COUNT(*) FROM ${prefix}_vectors) as embedded
+        (SELECT COUNT(*) FROM ${prefix}_vector_meta) as embedded
     `);
     const coverage = embeddingStats?.total
       ? (embeddingStats.embedded / embeddingStats.total) * 100

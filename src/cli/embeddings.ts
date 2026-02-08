@@ -180,7 +180,7 @@ async function generateEmbeddings(
     SELECT e.id, e.name, e.type, e.hash as content_hash,
            emb.content_hash as embedding_hash
     FROM ${prefix}_entities e
-    LEFT JOIN ${prefix}_vectors emb ON e.id = emb.entity_id
+    LEFT JOIN ${prefix}_vector_meta emb ON e.id = emb.entity_id
     WHERE 1=1
   `;
 
@@ -300,11 +300,11 @@ async function showEmbeddingStatus(
   const stats = db.get<EmbeddingStats>(`
     SELECT
       (SELECT COUNT(*) FROM ${prefix}_entities) as total_entities,
-      (SELECT COUNT(*) FROM ${prefix}_vectors emb
+      (SELECT COUNT(*) FROM ${prefix}_vector_meta emb
        WHERE EXISTS (SELECT 1 FROM ${prefix}_entities e WHERE e.id = emb.entity_id)) as embedded,
       (SELECT COUNT(*) FROM ${prefix}_entities e
-       WHERE NOT EXISTS (SELECT 1 FROM ${prefix}_vectors emb WHERE emb.entity_id = e.id)) as pending,
-      (SELECT COUNT(*) FROM ${prefix}_vectors emb
+       WHERE NOT EXISTS (SELECT 1 FROM ${prefix}_vector_meta emb WHERE emb.entity_id = e.id)) as pending,
+      (SELECT COUNT(*) FROM ${prefix}_vector_meta emb
        JOIN ${prefix}_entities e ON emb.entity_id = e.id
        WHERE e.hash IS NOT NULL AND emb.content_hash != e.hash) as stale
   `);
@@ -315,14 +315,14 @@ async function showEmbeddingStatus(
       COUNT(*) as count,
       SUM(CASE WHEN emb.id IS NOT NULL THEN 1 ELSE 0 END) as embedded
     FROM ${prefix}_entities e
-    LEFT JOIN ${prefix}_vectors emb ON e.id = emb.entity_id
+    LEFT JOIN ${prefix}_vector_meta emb ON e.id = emb.entity_id
     GROUP BY e.type
     ORDER BY count DESC
   `);
 
-  const storageSize = db.get<{ size: number }>(`
-    SELECT SUM(length(embedding)) as size FROM ${prefix}_vectors
-  `);
+  // F10h.2: estimate storage from vec0 (768 dims * 4 bytes * count)
+  const vecMetaCount = db.get<{ count: number }>(`SELECT COUNT(*) as count FROM ${prefix}_vector_meta`);
+  const storageSize = { size: (vecMetaCount?.count || 0) * 768 * 4 };
 
   await db.close();
 
@@ -397,9 +397,9 @@ async function cleanupEmbeddings(
   const prefix = sanitizeProjectId(projectId);
 
   // Find orphaned embeddings
-  const orphaned = db.all<{ id: string; entity_id: string }>(`
+  const orphaned = db.all<{ id: number; entity_id: string }>(`
     SELECT emb.id, emb.entity_id
-    FROM ${prefix}_vectors emb
+    FROM ${prefix}_vector_meta emb
     LEFT JOIN ${prefix}_entities e ON emb.entity_id = e.id
     WHERE e.id IS NULL
   `);
@@ -417,9 +417,12 @@ async function cleanupEmbeddings(
     return;
   }
 
-  // Delete orphaned embeddings
+  // Delete orphaned embeddings (F10h.2: delete from vec0 first, then metadata)
+  for (const o of orphaned) {
+    db.run(`DELETE FROM ${prefix}_vec WHERE rowid = ?`, [BigInt(o.id)]);
+  }
   db.run(`
-    DELETE FROM ${prefix}_vectors
+    DELETE FROM ${prefix}_vector_meta
     WHERE entity_id NOT IN (SELECT id FROM ${prefix}_entities)
   `);
 

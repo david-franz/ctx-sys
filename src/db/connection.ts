@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import * as sqliteVec from 'sqlite-vec';
 import * as fs from 'fs';
 import * as path from 'path';
 import { GLOBAL_SCHEMA, createProjectTables, dropProjectTables } from './schema';
@@ -34,6 +35,9 @@ export class DatabaseConnection {
     }
 
     this.db = new Database(this.dbPath);
+
+    // Load sqlite-vec extension for native vector search
+    sqliteVec.load(this.db);
 
     // Enable foreign keys and WAL mode for better performance
     this.db.pragma('foreign_keys = ON');

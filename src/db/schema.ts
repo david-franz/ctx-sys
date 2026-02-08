@@ -5,7 +5,7 @@
  * - Global tables for cross-project data
  * - Per-project tables (prefixed) for isolation
  * - FTS5 full-text search with BM25 ranking (F10.10)
- * - JSON columns for vector storage
+ * - sqlite-vec vec0 virtual tables for native vector search (F10h.2)
  */
 
 export const GLOBAL_SCHEMA = `
@@ -99,22 +99,26 @@ CREATE INDEX IF NOT EXISTS idx_${prefix}_entities_name ON ${prefix}_entities(nam
 CREATE INDEX IF NOT EXISTS idx_${prefix}_entities_qualified ON ${prefix}_entities(qualified_name);
 CREATE INDEX IF NOT EXISTS idx_${prefix}_entities_hash ON ${prefix}_entities(hash);
 
--- Vector embeddings (stored as JSON since sql.js doesn't support sqlite-vec)
--- F10.2: Added content_hash for incremental embedding support
-CREATE TABLE IF NOT EXISTS ${prefix}_vectors (
-  id TEXT PRIMARY KEY,
+-- Vector metadata (F10h.2: replaces JSON-based _vectors table)
+-- Links entity_id/model_id/content_hash to vec0 rowids
+CREATE TABLE IF NOT EXISTS ${prefix}_vector_meta (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   entity_id TEXT NOT NULL,
   model_id TEXT NOT NULL,
-  embedding JSON NOT NULL,
   content_hash TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (entity_id) REFERENCES ${prefix}_entities(id) ON DELETE CASCADE
+  FOREIGN KEY (entity_id) REFERENCES ${prefix}_entities(id) ON DELETE CASCADE,
+  UNIQUE(entity_id, model_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_${prefix}_vectors_entity ON ${prefix}_vectors(entity_id);
-CREATE INDEX IF NOT EXISTS idx_${prefix}_vectors_model ON ${prefix}_vectors(model_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_${prefix}_vectors_entity_model ON ${prefix}_vectors(entity_id, model_id);
-CREATE INDEX IF NOT EXISTS idx_${prefix}_vectors_hash ON ${prefix}_vectors(entity_id, model_id, content_hash);
+CREATE INDEX IF NOT EXISTS idx_${prefix}_vector_meta_entity ON ${prefix}_vector_meta(entity_id);
+CREATE INDEX IF NOT EXISTS idx_${prefix}_vector_meta_model ON ${prefix}_vector_meta(model_id);
+
+-- Native vector storage via sqlite-vec (F10h.2)
+-- 768 dimensions for nomic-embed-text, cosine distance metric
+CREATE VIRTUAL TABLE IF NOT EXISTS ${prefix}_vec USING vec0(
+  embedding float[768] distance_metric=cosine
+);
 
 -- Graph relationships
 CREATE TABLE IF NOT EXISTS ${prefix}_relationships (
@@ -406,6 +410,8 @@ DROP TABLE IF EXISTS ${prefix}_checkpoints;
 DROP TABLE IF EXISTS ${prefix}_messages;
 DROP TABLE IF EXISTS ${prefix}_sessions;
 DROP TABLE IF EXISTS ${prefix}_relationships;
+DROP TABLE IF EXISTS ${prefix}_vec;
+DROP TABLE IF EXISTS ${prefix}_vector_meta;
 DROP TABLE IF EXISTS ${prefix}_vectors;
 DROP TABLE IF EXISTS ${prefix}_ast_cache;
 DROP TABLE IF EXISTS ${prefix}_entities;
@@ -430,7 +436,8 @@ export function getProjectTableNames(projectId: string): string[] {
   const prefix = sanitizeProjectId(projectId);
   return [
     `${prefix}_entities`,
-    `${prefix}_vectors`,
+    `${prefix}_vector_meta`,
+    `${prefix}_vec`,
     `${prefix}_relationships`,
     `${prefix}_sessions`,
     `${prefix}_messages`,

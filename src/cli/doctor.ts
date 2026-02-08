@@ -165,18 +165,27 @@ async function checkProject(dbPath: string, projectPath: string): Promise<CheckR
       const entityRow = db.get<{ count: number }>(`SELECT COUNT(*) as count FROM ${prefix}_entities`);
       const entities = entityRow?.count ?? 0;
 
-      // Count vectors
-      const vectorTable = `${prefix}_vectors`;
-      const vecTableExists = db.all<{ name: string }>(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-        [vectorTable]
-      );
-
+      // Count vectors (F10h.2: check _vector_meta first, fall back to legacy _vectors)
       let embeddingPct = 0;
-      if (vecTableExists.length > 0 && entities > 0) {
-        const vecRow = db.get<{ count: number }>(`SELECT COUNT(DISTINCT entity_id) as count FROM ${vectorTable}`);
-        const vectors = vecRow?.count ?? 0;
-        embeddingPct = Math.round((vectors / entities) * 100);
+      if (entities > 0) {
+        const vectorMetaTable = `${prefix}_vector_meta`;
+        const legacyVectorTable = `${prefix}_vectors`;
+        const vecMetaExists = db.get<{ name: string }>(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+          [vectorMetaTable]
+        );
+        const legacyExists = db.get<{ name: string }>(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+          [legacyVectorTable]
+        );
+
+        if (vecMetaExists) {
+          const vecRow = db.get<{ count: number }>(`SELECT COUNT(DISTINCT entity_id) as count FROM ${vectorMetaTable}`);
+          embeddingPct = Math.round(((vecRow?.count ?? 0) / entities) * 100);
+        } else if (legacyExists) {
+          const vecRow = db.get<{ count: number }>(`SELECT COUNT(DISTINCT entity_id) as count FROM ${legacyVectorTable}`);
+          embeddingPct = Math.round(((vecRow?.count ?? 0) / entities) * 100);
+        }
       }
 
       // Count relationships
