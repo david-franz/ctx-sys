@@ -12,7 +12,7 @@ import { sanitizeProjectId } from '../db/schema';
 import { colors } from './formatters';
 import { CLIOutput, defaultOutput } from './init';
 
-interface CheckResult {
+export interface CheckResult {
   name: string;
   status: 'ok' | 'warn' | 'fail';
   detail: string;
@@ -29,7 +29,7 @@ function normalizeBaseUrl(url: string): string {
 /**
  * Check Ollama service connectivity.
  */
-async function checkOllamaService(baseUrl: string): Promise<CheckResult & { models?: string[] }> {
+export async function checkOllamaService(baseUrl: string): Promise<CheckResult & { models?: string[] }> {
   const url = normalizeBaseUrl(baseUrl);
   try {
     const controller = new AbortController();
@@ -56,7 +56,7 @@ async function checkOllamaService(baseUrl: string): Promise<CheckResult & { mode
 /**
  * Check if a specific model is available in Ollama.
  */
-function checkModel(
+export function checkModel(
   label: string,
   model: string,
   models: string[] | undefined,
@@ -81,7 +81,7 @@ function checkModel(
 /**
  * Check database connectivity and stats.
  */
-async function checkDatabase(dbPath: string): Promise<CheckResult> {
+export async function checkDatabase(dbPath: string): Promise<CheckResult> {
   try {
     if (!fs.existsSync(dbPath)) {
       return { name: 'Database', status: 'fail', detail: `Not found at ${dbPath}`, fix: 'ctx-sys index .' };
@@ -106,7 +106,7 @@ async function checkDatabase(dbPath: string): Promise<CheckResult> {
 /**
  * Check configuration files.
  */
-async function checkConfig(projectPath: string): Promise<CheckResult> {
+export async function checkConfig(projectPath: string): Promise<CheckResult> {
   try {
     const configManager = new ConfigManager({ inMemoryOnly: true });
     const parts: string[] = [];
@@ -130,7 +130,7 @@ async function checkConfig(projectPath: string): Promise<CheckResult> {
 /**
  * Check project state (indexed, embedding coverage).
  */
-async function checkProject(dbPath: string, projectPath: string): Promise<CheckResult> {
+export async function checkProject(dbPath: string, projectPath: string): Promise<CheckResult> {
   try {
     if (!fs.existsSync(dbPath)) {
       return { name: 'Project', status: 'warn', detail: 'No database — run: ctx-sys index .', fix: 'ctx-sys index .' };
@@ -212,7 +212,7 @@ async function checkProject(dbPath: string, projectPath: string): Promise<CheckR
 /**
  * Format a check result for display.
  */
-function formatCheck(check: CheckResult, maxNameLen: number): string {
+export function formatCheck(check: CheckResult, maxNameLen: number): string {
   const dots = '.'.repeat(Math.max(1, maxNameLen - check.name.length + 2));
   const statusLabel =
     check.status === 'ok' ? colors.green('OK') :

@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * F10.7: Complete CLI for ctx-sys context management system.
+ * ctx-sys CLI — Intelligent context management for AI coding assistants.
+ *
+ * Core commands: init, index, search, context, status, serve, watch
+ * Subcommand groups: entity, graph, embed, summarize, session, config, debug, kb, instruction
  */
 
 import { Command } from 'commander';
@@ -17,59 +20,37 @@ import { createIndexCommand } from './index-cmd';
 import { createSearchCommand } from './search';
 import { createContextCommand } from './context';
 import { createWatchCommand } from './watch';
-import { createConfigCommand } from './config';
 import { createStatusCommand } from './status';
 
-// Session commands (F10.7)
+// Subcommand group imports
+import { createConfigCommand } from './config';
 import { createSessionsCommand, createMessagesCommand } from './sessions';
-
-// Entity commands (F10.7)
 import {
   createEntitiesCommand,
   createEntityCommand,
   createEntityDeleteCommand,
   createEntityStatsCommand
 } from './entities';
-
-// Graph commands (F10.7)
 import {
   createGraphCommand,
   createGraphStatsCommand,
   createRelationshipsCommand,
   createLinkCommand
 } from './graph';
-
-// Embedding commands (F10.7)
 import {
   createEmbedCommand,
   createEmbedStatusCommand,
   createEmbedCleanupCommand
 } from './embeddings';
-
-// Summarization commands (F10.7)
 import {
   createSummarizeCommand,
   createSummarizeStatusCommand,
   createProvidersCommand
 } from './summarize';
-
-// Document indexing commands (F10.9)
-import { createDocIndexCommand } from './doc-index-cmd';
 import { createExtractRelCommand } from './extract-rel-cmd';
-
-// Decision search (F10.7)
 import { createSearchDecisionsCommand } from './search-decisions-cmd';
-
-// Knowledge base commands (F10e.4)
 import { createKBCommand } from './kb';
-
-// Team instruction commands (F10e.7)
 import { createInstructionCommand } from './instructions';
-
-// Doctor command (F10h.1)
-import { createDoctorCommand } from './doctor';
-
-// Debug commands (F10.7)
 import {
   createInspectCommand,
   createQueryCommand,
@@ -85,74 +66,79 @@ program
   .description('Intelligent context management system for AI coding assistants')
   .version(pkg.version);
 
-// Core commands
+// ─── Core Commands (top-level) ──────────────────────────────────────
+
 program.addCommand(createInitCommand());
 program.addCommand(createIndexCommand());
 program.addCommand(createSearchCommand());
 program.addCommand(createContextCommand());
-program.addCommand(createWatchCommand());
-program.addCommand(createConfigCommand());
 program.addCommand(createStatusCommand());
 program.addCommand(createServeCommand());
+program.addCommand(createWatchCommand());
 
-// Session commands
-program.addCommand(createSessionsCommand());
-program.addCommand(createMessagesCommand());
+// ─── Subcommand Groups ──────────────────────────────────────────────
 
-// Entity commands
-program.addCommand(createEntitiesCommand());
-program.addCommand(createEntityCommand());
-program.addCommand(createEntityDeleteCommand());
-program.addCommand(createEntityStatsCommand());
+// entity: list, get, delete, stats, extract-rel
+const entityGroup = new Command('entity')
+  .description('Manage indexed entities');
+entityGroup.addCommand(createEntitiesCommand());
+entityGroup.addCommand(createEntityCommand());
+entityGroup.addCommand(createEntityDeleteCommand());
+entityGroup.addCommand(createEntityStatsCommand());
+entityGroup.addCommand(createExtractRelCommand());
+program.addCommand(entityGroup);
 
-// Graph commands
-program.addCommand(createGraphCommand());
-program.addCommand(createGraphStatsCommand());
-program.addCommand(createRelationshipsCommand());
-program.addCommand(createLinkCommand());
+// graph: query, stats, relationships, link
+const graphGroup = new Command('graph')
+  .description('Explore entity relationship graph');
+graphGroup.addCommand(createGraphCommand());
+graphGroup.addCommand(createGraphStatsCommand());
+graphGroup.addCommand(createRelationshipsCommand());
+graphGroup.addCommand(createLinkCommand());
+program.addCommand(graphGroup);
 
-// Embedding commands
-program.addCommand(createEmbedCommand());
-program.addCommand(createEmbedStatusCommand());
-program.addCommand(createEmbedCleanupCommand());
+// embed: run, status, cleanup
+const embedGroup = new Command('embed')
+  .description('Manage embeddings for semantic search');
+embedGroup.addCommand(createEmbedCommand());
+embedGroup.addCommand(createEmbedStatusCommand());
+embedGroup.addCommand(createEmbedCleanupCommand());
+program.addCommand(embedGroup);
 
-// Summarization commands
-program.addCommand(createSummarizeCommand());
-program.addCommand(createSummarizeStatusCommand());
-program.addCommand(createProvidersCommand());
+// summarize: run, status, providers
+const summarizeGroup = new Command('summarize')
+  .description('LLM-powered entity summarization');
+summarizeGroup.addCommand(createSummarizeCommand());
+summarizeGroup.addCommand(createSummarizeStatusCommand());
+summarizeGroup.addCommand(createProvidersCommand());
+program.addCommand(summarizeGroup);
 
-// Document indexing commands
-program.addCommand(createDocIndexCommand());
-program.addCommand(createExtractRelCommand());
+// session: list, messages, search-decisions
+const sessionGroup = new Command('session')
+  .description('Manage conversation sessions');
+sessionGroup.addCommand(createSessionsCommand());
+sessionGroup.addCommand(createMessagesCommand());
+sessionGroup.addCommand(createSearchDecisionsCommand());
+program.addCommand(sessionGroup);
 
-// Decision search
-program.addCommand(createSearchDecisionsCommand());
+// config
+program.addCommand(createConfigCommand());
 
-// Knowledge base commands
+// debug: inspect, query, export, import, health
+const debugGroup = new Command('debug')
+  .description('Database debugging and maintenance tools');
+debugGroup.addCommand(createInspectCommand());
+debugGroup.addCommand(createQueryCommand());
+debugGroup.addCommand(createExportCommand());
+debugGroup.addCommand(createImportCommand());
+debugGroup.addCommand(createHealthCommand());
+program.addCommand(debugGroup);
+
+// kb (knowledge base)
 program.addCommand(createKBCommand());
 
-// Team instruction commands
+// instruction (team instructions)
 program.addCommand(createInstructionCommand());
-
-// Doctor command (F10h.1)
-program.addCommand(createDoctorCommand());
-
-// Debug commands (also available as top-level: inspect, query, export, import, health)
-const debugCommand = new Command('debug')
-  .description('Database debugging and maintenance tools');
-debugCommand.addCommand(createInspectCommand());
-debugCommand.addCommand(createQueryCommand());
-debugCommand.addCommand(createExportCommand());
-debugCommand.addCommand(createImportCommand());
-debugCommand.addCommand(createHealthCommand());
-program.addCommand(debugCommand);
-
-// Also register debug commands as top-level for convenience
-program.addCommand(createInspectCommand());
-program.addCommand(createQueryCommand());
-program.addCommand(createExportCommand());
-program.addCommand(createImportCommand());
-program.addCommand(createHealthCommand());
 
 // Parse arguments
 program.parse();
