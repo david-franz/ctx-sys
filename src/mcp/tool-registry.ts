@@ -974,7 +974,7 @@ export class ToolRegistry {
     this.register(
       {
         name: 'context_query',
-        description: 'Query for relevant context using hybrid RAG (vector + graph + keyword)',
+        description: 'Query for relevant context using hybrid RAG (vector + graph + keyword). Defaults: expand=true (auto-includes related entities), gate=true (skips trivial queries).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -1060,10 +1060,10 @@ export class ToolRegistry {
           includeTypes: include_types,
           includeSources: include_sources ?? true,
           minScore: min_score,
-          expand,
+          expand: expand ?? true,
           expandTokens: expand_tokens,
           decompose,
-          gate,
+          gate: gate ?? true,
           hyde,
           hydeModel: hyde_model
         });
