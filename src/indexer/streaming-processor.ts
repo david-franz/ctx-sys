@@ -5,10 +5,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import picomatch from 'picomatch';
 import { ASTParser, ParseResult } from '../ast';
 import { SymbolSummarizer, FileSummary } from '../summarization';
-import { loadGitignorePatterns } from './gitignore';
+import { IgnoreResolver } from './ignore-resolver';
 
 /**
  * State for resumable indexing.
@@ -47,17 +46,6 @@ export interface StreamingOptions {
   onBatchComplete?: (batch: FileProcessResult[]) => Promise<void>;
 }
 
-const DEFAULT_EXCLUDE = [
-  'node_modules',
-  '.git',
-  '.ctx-sys',
-  'dist',
-  'build',
-  'coverage',
-  '__pycache__',
-  '.next',
-  '.cache'
-];
 
 /**
  * Streaming file processor that handles large codebases without OOM.
@@ -193,11 +181,12 @@ export class StreamingFileProcessor {
    * Discover all files to index.
    */
   private async discoverFiles(): Promise<string[]> {
-    const gitignorePatterns = loadGitignorePatterns(this.projectRoot);
-    const exclude = [...DEFAULT_EXCLUDE, ...gitignorePatterns, ...(this.options.exclude || [])];
+    const resolver = new IgnoreResolver(this.projectRoot, {
+      extraExclude: this.options.exclude,
+    });
     const files: string[] = [];
 
-    await this.walkDirectory(this.projectRoot, files, exclude);
+    await this.walkDirectory(this.projectRoot, files, resolver);
 
     return files;
   }
@@ -208,7 +197,7 @@ export class StreamingFileProcessor {
   private async walkDirectory(
     dir: string,
     files: string[],
-    exclude: string[]
+    resolver: IgnoreResolver
   ): Promise<void> {
     let entries;
     try {
@@ -221,26 +210,16 @@ export class StreamingFileProcessor {
       const fullPath = path.join(dir, entry.name);
       const relativePath = path.relative(this.projectRoot, fullPath);
 
-      // Check exclusions
-      if (this.shouldExclude(relativePath, entry.name, exclude)) {
+      if (resolver.isIgnored(relativePath) || resolver.isIgnored(entry.name)) {
         continue;
       }
 
       if (entry.isDirectory()) {
-        await this.walkDirectory(fullPath, files, exclude);
+        await this.walkDirectory(fullPath, files, resolver);
       } else if (entry.isFile()) {
         files.push(relativePath);
       }
     }
-  }
-
-  /**
-   * Check if a path should be excluded.
-   * Uses picomatch for robust glob matching.
-   */
-  private shouldExclude(relativePath: string, name: string, patterns: string[]): boolean {
-    const isMatch = picomatch(patterns, { dot: true });
-    return isMatch(relativePath) || isMatch(name);
   }
 
   /**

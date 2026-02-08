@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import picomatch from 'picomatch';
 import { ASTParser, ParseResult } from '../ast';
 import { SymbolSummarizer, FileSummary } from '../summarization';
 import { EntityStore, Entity } from '../entities';
@@ -14,27 +13,7 @@ import {
   IndexEntry,
   FileStatus
 } from './types';
-import { loadGitignorePatterns } from './gitignore';
-
-/**
- * Default patterns to exclude from indexing.
- */
-const DEFAULT_EXCLUDE = [
-  'node_modules/**',
-  '.git/**',
-  '.ctx-sys/**',
-  'dist/**',
-  'build/**',
-  'coverage/**',
-  '__pycache__/**',
-  '.next/**',
-  '.cache/**',
-  '*.min.js',
-  '*.bundle.js',
-  '.env*',
-  '*.lock',
-  'package-lock.json'
-];
+import { IgnoreResolver } from './ignore-resolver';
 
 /**
  * Indexes a codebase for symbol extraction and search.
@@ -345,12 +324,12 @@ export class CodebaseIndexer {
    * Discover files to index.
    */
   private async discoverFiles(options: IndexOptions): Promise<string[]> {
-    const include = options.include || ['**/*'];
-    const gitignorePatterns = loadGitignorePatterns(this.projectRoot);
-    const exclude = [...DEFAULT_EXCLUDE, ...gitignorePatterns, ...(options.exclude || [])];
+    const resolver = new IgnoreResolver(this.projectRoot, {
+      extraExclude: options.exclude,
+    });
 
     const files: string[] = [];
-    await this.walkDirectory(this.projectRoot, files, exclude);
+    await this.walkDirectory(this.projectRoot, files, resolver);
 
     // Filter to supported files only
     return files.filter(f => this.parser.isSupported(f));
@@ -362,7 +341,7 @@ export class CodebaseIndexer {
   private async walkDirectory(
     dir: string,
     files: string[],
-    exclude: string[]
+    resolver: IgnoreResolver
   ): Promise<void> {
     const entries = await fs.promises.readdir(dir, { withFileTypes: true });
 
@@ -370,26 +349,16 @@ export class CodebaseIndexer {
       const fullPath = path.join(dir, entry.name);
       const relativePath = path.relative(this.projectRoot, fullPath);
 
-      // Check exclusions
-      if (this.matchesPattern(relativePath, exclude)) {
+      if (resolver.isIgnored(relativePath)) {
         continue;
       }
 
       if (entry.isDirectory()) {
-        await this.walkDirectory(fullPath, files, exclude);
+        await this.walkDirectory(fullPath, files, resolver);
       } else if (entry.isFile()) {
         files.push(relativePath);
       }
     }
-  }
-
-  /**
-   * Check if a path matches any of the patterns.
-   * Uses picomatch for robust glob matching.
-   */
-  private matchesPattern(filePath: string, patterns: string[]): boolean {
-    const isMatch = picomatch(patterns, { dot: true });
-    return isMatch(filePath);
   }
 
   /**

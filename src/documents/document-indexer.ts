@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import YAML from 'yaml';
 import picomatch from 'picomatch';
+import { IgnoreResolver } from '../indexer/ignore-resolver';
 import { EntityStore, Entity } from '../entities';
 import { EntityType } from '../entities/types';
 import { RelationshipStore } from '../graph/relationship-store';
@@ -628,15 +629,13 @@ export class DocumentIndexer {
   ): Promise<DirectoryIndexResult> {
     const defaultExtensions = Object.keys(EXTENSION_MAP);
     const extensions = options.extensions || defaultExtensions;
-    const exclude = options.exclude || [
-      'node_modules/**', '.git/**', 'dist/**', 'build/**',
-      'coverage/**', '__pycache__/**',
-    ];
     const recursive = options.recursive !== false;
 
     const absoluteDir = path.resolve(dirPath);
-    const isExcluded = picomatch(exclude, { dot: true });
-    const files = this.collectFiles(absoluteDir, absoluteDir, extensions, isExcluded, recursive);
+    const resolver = new IgnoreResolver(absoluteDir, {
+      extraExclude: options.exclude,
+    });
+    const files = this.collectFiles(absoluteDir, absoluteDir, extensions, (p) => resolver.isIgnored(p), recursive);
 
     const result: DirectoryIndexResult = {
       filesProcessed: 0,

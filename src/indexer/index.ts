@@ -1,5 +1,6 @@
 export { CodebaseIndexer } from './indexer';
 export { loadGitignorePatterns, parseGitignore } from './gitignore';
+export { IgnoreResolver, IgnoreResolverOptions } from './ignore-resolver';
 export {
   StreamingFileProcessor,
   IndexingState,
