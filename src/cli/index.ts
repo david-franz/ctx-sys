@@ -63,6 +63,9 @@ import { createSearchDecisionsCommand } from './search-decisions-cmd';
 // Knowledge base commands (F10e.4)
 import { createKBCommand } from './kb';
 
+// Team instruction commands (F10e.7)
+import { createInstructionCommand } from './instructions';
+
 // Debug commands (F10.7)
 import {
   createInspectCommand,
@@ -124,6 +127,9 @@ program.addCommand(createSearchDecisionsCommand());
 
 // Knowledge base commands
 program.addCommand(createKBCommand());
+
+// Team instruction commands
+program.addCommand(createInstructionCommand());
 
 // Debug commands (also available as top-level: inspect, query, export, import, health)
 const debugCommand = new Command('debug')

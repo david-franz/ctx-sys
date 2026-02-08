@@ -34,7 +34,9 @@ export type EntityType =
   | 'ticket'
   | 'bug'
   | 'task'
-  | 'milestone';
+  | 'milestone'
+  // Team entities
+  | 'instruction';
 
 export interface Entity {
   id: string;

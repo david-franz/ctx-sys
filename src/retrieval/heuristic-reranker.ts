@@ -76,6 +76,19 @@ export class HeuristicReranker implements Reranker {
         boost += 0.2;
       }
 
+      // F10e.7: Instruction priority boost
+      if (entity.type === 'instruction') {
+        const meta = entity.metadata as Record<string, unknown> | undefined;
+        const priority = meta?.priority as string || 'normal';
+        const priorityBoost = priority === 'high' ? 1.5 : priority === 'low' ? 0.5 : 1.0;
+        boost += (priorityBoost - 1.0); // high=+0.5, normal=0, low=-0.5
+
+        // Only count active instructions
+        if (meta?.active === false) {
+          boost -= 10; // Effectively hide inactive instructions
+        }
+      }
+
       return {
         entityId: entity.id,
         originalScore: candidate.score,
