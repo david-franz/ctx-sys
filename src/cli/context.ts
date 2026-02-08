@@ -29,6 +29,7 @@ export function createContextCommand(output: CLIOutput = defaultOutput): Command
     .option('--expand-tokens <n>', 'Token budget for expansion (default: 2000)')
     .option('--decompose', 'Break complex queries into sub-queries')
     .option('--gate', 'Skip retrieval for trivial queries')
+    .option('--hyde', 'Use HyDE (Hypothetical Document Embeddings) for better semantic search')
     .option('--format <format>', 'Output format (markdown, json, text)', 'markdown')
     .option('-d, --db <path>', 'Custom database path')
     .action(async (query: string, options) => {
@@ -60,6 +61,7 @@ async function runContext(
     expandTokens?: string;
     decompose?: boolean;
     gate?: boolean;
+    hyde?: boolean;
     format?: string;
     db?: string;
   },
@@ -95,7 +97,8 @@ async function runContext(
       expand: options.expand,
       expandTokens,
       decompose: options.decompose,
-      gate: options.gate
+      gate: options.gate,
+      hyde: options.hyde
     });
 
     // JSON output

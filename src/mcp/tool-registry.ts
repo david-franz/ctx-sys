@@ -1020,6 +1020,10 @@ export class ToolRegistry {
               type: 'boolean',
               description: 'Skip retrieval for trivial queries'
             },
+            hyde: {
+              type: 'boolean',
+              description: 'Use HyDE (Hypothetical Document Embeddings) for better semantic search'
+            },
             project: {
               type: 'string',
               description: 'Target project (default: active)'
@@ -1029,7 +1033,7 @@ export class ToolRegistry {
         }
       },
       async (args) => {
-        const { query, max_tokens, strategies, include_types, include_sources, min_score, expand, expand_tokens, decompose, gate, project } = args as {
+        const { query, max_tokens, strategies, include_types, include_sources, min_score, expand, expand_tokens, decompose, gate, hyde, project } = args as {
           query: string;
           max_tokens?: number;
           strategies?: string[];
@@ -1040,6 +1044,7 @@ export class ToolRegistry {
           expand_tokens?: number;
           decompose?: boolean;
           gate?: boolean;
+          hyde?: boolean;
           project?: string;
         };
 
@@ -1053,7 +1058,8 @@ export class ToolRegistry {
           expand,
           expandTokens: expand_tokens,
           decompose,
-          gate
+          gate,
+          hyde
         });
 
         return {

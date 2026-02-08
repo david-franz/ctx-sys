@@ -96,6 +96,7 @@ export interface QueryOptions {
   expandTokens?: number;      // Token budget for expansion (default: 2000)
   decompose?: boolean;        // Enable QueryDecomposer (break complex queries)
   gate?: boolean;             // Enable RetrievalGate (skip trivial queries)
+  hyde?: boolean;             // Enable HyDE (Hypothetical Document Embeddings)
 }
 
 export interface ContextResult {

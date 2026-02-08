@@ -45,6 +45,8 @@ export interface MultiSearchOptions {
   minScore?: number;
   /** Graph traversal depth */
   graphDepth?: number;
+  /** Pre-computed query embedding (e.g. from HyDE) — used instead of embedding the raw query */
+  queryEmbedding?: number[];
 }
 
 /**
@@ -60,7 +62,8 @@ const DEFAULT_OPTIONS: Required<MultiSearchOptions> = {
     graph: 0.8
   },
   minScore: 0.0,
-  graphDepth: 2
+  graphDepth: 2,
+  queryEmbedding: []
 };
 
 /**
@@ -90,7 +93,8 @@ export class MultiStrategySearch {
       entityTypes: options?.entityTypes ?? DEFAULT_OPTIONS.entityTypes,
       weights: options?.weights ?? DEFAULT_OPTIONS.weights,
       minScore: options?.minScore ?? DEFAULT_OPTIONS.minScore,
-      graphDepth: options?.graphDepth ?? DEFAULT_OPTIONS.graphDepth
+      graphDepth: options?.graphDepth ?? DEFAULT_OPTIONS.graphDepth,
+      queryEmbedding: options?.queryEmbedding ?? DEFAULT_OPTIONS.queryEmbedding
     };
     const parsed = this.queryParser.parse(query);
 
@@ -231,16 +235,16 @@ export class MultiStrategySearch {
     try {
     const results: RawResult[] = [];
 
-    // Search with normalized query
-    const mainResults = await this.embeddingManager.findSimilar(
-      parsed.normalizedQuery,
-      {
-        limit: options.limit * 2,
-        entityTypes: options.entityTypes.length > 0
-          ? options.entityTypes.map(t => t as string)
-          : undefined
-      }
-    );
+    // Search with pre-computed embedding (e.g. from HyDE) or normalized query
+    const searchOpts = {
+      limit: options.limit * 2,
+      entityTypes: options.entityTypes.length > 0
+        ? options.entityTypes.map(t => t as string)
+        : undefined
+    };
+    const mainResults = options.queryEmbedding && options.queryEmbedding.length > 0
+      ? await this.embeddingManager.findSimilarByVector(options.queryEmbedding, searchOpts)
+      : await this.embeddingManager.findSimilar(parsed.normalizedQuery, searchOpts);
 
     for (const match of mainResults) {
       results.push({

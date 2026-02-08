@@ -11,7 +11,7 @@ import { SessionManager, MessageStore, MessageInput, DecisionStore } from '../co
 import { Session, Message, Decision } from '../conversation/types';
 import { RelationshipStore, GraphTraversal } from '../graph';
 import { DocumentIndexer } from '../documents/document-indexer';
-import { MultiStrategySearch, ContextAssembler, SearchResult, HeuristicReranker, ContextExpander, RetrievalGate, QueryDecomposer } from '../retrieval';
+import { MultiStrategySearch, ContextAssembler, SearchResult, HeuristicReranker, ContextExpander, RetrievalGate, QueryDecomposer, HyDEQueryExpander, OllamaHypotheticalProvider } from '../retrieval';
 import { CheckpointManager, Checkpoint, AgentState, SaveOptions } from '../agent/checkpoints';
 import { MemoryTierManager } from '../agent/memory-tier';
 import {
@@ -617,6 +617,35 @@ export class CoreService {
 
     const searchService = await this.getSearchService(projectId);
 
+    // HyDE: generate hypothetical document embedding (opt-in)
+    let queryEmbedding: number[] | undefined;
+    if (options?.hyde) {
+      try {
+        const project = await this.context.projectManager.get(projectId);
+        const embeddingManager = this.context.getEmbeddingManager(projectId, project?.config);
+        const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+        const hydeProvider = new OllamaHypotheticalProvider({ baseUrl });
+        const hyde = new HyDEQueryExpander(hydeProvider, embeddingManager);
+        const result = await hyde.getSearchEmbedding(query, projectId, {
+          entityTypes: options?.includeTypes
+        });
+        if (result.usedHyDE) {
+          queryEmbedding = result.embedding;
+        }
+      } catch {
+        // HyDE failed (e.g. Ollama not running) — fall back to normal search
+      }
+    }
+
+    // Build common search options
+    const searchOpts = {
+      strategies: options?.strategies,
+      limit: 20,
+      entityTypes: options?.includeTypes as EntityType[],
+      minScore: options?.minScore,
+      queryEmbedding
+    };
+
     // Query decomposition: break complex queries into sub-queries (opt-in)
     let results: SearchResult[];
     if (options?.decompose) {
@@ -628,10 +657,8 @@ export class CoreService {
         const allResults = new Map<string, SearchResult>();
         for (const sub of decomposed.subQueries) {
           const subResults = await searchService.search(sub.text, {
-            strategies: options?.strategies,
-            limit: 10,
-            entityTypes: options?.includeTypes as EntityType[],
-            minScore: options?.minScore
+            ...searchOpts,
+            limit: 10
           });
           for (const r of subResults) {
             const existing = allResults.get(r.entity.id);
@@ -643,20 +670,10 @@ export class CoreService {
         }
         results = Array.from(allResults.values()).sort((a, b) => b.score - a.score).slice(0, 20);
       } else {
-        results = await searchService.search(query, {
-          strategies: options?.strategies,
-          limit: 20,
-          entityTypes: options?.includeTypes as EntityType[],
-          minScore: options?.minScore
-        });
+        results = await searchService.search(query, searchOpts);
       }
     } else {
-      results = await searchService.search(query, {
-        strategies: options?.strategies,
-        limit: 20,
-        entityTypes: options?.includeTypes as EntityType[],
-        minScore: options?.minScore
-      });
+      results = await searchService.search(query, searchOpts);
     }
 
     // Context expansion: add parent classes, imports, type defs (opt-in)
