@@ -385,6 +385,23 @@ Structural improvements to the retrieval pipeline: ignore patterns, score normal
 
 ---
 
+## Phase 10h: Infrastructure & Performance
+
+Environment health diagnostics and native vector search for production-scale performance.
+
+| Feature | Description | Doc | Status |
+|---------|-------------|-----|--------|
+| **F10h.1** | `ctx-sys doctor` — Environment Health Check | [F10h.1-ctx-doctor.md](phase-10h/F10h.1-ctx-doctor.md) | Planned |
+| **F10h.2** | Native Vector Search with sqlite-vec | [F10h.2-sqlite-vec.md](phase-10h/F10h.2-sqlite-vec.md) | Planned |
+
+**Key Goals:**
+- Single command to verify Ollama, models, database, config, and project health
+- Replace JSON-in-SQLite vector storage with native sqlite-vec for 50-100x faster semantic search
+- Auto-migrate existing databases from JSON vectors to vec0 virtual tables
+- Support 50k+ entity codebases with sub-100ms vector search
+
+---
+
 ## Phase 11: Integration & Team
 
 Deep IDE integration, automatic context injection, and team collaboration features.
