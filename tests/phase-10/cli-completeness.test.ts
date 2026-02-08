@@ -282,7 +282,7 @@ database:
       const messages = createMessagesCommand(mockOutput);
 
       expect(sessions).toBeInstanceOf(Command);
-      expect(sessions.name()).toBe('sessions');
+      expect(sessions.name()).toBe('list');
       expect(messages).toBeInstanceOf(Command);
       expect(messages.name()).toBe('messages');
     });
@@ -293,10 +293,10 @@ database:
       const entityDelete = createEntityDeleteCommand(mockOutput);
       const entityStats = createEntityStatsCommand(mockOutput);
 
-      expect(entities.name()).toBe('entities');
-      expect(entity.name()).toBe('entity');
-      expect(entityDelete.name()).toBe('entity-delete');
-      expect(entityStats.name()).toBe('entity-stats');
+      expect(entities.name()).toBe('list');
+      expect(entity.name()).toBe('get');
+      expect(entityDelete.name()).toBe('delete');
+      expect(entityStats.name()).toBe('stats');
     });
 
     it('should create all graph commands', () => {
@@ -305,8 +305,8 @@ database:
       const relationships = createRelationshipsCommand(mockOutput);
       const link = createLinkCommand(mockOutput);
 
-      expect(graph.name()).toBe('graph');
-      expect(graphStats.name()).toBe('graph-stats');
+      expect(graph.name()).toBe('query');
+      expect(graphStats.name()).toBe('stats');
       expect(relationships.name()).toBe('relationships');
       expect(link.name()).toBe('link');
     });
@@ -316,9 +316,9 @@ database:
       const embedStatus = createEmbedStatusCommand(mockOutput);
       const embedCleanup = createEmbedCleanupCommand(mockOutput);
 
-      expect(embed.name()).toBe('embed');
-      expect(embedStatus.name()).toBe('embed-status');
-      expect(embedCleanup.name()).toBe('embed-cleanup');
+      expect(embed.name()).toBe('run');
+      expect(embedStatus.name()).toBe('status');
+      expect(embedCleanup.name()).toBe('cleanup');
     });
 
     it('should create all summarization commands', () => {
@@ -326,8 +326,8 @@ database:
       const summarizeStatus = createSummarizeStatusCommand(mockOutput);
       const providers = createProvidersCommand(mockOutput);
 
-      expect(summarize.name()).toBe('summarize');
-      expect(summarizeStatus.name()).toBe('summarize-status');
+      expect(summarize.name()).toBe('run');
+      expect(summarizeStatus.name()).toBe('status');
       expect(providers.name()).toBe('providers');
     });
 
