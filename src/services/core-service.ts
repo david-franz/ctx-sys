@@ -7,7 +7,7 @@ import { AppContext } from '../context';
 import { Project, ProjectConfig } from '../project/types';
 import { Entity, EntityType } from '../entities/types';
 import { CodebaseIndexer } from '../indexer';
-import { SessionManager, MessageStore, MessageInput } from '../conversation';
+import { SessionManager, MessageStore, MessageInput, DecisionStore } from '../conversation';
 import { Session, Message, Decision } from '../conversation/types';
 import { RelationshipStore, GraphTraversal } from '../graph';
 import { DocumentIndexer } from '../documents/document-indexer';
@@ -58,6 +58,7 @@ export class CoreService {
   private searchServices: Map<string, MultiStrategySearch> = new Map();
   private checkpointManagers: Map<string, CheckpointManager> = new Map();
   private memoryManagers: Map<string, MemoryTierManager> = new Map();
+  private decisionStores: Map<string, DecisionStore> = new Map();
 
   constructor(private context: AppContext) {}
 
@@ -101,6 +102,13 @@ export class CoreService {
       this.messageStores.set(projectId, new MessageStore(this.context.db, projectId));
     }
     return this.messageStores.get(projectId)!;
+  }
+
+  private getDecisionStore(projectId: string): DecisionStore {
+    if (!this.decisionStores.has(projectId)) {
+      this.decisionStores.set(projectId, new DecisionStore(this.context.db, projectId));
+    }
+    return this.decisionStores.get(projectId)!;
   }
 
   private getRelationshipStore(projectId: string): RelationshipStore {
@@ -430,8 +438,24 @@ export class CoreService {
   }
 
   async searchDecisions(projectId: string, query: string, options?: DecisionSearchOptions): Promise<Decision[]> {
-    const messageStore = this.getMessageStore(projectId);
+    const decisionStore = this.getDecisionStore(projectId);
     const limit = options?.limit || 10;
+
+    // Strategy 1: Search persistent decisions table (fast, ranked via FTS5)
+    try {
+      const decisions = decisionStore.search(query, {
+        sessionId: options?.sessionId,
+        limit
+      });
+      if (decisions.length > 0) {
+        return decisions;
+      }
+    } catch {
+      // Decisions table may not exist for legacy projects
+    }
+
+    // Strategy 2: Fallback to message scanning (for un-processed sessions)
+    const messageStore = this.getMessageStore(projectId);
     const seen = new Set<string>();
     const decisions: Decision[] = [];
 
@@ -445,7 +469,7 @@ export class CoreService {
       createdAt: m.createdAt
     });
 
-    // Strategy 1: Messages with decision metadata
+    // Messages with decision metadata
     const allMessages = messageStore.getRecent(500);
     for (const m of allMessages) {
       if (m.metadata?.type === 'decision') {
@@ -459,7 +483,7 @@ export class CoreService {
       if (decisions.length >= limit) return decisions;
     }
 
-    // Strategy 2: Keyword-based detection in search results
+    // Keyword-based detection in search results
     if (query) {
       const searchResults = messageStore.search(query, { limit: limit * 3 });
       const decisionKeywords = ['decided', 'decision', 'agreed', 'will use', 'chose', 'choosing'];
@@ -473,6 +497,21 @@ export class CoreService {
     }
 
     return decisions;
+  }
+
+  /**
+   * Create a persistent decision.
+   */
+  async createDecision(projectId: string, input: { sessionId: string; messageId?: string; description: string; context?: string; alternatives?: string[]; relatedEntities?: string[] }): Promise<Decision> {
+    const decisionStore = this.getDecisionStore(projectId);
+    return decisionStore.create({
+      sessionId: input.sessionId,
+      messageId: input.messageId || '',
+      description: input.description,
+      context: input.context,
+      alternatives: input.alternatives,
+      relatedEntities: input.relatedEntities
+    });
   }
 
   // ─────────────────────────────────────────────────────────

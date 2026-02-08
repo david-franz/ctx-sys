@@ -31,6 +31,7 @@ export interface MessageInput {
 export class MessageStore {
   private messagesTable: string;
   private sessionsTable: string;
+  private messagesFtsTable: string;
 
   constructor(
     private db: DatabaseConnection,
@@ -39,6 +40,7 @@ export class MessageStore {
     const prefix = sanitizeProjectId(projectId);
     this.messagesTable = `${prefix}_messages`;
     this.sessionsTable = `${prefix}_sessions`;
+    this.messagesFtsTable = `${prefix}_messages_fts`;
   }
 
   /**
@@ -172,6 +174,49 @@ export class MessageStore {
 
     const rows = this.db.all<MessageRow>(sql, params);
     return rows.map(row => this.rowToMessage(row));
+  }
+
+  /**
+   * Search messages using FTS5 full-text search with ranking and stemming.
+   */
+  searchFTS(query: string, options?: { sessionId?: string; limit?: number }): Message[] {
+    const limit = options?.limit || 20;
+
+    // Escape FTS5 special characters and build query
+    const ftsQuery = query.replace(/['"]/g, '').trim();
+    if (!ftsQuery) return [];
+
+    try {
+      let sql: string;
+      const params: unknown[] = [];
+
+      if (options?.sessionId) {
+        sql = `
+          SELECT m.* FROM ${this.messagesFtsTable} fts
+          JOIN ${this.messagesTable} m ON m.rowid = fts.rowid
+          WHERE ${this.messagesFtsTable} MATCH ?
+            AND m.session_id = ?
+          ORDER BY rank
+          LIMIT ?
+        `;
+        params.push(ftsQuery, options.sessionId, limit);
+      } else {
+        sql = `
+          SELECT m.* FROM ${this.messagesFtsTable} fts
+          JOIN ${this.messagesTable} m ON m.rowid = fts.rowid
+          WHERE ${this.messagesFtsTable} MATCH ?
+          ORDER BY rank
+          LIMIT ?
+        `;
+        params.push(ftsQuery, limit);
+      }
+
+      const rows = this.db.all<MessageRow>(sql, params);
+      return rows.map(row => this.rowToMessage(row));
+    } catch {
+      // FTS5 table may not exist for legacy projects; fall back to LIKE search
+      return this.search(query, options);
+    }
   }
 
   /**

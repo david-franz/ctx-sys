@@ -1,5 +1,6 @@
 export { MessageStore, MessageInput } from './message-store';
 export { SessionManager } from './session-manager';
+export { DecisionStore, DecisionSearchOptions } from './decision-store';
 export {
   ConversationSummarizer,
   SummaryProvider,

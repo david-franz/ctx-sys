@@ -292,7 +292,68 @@ CREATE TRIGGER IF NOT EXISTS ${prefix}_entities_au AFTER UPDATE ON ${prefix}_ent
   VALUES ('delete', old.rowid, old.name, old.content, old.summary);
   INSERT INTO ${prefix}_entities_fts(rowid, name, content, summary)
   VALUES (new.rowid, new.name, new.content, new.summary);
-END
+END;
+
+-- F10e.5: FTS5 for message search with porter stemming
+CREATE VIRTUAL TABLE IF NOT EXISTS ${prefix}_messages_fts USING fts5(
+  content,
+  content=${prefix}_messages,
+  content_rowid=rowid,
+  tokenize='porter unicode61'
+);
+
+CREATE TRIGGER IF NOT EXISTS ${prefix}_messages_fts_insert
+  AFTER INSERT ON ${prefix}_messages BEGIN
+    INSERT INTO ${prefix}_messages_fts(rowid, content) VALUES (new.rowid, new.content);
+  END;
+CREATE TRIGGER IF NOT EXISTS ${prefix}_messages_fts_delete
+  AFTER DELETE ON ${prefix}_messages BEGIN
+    INSERT INTO ${prefix}_messages_fts(${prefix}_messages_fts, rowid, content)
+      VALUES('delete', old.rowid, old.content);
+  END;
+
+-- F10e.5: Persistent decisions table
+CREATE TABLE IF NOT EXISTS ${prefix}_decisions (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  message_id TEXT,
+  description TEXT NOT NULL,
+  context TEXT,
+  alternatives TEXT,
+  related_entity_ids TEXT,
+  status TEXT DEFAULT 'active',
+  superseded_by TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (session_id) REFERENCES ${prefix}_sessions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_${prefix}_decisions_session ON ${prefix}_decisions(session_id);
+CREATE INDEX IF NOT EXISTS idx_${prefix}_decisions_status ON ${prefix}_decisions(status);
+
+-- FTS for decision search
+CREATE VIRTUAL TABLE IF NOT EXISTS ${prefix}_decisions_fts USING fts5(
+  description, context,
+  content=${prefix}_decisions,
+  content_rowid=rowid,
+  tokenize='porter unicode61'
+);
+
+CREATE TRIGGER IF NOT EXISTS ${prefix}_decisions_fts_insert
+  AFTER INSERT ON ${prefix}_decisions BEGIN
+    INSERT INTO ${prefix}_decisions_fts(rowid, description, context) VALUES (new.rowid, new.description, new.context);
+  END;
+CREATE TRIGGER IF NOT EXISTS ${prefix}_decisions_fts_delete
+  AFTER DELETE ON ${prefix}_decisions BEGIN
+    INSERT INTO ${prefix}_decisions_fts(${prefix}_decisions_fts, rowid, description, context)
+      VALUES('delete', old.rowid, old.description, old.context);
+  END;
+CREATE TRIGGER IF NOT EXISTS ${prefix}_decisions_fts_update
+  AFTER UPDATE ON ${prefix}_decisions BEGIN
+    INSERT INTO ${prefix}_decisions_fts(${prefix}_decisions_fts, rowid, description, context)
+      VALUES('delete', old.rowid, old.description, old.context);
+    INSERT INTO ${prefix}_decisions_fts(rowid, description, context)
+      VALUES (new.rowid, new.description, new.context);
+  END
 `;
 }
 
@@ -306,7 +367,15 @@ export function dropProjectTables(projectId: string): string {
 DROP TRIGGER IF EXISTS ${prefix}_entities_ai;
 DROP TRIGGER IF EXISTS ${prefix}_entities_ad;
 DROP TRIGGER IF EXISTS ${prefix}_entities_au;
+DROP TRIGGER IF EXISTS ${prefix}_messages_fts_insert;
+DROP TRIGGER IF EXISTS ${prefix}_messages_fts_delete;
+DROP TRIGGER IF EXISTS ${prefix}_decisions_fts_insert;
+DROP TRIGGER IF EXISTS ${prefix}_decisions_fts_delete;
+DROP TRIGGER IF EXISTS ${prefix}_decisions_fts_update;
 DROP TABLE IF EXISTS ${prefix}_entities_fts;
+DROP TABLE IF EXISTS ${prefix}_messages_fts;
+DROP TABLE IF EXISTS ${prefix}_decisions_fts;
+DROP TABLE IF EXISTS ${prefix}_decisions;
 DROP TABLE IF EXISTS ${prefix}_context_suggestions;
 DROP TABLE IF EXISTS ${prefix}_context_subscriptions;
 DROP TABLE IF EXISTS ${prefix}_reflections;
@@ -347,6 +416,7 @@ export function getProjectTableNames(projectId: string): string[] {
     `${prefix}_checkpoints`,
     `${prefix}_memory_items`,
     `${prefix}_reflections`,
+    `${prefix}_decisions`,
     `${prefix}_context_subscriptions`,
     `${prefix}_context_suggestions`
   ];
