@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as zlib from 'zlib';
 import * as crypto from 'crypto';
 import { DatabaseConnection } from '../db/connection';
-import { sanitizeProjectId, createProjectTables } from '../db/schema';
+import { sanitizeProjectId, createProjectTables, createVecTable } from '../db/schema';
 import { KBManifest, KBCreateOptions, KBInstallOptions, KBPackage } from './types';
 
 export class KnowledgeBasePackager {
@@ -130,6 +130,7 @@ export class KnowledgeBasePackager {
     // Create project tables if new
     if (!options.merge) {
       this.db.exec(createProjectTables(projectId));
+      this.db.exec(createVecTable(projectId, manifest.embedding.dimensions || 768));
     }
 
     // Check embedding model mismatch

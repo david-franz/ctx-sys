@@ -178,7 +178,8 @@ describe('F1.1 Database Schema', () => {
     it('should return correct project table names', () => {
       const tables = getProjectTableNames('test-proj');
       expect(tables).toContain('p_test_proj_entities');
-      expect(tables).toContain('p_test_proj_vectors');
+      expect(tables).toContain('p_test_proj_vector_meta');
+      expect(tables).toContain('p_test_proj_vec');
       expect(tables).toContain('p_test_proj_relationships');
       expect(tables).toContain('p_test_proj_sessions');
       expect(tables).toContain('p_test_proj_messages');
@@ -190,6 +191,8 @@ describe('F1.1 Database Schema', () => {
 
       const tableNames = getProjectTableNames('full-test');
       for (const tableName of tableNames) {
+        // vec0 virtual table is created on demand by EmbeddingManager, not createProjectTables()
+        if (tableName.endsWith('_vec')) continue;
         const tables = db.all<{ name: string }>(
           `SELECT name FROM sqlite_master WHERE type='table' AND name=?`,
           [tableName]

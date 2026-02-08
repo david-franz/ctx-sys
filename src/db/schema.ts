@@ -114,11 +114,8 @@ CREATE TABLE IF NOT EXISTS ${prefix}_vector_meta (
 CREATE INDEX IF NOT EXISTS idx_${prefix}_vector_meta_entity ON ${prefix}_vector_meta(entity_id);
 CREATE INDEX IF NOT EXISTS idx_${prefix}_vector_meta_model ON ${prefix}_vector_meta(model_id);
 
--- Native vector storage via sqlite-vec (F10h.2)
--- 768 dimensions for nomic-embed-text, cosine distance metric
-CREATE VIRTUAL TABLE IF NOT EXISTS ${prefix}_vec USING vec0(
-  embedding float[768] distance_metric=cosine
-);
+-- Note: vec0 virtual table (${prefix}_vec) is created on demand by EmbeddingManager
+-- with the correct dimensions for the configured embedding model.
 
 -- Graph relationships
 CREATE TABLE IF NOT EXISTS ${prefix}_relationships (
@@ -426,6 +423,18 @@ export function sanitizeProjectId(projectId: string): string {
   const sanitized = projectId.replace(/[^a-zA-Z0-9]/g, '_');
   // Prefix with 'p_' to ensure table names don't start with a digit
   return `p_${sanitized}`;
+}
+
+/**
+ * Create the vec0 virtual table for a project with specific dimensions.
+ * Called by EmbeddingManager and import functions rather than createProjectTables()
+ * so dimensions can match the configured embedding model.
+ */
+export function createVecTable(projectId: string, dimensions: number = 768): string {
+  const prefix = sanitizeProjectId(projectId);
+  return `CREATE VIRTUAL TABLE IF NOT EXISTS ${prefix}_vec USING vec0(
+    embedding float[${dimensions}] distance_metric=cosine
+  );`;
 }
 
 /**

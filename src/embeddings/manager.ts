@@ -1,5 +1,5 @@
 import { DatabaseConnection } from '../db/connection';
-import { sanitizeProjectId } from '../db/schema';
+import { sanitizeProjectId, createVecTable } from '../db/schema';
 import { EmbeddingProvider, SimilarityResult } from './types';
 import { Entity } from '../entities';
 import { hashEntityContent, buildEmbeddingContent } from './content-hasher';
@@ -90,11 +90,7 @@ export class EmbeddingManager {
       CREATE INDEX IF NOT EXISTS idx_${this.projectPrefix}_vector_meta_model ON ${this.vectorMetaTable}(model_id);
     `);
 
-    this.db.exec(`
-      CREATE VIRTUAL TABLE IF NOT EXISTS ${this.vecTable} USING vec0(
-        embedding float[768] distance_metric=cosine
-      );
-    `);
+    this.db.exec(createVecTable(this.projectId, this.provider.dimensions));
   }
 
   /**

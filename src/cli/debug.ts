@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { formatTable, formatDate, formatBytes, colors } from './formatters';
-import { sanitizeProjectId } from '../db/schema';
+import { sanitizeProjectId, createVecTable } from '../db/schema';
 import { CLIOutput, defaultOutput } from './init';
 
 /**
@@ -470,6 +470,15 @@ async function importData(
   }
 
   // Import vectors (F10h.2: into vector_meta + vec0)
+  // Ensure vec0 table exists — infer dimensions from first vector
+  if (data.vectors && data.vectors.length > 0) {
+    const firstEmb = typeof data.vectors[0].embedding === 'string'
+      ? JSON.parse(data.vectors[0].embedding)
+      : data.vectors[0].embedding;
+    if (firstEmb && firstEmb.length > 0) {
+      db.exec(createVecTable(projectId, firstEmb.length));
+    }
+  }
   if (data.vectors) {
     let vectorCount = 0;
     for (const v of data.vectors) {
