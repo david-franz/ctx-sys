@@ -60,6 +60,9 @@ import { createExtractRelCommand } from './extract-rel-cmd';
 // Decision search (F10.7)
 import { createSearchDecisionsCommand } from './search-decisions-cmd';
 
+// Knowledge base commands (F10e.4)
+import { createKBCommand } from './kb';
+
 // Debug commands (F10.7)
 import {
   createInspectCommand,
@@ -118,6 +121,9 @@ program.addCommand(createExtractRelCommand());
 
 // Decision search
 program.addCommand(createSearchDecisionsCommand());
+
+// Knowledge base commands
+program.addCommand(createKBCommand());
 
 // Debug commands (also available as top-level: inspect, query, export, import, health)
 const debugCommand = new Command('debug')
