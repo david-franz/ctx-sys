@@ -42,6 +42,8 @@ export class DatabaseConnection {
     // Enable foreign keys and WAL mode for better performance
     this.db.pragma('foreign_keys = ON');
     this.db.pragma('journal_mode = WAL');
+    // Wait up to 5s for locks instead of failing immediately (multi-process safety)
+    this.db.pragma('busy_timeout = 5000');
 
     this.initialized = true;
 
