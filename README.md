@@ -206,6 +206,18 @@ Fix retrieval quality issues: noise filtering, broken confidence metrics, missin
 | **F10f.5** | HyDE quality guard — discard bad hypothetical matches | Done |
 | **F10f.6** | Entity type scoring — prefer code over file stubs | Done |
 
+### Phase 10g: Retrieval Foundations (Planned)
+
+Structural improvements: ignore patterns, score normalization, richer relationships, cleaner display, configurable HyDE.
+
+| Feature | Description | Status |
+| ------- | ----------- | ------ |
+| **F10g.1** | .ctxignore + .gitignore support (centralized ignore resolution) | Planned |
+| **F10g.2** | Score normalization (multiplicative reranking for [0,1] scores) | Planned |
+| **F10g.3** | Richer relationship extraction (CALLS, EXTENDS, IMPLEMENTS from AST) | Planned |
+| **F10g.4** | Improve extractCodeSummary (clean signatures, no body leakage) | Planned |
+| **F10g.5** | HyDE model selection & benchmarking (gemma3, qwen2.5-coder) | Planned |
+
 ---
 
 ## Features

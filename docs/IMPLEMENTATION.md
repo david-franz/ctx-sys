@@ -363,6 +363,28 @@ Fix retrieval quality issues discovered during end-to-end testing: noise filteri
 
 ---
 
+## Phase 10g: Retrieval Foundations
+
+Structural improvements to the retrieval pipeline: ignore patterns, score normalization, richer relationship extraction, cleaner context display, and configurable HyDE models.
+
+| Feature | Description | Doc | Status |
+|---------|-------------|-----|--------|
+| **F10g.1** | .ctxignore + .gitignore Improvements | [F10g.1-ctxignore-gitignore.md](phase-10g/F10g.1-ctxignore-gitignore.md) | Planned |
+| **F10g.2** | Score Normalization (Multiplicative Reranking) | [F10g.2-score-normalization.md](phase-10g/F10g.2-score-normalization.md) | Planned |
+| **F10g.3** | Richer Relationship Extraction | [F10g.3-richer-relationships.md](phase-10g/F10g.3-richer-relationships.md) | Planned |
+| **F10g.4** | Improve extractCodeSummary Display | [F10g.4-extract-code-summary.md](phase-10g/F10g.4-extract-code-summary.md) | Planned |
+| **F10g.5** | HyDE Model Selection & Testing | [F10g.5-hyde-model-selection.md](phase-10g/F10g.5-hyde-model-selection.md) | Planned |
+
+**Key Goals:**
+- Centralized ignore pattern resolution (.ctxignore + .gitignore) for indexer and document indexer
+- Switch reranker from additive boosts to multiplicative scoring for normalized [0,1] scores
+- Wire AST-extracted CALLS/EXTENDS/IMPLEMENTS/USES_TYPE relationships into the graph
+- Natural language entity mention extraction for document-to-code linking
+- Fix extractCodeSummary to produce clean class/function signatures without body code leakage
+- Configurable HyDE model with benchmarking across available Ollama models
+
+---
+
 ## Phase 11: Integration & Team
 
 Deep IDE integration, automatic context injection, and team collaboration features.
