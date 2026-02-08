@@ -1,6 +1,7 @@
 /**
- * F10c.3: Fast heuristic reranker that uses content signals
- * to boost relevant results without requiring an LLM.
+ * F10c.3 / F10g.2: Fast heuristic reranker with multiplicative scoring.
+ * Uses content signals to improve result ordering without requiring an LLM.
+ * Scores are normalized to [0, 1] after reranking.
  */
 
 import { SearchResult, SearchStrategy } from './types';
@@ -29,8 +30,8 @@ const STOP_WORDS = new Set([
 ]);
 
 /**
- * Fast, no-model reranker that uses content signals to improve result ordering.
- * Adds < 5ms latency.
+ * Fast, no-model reranker using multiplicative scoring.
+ * All scores are normalized to [0, 1] after reranking.
  */
 export class HeuristicReranker implements Reranker {
   async rerank(
@@ -42,74 +43,81 @@ export class HeuristicReranker implements Reranker {
     const queryLower = query.toLowerCase();
 
     const results = candidates.map(candidate => {
-      let boost = 0;
+      let multiplier = 1.0;
       const entity = candidate.entity;
 
-      // Exact name match boost
+      // Exact name match — strong signal
       if (entity.name.toLowerCase() === queryLower) {
-        boost += 2.0;
+        multiplier *= 3.0;
       }
 
       // Name contains query terms
       const nameLower = entity.name.toLowerCase();
-      for (const term of queryTerms) {
-        if (nameLower.includes(term)) boost += 0.5;
+      const nameHits = queryTerms.filter(t => nameLower.includes(t)).length;
+      if (queryTerms.length > 0 && nameHits > 0) {
+        multiplier *= 1.0 + (nameHits / queryTerms.length) * 1.5;
       }
 
       // Summary relevance
       if (entity.summary) {
         const summaryLower = entity.summary.toLowerCase();
         const termHits = queryTerms.filter(t => summaryLower.includes(t)).length;
-        if (queryTerms.length > 0) {
-          boost += (termHits / queryTerms.length) * 0.3;
+        if (queryTerms.length > 0 && termHits > 0) {
+          multiplier *= 1.0 + (termHits / queryTerms.length) * 0.5;
         }
       }
 
       // Penalize very short content (likely stubs)
       if (entity.content && entity.content.length < 50) {
-        boost -= 0.3;
+        multiplier *= 0.5;
       }
 
       // Boost entities with more connections (higher importance)
       const connectionCount = (entity.metadata as Record<string, unknown>)?.connectionCount;
       if (typeof connectionCount === 'number' && connectionCount > 5) {
-        boost += 0.2;
+        multiplier *= 1.15;
       }
 
-      // F10f.6: Entity type scoring — prefer substantive entities over stubs
-      const typeWeights: Record<string, number> = {
-        'class': 0.15,
-        'function': 0.1,
-        'method': 0.1,
-        'interface': 0.05,
-        'type': 0.05,
-        'document': 0.1,
-        'section': 0.05,
-        'file': -0.1,
-        'module': -0.05,
+      // Entity type weight
+      const typeMultipliers: Record<string, number> = {
+        'class': 1.3,
+        'function': 1.2,
+        'method': 1.2,
+        'interface': 1.1,
+        'type': 1.1,
+        'document': 1.2,
+        'section': 1.1,
+        'file': 0.7,
+        'module': 0.8,
       };
-      boost += typeWeights[entity.type] || 0;
+      multiplier *= typeMultipliers[entity.type] || 1.0;
 
       // F10e.7: Instruction priority boost
       if (entity.type === 'instruction') {
         const meta = entity.metadata as Record<string, unknown> | undefined;
         const priority = meta?.priority as string || 'normal';
-        const priorityBoost = priority === 'high' ? 1.5 : priority === 'low' ? 0.5 : 1.0;
-        boost += (priorityBoost - 1.0); // high=+0.5, normal=0, low=-0.5
+        const priorityMultiplier = priority === 'high' ? 2.0 : priority === 'low' ? 0.5 : 1.0;
+        multiplier *= priorityMultiplier;
 
         // Only count active instructions
         if (meta?.active === false) {
-          boost -= 10; // Effectively hide inactive instructions
+          multiplier *= 0.001; // Effectively hide inactive instructions
         }
       }
 
       return {
         entityId: entity.id,
         originalScore: candidate.score,
-        rerankedScore: candidate.score + boost,
+        rerankedScore: candidate.score * multiplier,
         source: candidate.source
       };
     });
+
+    // Normalize scores to [0, 1] using max score
+    const maxScore = Math.max(...results.map(r => r.rerankedScore), 0.001);
+    for (const r of results) {
+      r.rerankedScore = r.rerankedScore / maxScore;
+    }
 
     results.sort((a, b) => b.rerankedScore - a.rerankedScore);
 
