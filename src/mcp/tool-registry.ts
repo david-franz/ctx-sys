@@ -1004,6 +1004,22 @@ export class ToolRegistry {
               type: 'number',
               description: 'Minimum relevance score 0-1 (default: 0.3)'
             },
+            expand: {
+              type: 'boolean',
+              description: 'Auto-include parent classes, imports, type definitions'
+            },
+            expand_tokens: {
+              type: 'number',
+              description: 'Token budget for expansion (default: 2000)'
+            },
+            decompose: {
+              type: 'boolean',
+              description: 'Break complex queries into sub-queries'
+            },
+            gate: {
+              type: 'boolean',
+              description: 'Skip retrieval for trivial queries'
+            },
             project: {
               type: 'string',
               description: 'Target project (default: active)'
@@ -1013,13 +1029,17 @@ export class ToolRegistry {
         }
       },
       async (args) => {
-        const { query, max_tokens, strategies, include_types, include_sources, min_score, project } = args as {
+        const { query, max_tokens, strategies, include_types, include_sources, min_score, expand, expand_tokens, decompose, gate, project } = args as {
           query: string;
           max_tokens?: number;
           strategies?: string[];
           include_types?: string[];
           include_sources?: boolean;
           min_score?: number;
+          expand?: boolean;
+          expand_tokens?: number;
+          decompose?: boolean;
+          gate?: boolean;
           project?: string;
         };
 
@@ -1029,7 +1049,11 @@ export class ToolRegistry {
           strategies: strategies as any,
           includeTypes: include_types,
           includeSources: include_sources ?? true,
-          minScore: min_score
+          minScore: min_score,
+          expand,
+          expandTokens: expand_tokens,
+          decompose,
+          gate
         });
 
         return {

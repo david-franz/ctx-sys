@@ -90,6 +90,12 @@ export interface QueryOptions {
   includeSources?: boolean;
   strategies?: SearchStrategy[];
   minScore?: number;
+
+  // Opt-in pipeline options (F10e.1)
+  expand?: boolean;           // Enable ContextExpander (add parents, imports, types)
+  expandTokens?: number;      // Token budget for expansion (default: 2000)
+  decompose?: boolean;        // Enable QueryDecomposer (break complex queries)
+  gate?: boolean;             // Enable RetrievalGate (skip trivial queries)
 }
 
 export interface ContextResult {

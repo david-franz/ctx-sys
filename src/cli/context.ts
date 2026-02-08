@@ -25,6 +25,10 @@ export function createContextCommand(output: CLIOutput = defaultOutput): Command
     .option('--strategy <strategies>', 'Search strategies: keyword,semantic,graph (comma-separated)')
     .option('--min-score <n>', 'Minimum relevance score', '0')
     .option('--no-sources', 'Omit source attribution')
+    .option('--expand', 'Auto-include parent classes, imports, type definitions')
+    .option('--expand-tokens <n>', 'Token budget for expansion (default: 2000)')
+    .option('--decompose', 'Break complex queries into sub-queries')
+    .option('--gate', 'Skip retrieval for trivial queries')
     .option('--format <format>', 'Output format (markdown, json, text)', 'markdown')
     .option('-d, --db <path>', 'Custom database path')
     .action(async (query: string, options) => {
@@ -52,6 +56,10 @@ async function runContext(
     strategy?: string;
     minScore?: string;
     sources?: boolean;
+    expand?: boolean;
+    expandTokens?: string;
+    decompose?: boolean;
+    gate?: boolean;
     format?: string;
     db?: string;
   },
@@ -76,12 +84,18 @@ async function runContext(
       : undefined;
     const includeSources = options.sources !== false;
 
+    const expandTokens = options.expandTokens ? parseInt(options.expandTokens, 10) : undefined;
+
     const result = await coreService.queryContext(projectId, query, {
       maxTokens,
       includeTypes,
       includeSources,
       strategies,
-      minScore
+      minScore,
+      expand: options.expand,
+      expandTokens,
+      decompose: options.decompose,
+      gate: options.gate
     });
 
     // JSON output

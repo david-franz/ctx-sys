@@ -11,7 +11,7 @@ import { SessionManager, MessageStore, MessageInput } from '../conversation';
 import { Session, Message, Decision } from '../conversation/types';
 import { RelationshipStore, GraphTraversal } from '../graph';
 import { DocumentIndexer } from '../documents/document-indexer';
-import { MultiStrategySearch, ContextAssembler, SearchResult, HeuristicReranker } from '../retrieval';
+import { MultiStrategySearch, ContextAssembler, SearchResult, HeuristicReranker, ContextExpander, RetrievalGate, QueryDecomposer } from '../retrieval';
 import { CheckpointManager, Checkpoint, AgentState, SaveOptions } from '../agent/checkpoints';
 import { MemoryTierManager } from '../agent/memory-tier';
 import {
@@ -561,15 +561,74 @@ export class CoreService {
   // ─────────────────────────────────────────────────────────
 
   async queryContext(projectId: string, query: string, options?: QueryOptions): Promise<ContextResult> {
-    const startTime = Date.now();
+    // Gate check: skip retrieval for trivial queries (opt-in)
+    if (options?.gate) {
+      const gate = new RetrievalGate();
+      const decision = await gate.shouldRetrieve({ query });
+      if (!decision.shouldRetrieve) {
+        return {
+          context: '',
+          sources: [],
+          confidence: 0,
+          tokensUsed: 0,
+          truncated: false
+        };
+      }
+    }
+
     const searchService = await this.getSearchService(projectId);
 
-    const results = await searchService.search(query, {
-      strategies: options?.strategies,
-      limit: 20,
-      entityTypes: options?.includeTypes as EntityType[],
-      minScore: options?.minScore
-    });
+    // Query decomposition: break complex queries into sub-queries (opt-in)
+    let results: SearchResult[];
+    if (options?.decompose) {
+      const decomposer = new QueryDecomposer();
+      const decomposed = decomposer.decompose(query);
+
+      if (decomposed.wasDecomposed) {
+        // Search each sub-query and merge results
+        const allResults = new Map<string, SearchResult>();
+        for (const sub of decomposed.subQueries) {
+          const subResults = await searchService.search(sub.text, {
+            strategies: options?.strategies,
+            limit: 10,
+            entityTypes: options?.includeTypes as EntityType[],
+            minScore: options?.minScore
+          });
+          for (const r of subResults) {
+            const existing = allResults.get(r.entity.id);
+            const weighted = r.score * sub.weight;
+            if (!existing || weighted > existing.score) {
+              allResults.set(r.entity.id, { ...r, score: existing ? Math.max(existing.score, weighted) : weighted });
+            }
+          }
+        }
+        results = Array.from(allResults.values()).sort((a, b) => b.score - a.score).slice(0, 20);
+      } else {
+        results = await searchService.search(query, {
+          strategies: options?.strategies,
+          limit: 20,
+          entityTypes: options?.includeTypes as EntityType[],
+          minScore: options?.minScore
+        });
+      }
+    } else {
+      results = await searchService.search(query, {
+        strategies: options?.strategies,
+        limit: 20,
+        entityTypes: options?.includeTypes as EntityType[],
+        minScore: options?.minScore
+      });
+    }
+
+    // Context expansion: add parent classes, imports, type defs (opt-in)
+    if (options?.expand && results.length > 0) {
+      const entityStore = this.context.getEntityStore(projectId);
+      const relationshipStore = this.getRelationshipStore(projectId);
+      const expander = new ContextExpander(entityStore, relationshipStore);
+      results = await expander.expand(results, {
+        maxExpansionTokens: options?.expandTokens || 2000
+      });
+    }
 
     const assembler = new ContextAssembler();
     const assembled = assembler.assemble(results, {
