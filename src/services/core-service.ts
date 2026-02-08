@@ -693,18 +693,37 @@ export class CoreService {
       minRelevance: options?.minScore ?? 0.1
     });
 
-    // Calculate average relevance
-    const avgRelevance = results.length > 0
-      ? results.reduce((sum, r) => sum + r.score, 0) / results.length
-      : 0;
+    // F10f.2: Weighted top-k confidence — reflects quality of best results, not tail noise
+    const confidence = this.calculateConfidence(results);
 
     return {
       context: assembled.context,
       sources: assembled.sources,
-      confidence: avgRelevance,
+      confidence,
       tokensUsed: assembled.tokenCount,
       truncated: assembled.truncated
     };
+  }
+
+  /**
+   * F10f.2: Calculate confidence using weighted top-k scores.
+   * Top results matter most; tail noise doesn't drag down the metric.
+   */
+  private calculateConfidence(results: SearchResult[]): number {
+    if (results.length === 0) return 0;
+
+    const sorted = [...results].sort((a, b) => b.score - a.score);
+    const k = Math.min(5, sorted.length);
+    let weightedSum = 0;
+    let totalWeight = 0;
+
+    for (let i = 0; i < k; i++) {
+      const weight = Math.pow(0.7, i); // 1.0, 0.7, 0.49, 0.34, 0.24
+      weightedSum += Math.max(0, sorted[i].score) * weight;
+      totalWeight += weight;
+    }
+
+    return totalWeight > 0 ? weightedSum / totalWeight : 0;
   }
 
   // ─────────────────────────────────────────────────────────
