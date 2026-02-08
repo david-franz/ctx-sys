@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { ASTParser, ParseResult } from '../ast';
+import { ASTParser, ParseResult, defaultRegistry as relationshipRegistry } from '../ast';
+import { GraphRelationshipType } from '../graph/types';
 import { SymbolSummarizer, FileSummary } from '../summarization';
 import { EntityStore, Entity } from '../entities';
 import { RelationshipStore } from '../graph/relationship-store';
@@ -14,6 +15,21 @@ import {
   FileStatus
 } from './types';
 import { IgnoreResolver } from './ignore-resolver';
+
+/**
+ * F10g.3: Map AST relationship types to graph relationship types.
+ */
+function mapAstRelToGraph(astType: string): GraphRelationshipType | null {
+  const map: Record<string, GraphRelationshipType> = {
+    'calls': 'CALLS',
+    'extends': 'EXTENDS',
+    'implements': 'IMPLEMENTS',
+    'uses_type': 'USES',
+    'instantiates': 'USES',
+    'references': 'REFERENCES',
+  };
+  return map[astType] || null;
+}
 
 /**
  * Indexes a codebase for symbol extraction and search.
@@ -200,6 +216,9 @@ export class CodebaseIndexer {
         ? Math.max(...parseResult.imports.map(i => i.startLine))
         : 0;
       await this.storeFileSummary(relativePath, summary, content, importEndLine);
+
+      // F10g.3: Extract and store rich relationships from AST
+      await this.storeRichRelationships(relativePath, parseResult);
     }
 
     return summary;
@@ -502,6 +521,79 @@ export class CodebaseIndexer {
         }
       }
     }
+  }
+
+  /**
+   * F10g.3: Extract and store rich relationships from AST extractors.
+   * Stores CALLS, EXTENDS, IMPLEMENTS, USES relationships.
+   */
+  private async storeRichRelationships(
+    filePath: string,
+    parseResult: ParseResult
+  ): Promise<void> {
+    if (!this.entityStore || !this.relationshipStore) return;
+
+    const extractor = relationshipRegistry.getExtractorForFile(filePath);
+    if (!extractor) return;
+
+    const extracted = extractor.extract(parseResult as any);
+
+    for (const rel of extracted) {
+      // Skip imports and contains — already handled by storeFileSummary
+      if (rel.type === 'imports' || rel.type === 'contains') continue;
+
+      const graphType = mapAstRelToGraph(rel.type);
+      if (!graphType) continue;
+
+      // Resolve source entity
+      const sourceEntity = await this.resolveRelationshipTarget(
+        rel.source, filePath
+      );
+      if (!sourceEntity) continue;
+
+      // Resolve target entity
+      const targetEntity = await this.resolveRelationshipTarget(
+        rel.target, filePath
+      );
+      if (!targetEntity) continue;
+
+      await this.relationshipStore.upsert({
+        sourceId: sourceEntity.id,
+        targetId: targetEntity.id,
+        relationship: graphType,
+        weight: rel.weight || 0.8,
+        metadata: { line: rel.metadata?.line, file: filePath }
+      });
+    }
+  }
+
+  /**
+   * F10g.3: Resolve a symbol name to an entity.
+   * Tries qualified name in same file, then name match, then search.
+   */
+  private async resolveRelationshipTarget(
+    targetName: string,
+    sourceFile: string
+  ): Promise<Entity | null> {
+    if (!this.entityStore) return null;
+
+    // 1. Try qualified name in same file
+    const inFile = await this.entityStore.getByQualifiedName(
+      `${sourceFile}::${targetName}`
+    );
+    if (inFile) return inFile;
+
+    // 2. Already a qualified name?
+    if (targetName.includes('::')) {
+      const byQN = await this.entityStore.getByQualifiedName(targetName);
+      if (byQN) return byQN;
+    }
+
+    // 3. Try by exact name
+    const byName = await this.entityStore.getByName(targetName);
+    if (byName) return byName;
+
+    return null;
   }
 
   /**
