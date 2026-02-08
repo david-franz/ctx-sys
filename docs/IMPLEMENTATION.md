@@ -391,14 +391,20 @@ Environment health diagnostics and native vector search for production-scale per
 
 | Feature | Description | Doc | Status |
 |---------|-------------|-----|--------|
-| **F10h.1** | `ctx-sys doctor` — Environment Health Check | [F10h.1-ctx-doctor.md](phase-10h/F10h.1-ctx-doctor.md) | Planned |
-| **F10h.2** | Native Vector Search with sqlite-vec | [F10h.2-sqlite-vec.md](phase-10h/F10h.2-sqlite-vec.md) | Planned |
+| **F10h.1** | `ctx-sys doctor` — Environment Health Check | [F10h.1-ctx-doctor.md](phase-10h/F10h.1-ctx-doctor.md) | Done |
+| **F10h.2** | Native Vector Search with sqlite-vec | [F10h.2-sqlite-vec.md](phase-10h/F10h.2-sqlite-vec.md) | Done |
+| **F10h.3** | Bug Fixes: Coverage, Doctor, FTS Scoring | [F10h.3-bug-fixes.md](phase-10h/F10h.3-bug-fixes.md) | Done |
+| **F10h.4** | Smarter CLI Defaults | [F10h.4-smarter-defaults.md](phase-10h/F10h.4-smarter-defaults.md) | Done |
+| **F10h.5** | CLI Simplification (36 → 7+9) | [F10h.5-cli-simplification.md](phase-10h/F10h.5-cli-simplification.md) | Done |
+| **F10h.6** | MCP context_query Defaults | [F10h.6-mcp-defaults.md](phase-10h/F10h.6-mcp-defaults.md) | Done |
 
 **Key Goals:**
-- Single command to verify Ollama, models, database, config, and project health
-- Replace JSON-in-SQLite vector storage with native sqlite-vec for 50-100x faster semantic search
-- Auto-migrate existing databases from JSON vectors to vec0 virtual tables
-- Support 50k+ entity codebases with sub-100ms vector search
+- Environment health diagnostics with `status --check`
+- Native sqlite-vec for 50-100x faster semantic search
+- Fix bugs: 135% coverage, doctor "not indexed", fake FTS scores
+- Smarter defaults: doc, embed, semantic, expand all ON by default
+- Simplified CLI: 7 core commands + 9 subcommand groups
+- MCP context_query: expand and gate default ON for agents
 
 ---
 

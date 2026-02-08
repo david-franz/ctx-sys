@@ -89,13 +89,13 @@ The result: AI assistants that remember everything but only surface what matters
 
 ## Current Status
 
-> **Beta Release** - Core functionality complete through Phase 10e. Knowledge bases, conversation intelligence, team instructions, and full retrieval pipeline.
+> **Beta Release** - Core functionality complete through Phase 10h. Simplified CLI (7 core commands), smarter defaults, native sqlite-vec vector search, and production-ready bug fixes.
 
 ### What Works Now
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| **CLI** | ✅ Working | 30+ commands for all operations |
+| **CLI** | ✅ Working | 7 core commands + 9 subcommand groups |
 | **MCP Server** | ✅ Working | All tools available for Claude/AI assistants |
 | **AST Parsing** | ✅ Working | TypeScript, JavaScript, Python via tree-sitter |
 | **Entity Storage** | ✅ Working | Functions, classes, methods with full source code |
@@ -117,7 +117,7 @@ The result: AI assistants that remember everything but only surface what matters
 | **F10.4: Smart Context Assembly** | Include source code in context with token budgets |
 | **F10.5: Auto Relationship Extraction** | Extract imports, calls, extends, implements from AST |
 | **F10.6: LLM Summaries** | Multi-provider summarization (Ollama/OpenAI/Anthropic) |
-| **F10.7: CLI Completeness** | 30+ commands covering all functionality |
+| **F10.7: CLI Completeness** | Full CLI coverage (simplified in F10h.5) |
 | **F10.8: Robustness** | Replace hand-rolled glob/YAML/import parsers with picomatch, yaml |
 | **F10.9: Universal Document Indexing** | Index markdown, HTML, YAML, JSON, TOML, plain text + LLM extraction |
 | **F10.10: Native SQLite + FTS5** | Migrate to better-sqlite3 with FTS5 full-text search |
@@ -218,14 +218,18 @@ Structural improvements: ignore patterns, score normalization, richer relationsh
 | **F10g.4** | Improve extractCodeSummary (clean signatures, no body leakage) | Done |
 | **F10g.5** | HyDE model selection (--hyde-model flag, CTX_HYDE_MODEL env var) | Done |
 
-### Phase 10h: Infrastructure & Performance
+### Phase 10h: Infrastructure & Performance (Complete)
 
-Environment health diagnostics and native vector search for production-scale performance.
+Bug fixes, smarter defaults, CLI simplification, and native vector search.
 
 | Feature | Description | Status |
 | ------- | ----------- | ------ |
-| **F10h.1** | `ctx-sys doctor` — verify Ollama, models, database, config health | Done |
+| **F10h.1** | `ctx-sys doctor` — environment health checks (now `status --check`) | Done |
 | **F10h.2** | Native vector search with sqlite-vec (~75x faster semantic search) | Done |
+| **F10h.3** | Bug fixes: 135% coverage, doctor "not indexed", fake FTS scores | Done |
+| **F10h.4** | Smarter defaults: doc, embed, semantic, expand all ON by default | Done |
+| **F10h.5** | CLI simplification: 36 commands → 7 core + 9 subcommand groups | Done |
+| **F10h.6** | MCP context_query defaults: expand=true, gate=true | Done |
 
 ---
 
@@ -288,7 +292,7 @@ npm link
 # Initialize a project
 ctx-sys init
 
-# Index your codebase
+# Index codebase — includes docs + embeddings by default
 ctx-sys index
 
 # Start the MCP server for Claude Desktop
@@ -304,74 +308,57 @@ ctx-sys watch
 
 ```bash
 ctx-sys init              # Initialize project configuration
-ctx-sys index             # Index codebase (with streaming for large projects)
-ctx-sys search <query>    # Search entities
-ctx-sys context <query>   # Query assembled context (like MCP context_query)
-ctx-sys status            # Show indexing status
+ctx-sys index             # Index code + docs + embeddings (use --no-doc, --no-embed to skip)
+ctx-sys index . --doc-path docs/api.md  # Index specific doc file
+ctx-sys search <query>    # Semantic + keyword search (--no-semantic for keyword-only)
+ctx-sys context <query>   # Assembled context with expansion (--no-expand to disable)
+ctx-sys status            # Project info (add --check for full health diagnostics)
 ctx-sys serve             # Start MCP server
 ctx-sys watch             # Watch and auto-index on changes
 ```
 
-### Entity Management
+### Subcommand Groups
 
 ```bash
-ctx-sys entities          # List all entities
-ctx-sys entity <id>       # Show entity details
-ctx-sys entity-stats      # Entity type statistics
-ctx-sys entity-delete     # Delete an entity
-```
+# Entity management
+ctx-sys entity list       # List all entities
+ctx-sys entity get <id>   # Show entity details
+ctx-sys entity stats      # Entity type statistics
 
-### Graph Operations
+# Graph operations
+ctx-sys graph query <entity>      # Traverse relationship graph
+ctx-sys graph stats               # Graph statistics
+ctx-sys graph relationships       # List relationships
+ctx-sys graph link <src> <type> <tgt>  # Create relationship
 
-```bash
-ctx-sys graph <entity>    # Traverse relationship graph
-ctx-sys graph-stats       # Graph statistics
-ctx-sys relationships     # List relationships
-ctx-sys link <src> <type> <tgt>  # Create relationship
-```
+# Embeddings
+ctx-sys embed run         # Generate embeddings
+ctx-sys embed status      # Embedding coverage status
+ctx-sys embed cleanup     # Clean up orphaned vectors
 
-### Embeddings & Summaries
+# Summarization
+ctx-sys summarize run     # Generate LLM summaries
+ctx-sys summarize status  # Summarization coverage
 
-```bash
-ctx-sys embed             # Generate embeddings
-ctx-sys embed-status      # Embedding coverage status
-ctx-sys summarize         # Generate LLM summaries
-ctx-sys providers         # Show available LLM providers
-```
+# Sessions
+ctx-sys session list      # List conversation sessions
+ctx-sys session messages  # View session messages
 
-### Sessions
-
-```bash
-ctx-sys sessions          # List conversation sessions
-ctx-sys messages          # View session messages
-```
-
-### Knowledge Bases
-
-```bash
-ctx-sys kb create <name>  # Package project as shareable .ctx-kb
-ctx-sys kb install <file> # Install a knowledge base package
-ctx-sys kb info <file>    # Show package details
+# Knowledge bases
+ctx-sys kb create <name>  # Package project as .ctx-kb
+ctx-sys kb install <file> # Install a knowledge base
 ctx-sys kb list           # List installed knowledge bases
-```
 
-### Team Instructions
-
-```bash
+# Team instructions
 ctx-sys instruction add <name>  # Add a team instruction
 ctx-sys instruction list        # List all instructions
-ctx-sys instruction edit <id>   # Edit an instruction
-ctx-sys instruction remove <id> # Remove an instruction
-```
 
-### Debug & Maintenance
-
-```bash
-ctx-sys health            # System health check
-ctx-sys inspect           # Inspect database tables
-ctx-sys query <sql>       # Execute SQL query
-ctx-sys export <file>     # Export project data (--full for all tables)
-ctx-sys import <file>     # Import project data
+# Debug & maintenance
+ctx-sys debug health      # System health check
+ctx-sys debug inspect     # Inspect database tables
+ctx-sys debug query <sql> # Execute SQL query
+ctx-sys debug export <f>  # Export project data
+ctx-sys debug import <f>  # Import project data
 ```
 
 ### With Claude Desktop
