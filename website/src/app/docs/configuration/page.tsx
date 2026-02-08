@@ -1,20 +1,13 @@
 import Link from 'next/link';
+import { CodeBlock, Callout, FlagTable } from '../../../components/docs';
 
 export default function ConfigurationPage() {
   return (
     <>
       <h1>Configuration</h1>
       <p>
-        ctx-sys uses two configuration files: a global config that applies to
-        all projects, and a per-project config that overrides global defaults.
-        Both use YAML syntax. Environment variables can override any setting.
-      </p>
-
-      {/* Configuration Hierarchy */}
-      <h2>Configuration Hierarchy</h2>
-      <p>
-        Settings are resolved in the following order, with later sources
-        overriding earlier ones:
+        ctx-sys uses a layered configuration system. Settings are resolved in
+        the following order, with each layer overriding the previous:
       </p>
       <ol>
         <li>
@@ -30,140 +23,21 @@ export default function ConfigurationPage() {
           <code>.ctx-sys/config.yaml</code> in the project root
         </li>
         <li>
-          <strong>Environment variables</strong> &mdash; highest priority,
-          always wins
+          <strong>Environment variables</strong> &mdash; override any config
+          file setting
+        </li>
+        <li>
+          <strong>CLI flags</strong> &mdash; highest priority, applied per
+          command
         </li>
       </ol>
-
-      {/* Global Configuration */}
-      <h2>Global Configuration</h2>
-      <p>
-        The global configuration file lives at{' '}
-        <code>~/.ctx-sys/config.yaml</code>. It controls database location,
-        provider credentials, default model choices, and CLI behavior. Create
-        this file manually or use <code>ctx-sys config set</code> to modify
-        individual keys.
-      </p>
-
-      <h3>Full Global Config Reference</h3>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`# ~/.ctx-sys/config.yaml
-
-# Database location
-database:
-  path: ~/.ctx-sys/ctx-sys.db        # string, default: ~/.ctx-sys/ctx-sys.db
-
-# Provider configuration
-providers:
-  ollama:
-    base_url: http://localhost:11434  # string, default: http://localhost:11434
-
-  openai:
-    api_key: \${OPENAI_API_KEY}        # string, supports env var interpolation
-    base_url:                          # string, optional (for OpenAI-compatible APIs)
-
-  anthropic:
-    api_key: \${ANTHROPIC_API_KEY}     # string, supports env var interpolation
-
-# Default model selections
-defaults:
-  summarization:
-    provider: ollama                   # string, default: ollama
-    model: qwen3:0.6b           # string, default: qwen3:0.6b
-
-  embeddings:
-    provider: ollama                   # string, default: ollama
-    model: mxbai-embed-large:latest    # string, default: mxbai-embed-large:latest
-
-# CLI preferences
-cli:
-  colors: true                         # boolean, default: true
-  progress: true                       # boolean, default: true`}
-          </code>
-        </pre>
-      </div>
-
-      <h3>Global Config Options</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Key</th>
-            <th>Type</th>
-            <th>Default</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>database.path</code></td>
-            <td>string</td>
-            <td><code>~/.ctx-sys/ctx-sys.db</code></td>
-            <td>Path to the SQLite database file</td>
-          </tr>
-          <tr>
-            <td><code>providers.ollama.base_url</code></td>
-            <td>string</td>
-            <td><code>http://localhost:11434</code></td>
-            <td>Ollama server URL</td>
-          </tr>
-          <tr>
-            <td><code>providers.openai.api_key</code></td>
-            <td>string</td>
-            <td>&mdash;</td>
-            <td>OpenAI API key (supports <code>{'${OPENAI_API_KEY}'}</code>)</td>
-          </tr>
-          <tr>
-            <td><code>providers.openai.base_url</code></td>
-            <td>string</td>
-            <td>&mdash;</td>
-            <td>Custom base URL for OpenAI-compatible APIs</td>
-          </tr>
-          <tr>
-            <td><code>providers.anthropic.api_key</code></td>
-            <td>string</td>
-            <td>&mdash;</td>
-            <td>Anthropic API key (supports <code>{'${ANTHROPIC_API_KEY}'}</code>)</td>
-          </tr>
-          <tr>
-            <td><code>defaults.summarization.provider</code></td>
-            <td>string</td>
-            <td><code>ollama</code></td>
-            <td>Default provider for entity summarization</td>
-          </tr>
-          <tr>
-            <td><code>defaults.summarization.model</code></td>
-            <td>string</td>
-            <td><code>qwen3:0.6b</code></td>
-            <td>Default model for entity summarization</td>
-          </tr>
-          <tr>
-            <td><code>defaults.embeddings.provider</code></td>
-            <td>string</td>
-            <td><code>ollama</code></td>
-            <td>Default provider for embedding generation</td>
-          </tr>
-          <tr>
-            <td><code>defaults.embeddings.model</code></td>
-            <td>string</td>
-            <td><code>mxbai-embed-large:latest</code></td>
-            <td>Default model for embedding generation</td>
-          </tr>
-          <tr>
-            <td><code>cli.colors</code></td>
-            <td>boolean</td>
-            <td><code>true</code></td>
-            <td>Enable colored CLI output</td>
-          </tr>
-          <tr>
-            <td><code>cli.progress</code></td>
-            <td>boolean</td>
-            <td><code>true</code></td>
-            <td>Show progress bars during long operations</td>
-          </tr>
-        </tbody>
-      </table>
+      <Callout type="tip">
+        <p>
+          For most users, the built-in defaults work out of the box. You only
+          need to create configuration files when you want to change models,
+          providers, or ignore patterns.
+        </p>
+      </Callout>
 
       {/* Project Configuration */}
       <h2>Project Configuration</h2>
@@ -171,204 +45,95 @@ cli:
         Each project has its own configuration file at{' '}
         <code>.ctx-sys/config.yaml</code> relative to the project root. This
         file is created automatically when you run <code>ctx-sys init</code>.
-        Project-level settings override the corresponding global defaults.
+        Project-level settings override global defaults.
       </p>
+      <CodeBlock title=".ctx-sys/config.yaml">{`project:
+  name: my-project
 
-      <h3>Full Project Config Reference</h3>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`# .ctx-sys/config.yaml
-
-# Project identity
-project:
-  name: my-project                     # string, default: unnamed
-
-# Indexing behavior
 indexing:
-  mode: incremental                    # string: full | incremental | manual
-                                       # default: incremental
-  watch: false                         # boolean, default: false
-  ignore:                              # string[], default shown below
+  ignore:
     - node_modules
-    - .git
     - dist
-    - build
-  languages:                           # string[], optional (auto-detected if omitted)
-    - typescript
-    - python
+    - .git
 
-# Summarization settings
-summarization:
-  enabled: true                        # boolean, default: true
-  provider: ollama                     # string, default: ollama
-  model: qwen3:0.6b             # string, default: qwen3:0.6b
-
-# Embedding settings
 embeddings:
-  provider: ollama                     # string, default: ollama
-  model: mxbai-embed-large:latest      # string, default: mxbai-embed-large:latest
+  provider: ollama
+  model: mxbai-embed-large:latest
 
-# Session management
-sessions:
-  retention: 30                        # number, default: 30 (days)
-  auto_summarize: true                 # boolean, default: true
+summarization:
+  provider: ollama
+  model: qwen3:0.6b
 
-# Retrieval settings
-retrieval:
-  default_max_tokens: 4000             # number, default: 4000
-  strategies:                          # string[], default shown below
-    - vector
-    - graph
-    - fts`}
-          </code>
-        </pre>
-      </div>
+hyde:
+  model: gemma3:12b`}</CodeBlock>
 
       <h3>Project Config Options</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Key</th>
-            <th>Type</th>
-            <th>Default</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>project.name</code></td>
-            <td>string</td>
-            <td><code>unnamed</code></td>
-            <td>Human-readable project name</td>
-          </tr>
-          <tr>
-            <td><code>indexing.mode</code></td>
-            <td>string</td>
-            <td><code>incremental</code></td>
-            <td>Indexing mode: <code>full</code>, <code>incremental</code>, or <code>manual</code></td>
-          </tr>
-          <tr>
-            <td><code>indexing.watch</code></td>
-            <td>boolean</td>
-            <td><code>false</code></td>
-            <td>Watch for file changes and re-index automatically</td>
-          </tr>
-          <tr>
-            <td><code>indexing.ignore</code></td>
-            <td>string[]</td>
-            <td><code>[node_modules, .git, dist, build]</code></td>
-            <td>Directories and patterns to exclude from indexing</td>
-          </tr>
-          <tr>
-            <td><code>indexing.languages</code></td>
-            <td>string[]</td>
-            <td>auto-detected</td>
-            <td>Limit indexing to specific languages</td>
-          </tr>
-          <tr>
-            <td><code>summarization.enabled</code></td>
-            <td>boolean</td>
-            <td><code>true</code></td>
-            <td>Generate AI summaries for extracted entities</td>
-          </tr>
-          <tr>
-            <td><code>summarization.provider</code></td>
-            <td>string</td>
-            <td><code>ollama</code></td>
-            <td>Provider for summarization (ollama or openai)</td>
-          </tr>
-          <tr>
-            <td><code>summarization.model</code></td>
-            <td>string</td>
-            <td><code>qwen3:0.6b</code></td>
-            <td>Model used for entity summarization</td>
-          </tr>
-          <tr>
-            <td><code>embeddings.provider</code></td>
-            <td>string</td>
-            <td><code>ollama</code></td>
-            <td>Provider for embedding generation (ollama or openai)</td>
-          </tr>
-          <tr>
-            <td><code>embeddings.model</code></td>
-            <td>string</td>
-            <td><code>mxbai-embed-large:latest</code></td>
-            <td>Model used for generating vector embeddings</td>
-          </tr>
-          <tr>
-            <td><code>sessions.retention</code></td>
-            <td>number</td>
-            <td><code>30</code></td>
-            <td>Days to retain conversation sessions</td>
-          </tr>
-          <tr>
-            <td><code>sessions.auto_summarize</code></td>
-            <td>boolean</td>
-            <td><code>true</code></td>
-            <td>Automatically summarize sessions on close</td>
-          </tr>
-          <tr>
-            <td><code>retrieval.default_max_tokens</code></td>
-            <td>number</td>
-            <td><code>4000</code></td>
-            <td>Token budget for context retrieval responses</td>
-          </tr>
-          <tr>
-            <td><code>retrieval.strategies</code></td>
-            <td>string[]</td>
-            <td><code>[vector, graph, fts]</code></td>
-            <td>Search strategies used in hybrid RAG</td>
-          </tr>
-        </tbody>
-      </table>
+      <FlagTable
+        flags={[
+          { flag: 'project.name', description: 'Human-readable project name', default: 'unnamed' },
+          { flag: 'indexing.ignore', description: 'Directories and patterns to exclude from indexing', default: '[node_modules, .git, dist, build]' },
+          { flag: 'indexing.languages', description: 'Limit indexing to specific languages', default: 'auto-detected' },
+          { flag: 'embeddings.provider', description: 'Provider for embedding generation (ollama or openai)', default: 'ollama' },
+          { flag: 'embeddings.model', description: 'Model used for generating vector embeddings', default: 'mxbai-embed-large:latest' },
+          { flag: 'summarization.provider', description: 'Provider for entity summarization (ollama or openai)', default: 'ollama' },
+          { flag: 'summarization.model', description: 'Model used for entity summarization', default: 'qwen3:0.6b' },
+          { flag: 'hyde.model', description: 'Model used for HyDE hypothetical document generation', default: 'gemma3:12b' },
+          { flag: 'retrieval.default_max_tokens', description: 'Token budget for context retrieval responses', default: '4000' },
+          { flag: 'retrieval.strategies', description: 'Search strategies used in hybrid RAG', default: '[vector, graph, fts]' },
+        ]}
+      />
+
+      {/* Global Configuration */}
+      <h2>Global Configuration</h2>
+      <p>
+        The global configuration file lives at{' '}
+        <code>~/.ctx-sys/config.yaml</code>. It controls database location,
+        provider credentials, and default model choices. These settings apply to
+        all projects unless overridden by a project config.
+      </p>
+      <CodeBlock title="~/.ctx-sys/config.yaml">{`database:
+  path: ~/.ctx-sys/ctx-sys.db
+
+providers:
+  ollama:
+    base_url: http://localhost:11434
+  openai:
+    api_key: \${OPENAI_API_KEY}`}</CodeBlock>
+
+      <h3>Global Config Options</h3>
+      <FlagTable
+        flags={[
+          { flag: 'database.path', description: 'Path to the SQLite database file', default: '~/.ctx-sys/ctx-sys.db' },
+          { flag: 'providers.ollama.base_url', description: 'Ollama server URL', default: 'http://localhost:11434' },
+          { flag: 'providers.openai.api_key', description: 'OpenAI API key (supports ${OPENAI_API_KEY} interpolation)' },
+          { flag: 'providers.openai.base_url', description: 'Custom base URL for OpenAI-compatible APIs' },
+          { flag: 'providers.anthropic.api_key', description: 'Anthropic API key (supports ${ANTHROPIC_API_KEY} interpolation)' },
+        ]}
+      />
 
       {/* Environment Variables */}
       <h2>Environment Variables</h2>
       <p>
-        Environment variables provide the highest-priority overrides and are
-        the recommended way to supply secrets such as API keys. ctx-sys
-        recognizes the following variables:
+        Environment variables provide overrides that take priority over both
+        global and project config files. They are the recommended way to supply
+        secrets such as API keys.
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Variable</th>
-            <th>Description</th>
-            <th>Equivalent Config Key</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>OPENAI_API_KEY</code></td>
-            <td>OpenAI API key for embeddings and summarization</td>
-            <td><code>providers.openai.api_key</code></td>
-          </tr>
-          <tr>
-            <td><code>ANTHROPIC_API_KEY</code></td>
-            <td>Anthropic API key</td>
-            <td><code>providers.anthropic.api_key</code></td>
-          </tr>
-          <tr>
-            <td><code>OLLAMA_BASE_URL</code></td>
-            <td>Custom Ollama server URL</td>
-            <td><code>providers.ollama.base_url</code></td>
-          </tr>
-        </tbody>
-      </table>
+      <FlagTable
+        flags={[
+          { flag: 'OLLAMA_BASE_URL', description: 'Custom Ollama server URL', default: 'http://localhost:11434' },
+          { flag: 'OPENAI_API_KEY', description: 'OpenAI API key for cloud embeddings and summarization' },
+          { flag: 'ANTHROPIC_API_KEY', description: 'Anthropic API key for summarization' },
+          { flag: 'CTX_HYDE_MODEL', description: 'Override HyDE model for hypothetical document generation', default: 'gemma3:12b' },
+        ]}
+      />
       <p>
         Set these in your shell profile (<code>~/.bashrc</code>,{' '}
         <code>~/.zshrc</code>) or in your CI environment:
       </p>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`export OPENAI_API_KEY=sk-...
+      <CodeBlock>{`export OLLAMA_BASE_URL=http://localhost:11434
+export OPENAI_API_KEY=sk-...
 export ANTHROPIC_API_KEY=sk-ant-...
-export OLLAMA_BASE_URL=http://gpu-server:11434`}
-          </code>
-        </pre>
-      </div>
+export CTX_HYDE_MODEL=gemma3:12b`}</CodeBlock>
 
       {/* CLI Config Commands */}
       <h2>CLI Config Commands</h2>
@@ -378,110 +143,64 @@ export OLLAMA_BASE_URL=http://gpu-server:11434`}
       </p>
 
       <h3>List All Settings</h3>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`$ ctx-sys config list
+      <CodeBlock>{`$ ctx-sys config list
 
 database.path              = ~/.ctx-sys/ctx-sys.db
 providers.ollama.base_url  = http://localhost:11434
 defaults.summarization.provider = ollama
 defaults.summarization.model    = qwen3:0.6b
 defaults.embeddings.provider    = ollama
-defaults.embeddings.model       = mxbai-embed-large:latest
-cli.colors                 = true
-cli.progress               = true`}
-          </code>
-        </pre>
-      </div>
+defaults.embeddings.model       = mxbai-embed-large:latest`}</CodeBlock>
 
       <h3>Get a Single Value</h3>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`$ ctx-sys config get defaults.embeddings.model
+      <CodeBlock>{`$ ctx-sys config get defaults.embeddings.model
 
-mxbai-embed-large:latest`}
-          </code>
-        </pre>
-      </div>
+mxbai-embed-large:latest`}</CodeBlock>
 
       <h3>Set a Value</h3>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`$ ctx-sys config set defaults.embeddings.provider openai
+      <CodeBlock>{`$ ctx-sys config set defaults.embeddings.provider openai
 
-Set defaults.embeddings.provider = openai`}
-          </code>
-        </pre>
-      </div>
+Set defaults.embeddings.provider = openai`}</CodeBlock>
+
+      <h3>Show Config File Paths</h3>
+      <CodeBlock>{`$ ctx-sys config path
+
+Project config: /home/user/my-project/.ctx-sys/config.yaml
+Global config:  ~/.ctx-sys/config.yaml`}</CodeBlock>
 
       {/* Example Configurations */}
       <h2>Example Configurations</h2>
 
-      <h3>Local-Only Setup (Ollama)</h3>
+      <h3>Local-Only (Ollama, Everything Default)</h3>
       <p>
-        This configuration keeps everything local. No data leaves your machine.
-        Ideal for proprietary codebases.
+        This is the simplest setup. Everything runs locally through Ollama and
+        no data ever leaves your machine. Ideal for proprietary codebases.
       </p>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`# ~/.ctx-sys/config.yaml
-providers:
-  ollama:
-    base_url: http://localhost:11434
+      <CodeBlock title=".ctx-sys/config.yaml">{`project:
+  name: my-project
 
-defaults:
-  summarization:
-    provider: ollama
-    model: qwen3:0.6b
-  embeddings:
-    provider: ollama
-    model: mxbai-embed-large:latest`}
-          </code>
-        </pre>
-      </div>
+# All defaults use Ollama — no additional configuration needed.
+# Just make sure Ollama is running and the models are pulled:
+#   ollama pull mxbai-embed-large:latest
+#   ollama pull qwen3:0.6b`}</CodeBlock>
+      <Callout type="tip">
+        <p>
+          With the default configuration, you only need to run{' '}
+          <code>ctx-sys init</code> and <code>ctx-sys index</code> to get
+          started. No config file editing required.
+        </p>
+      </Callout>
 
-      <h3>Cloud-Based Setup (OpenAI)</h3>
+      <h3>Large Monorepo</h3>
       <p>
-        Use OpenAI for faster embeddings and higher-quality summarization.
-        Requires an API key.
+        For large codebases, customize ignore patterns to exclude generated code
+        and vendor directories. Restrict indexing to specific languages to reduce
+        noise.
       </p>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`# ~/.ctx-sys/config.yaml
-providers:
-  openai:
-    api_key: \${OPENAI_API_KEY}
-
-defaults:
-  summarization:
-    provider: openai
-    model: gpt-4o-mini
-  embeddings:
-    provider: openai
-    model: text-embedding-3-small`}
-          </code>
-        </pre>
-      </div>
-
-      <h3>Large Monorepo Project Config</h3>
-      <p>
-        For large codebases, restrict indexing to specific languages and
-        exclude generated code directories.
-      </p>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`# .ctx-sys/config.yaml
-project:
+      <CodeBlock title=".ctx-sys/config.yaml">{`project:
   name: my-monorepo
 
 indexing:
-  mode: incremental
   ignore:
     - node_modules
     - .git
@@ -490,30 +209,61 @@ indexing:
     - generated
     - __pycache__
     - .next
+    - vendor
+    - "**/*.min.js"
   languages:
     - typescript
     - python
+    - go
 
 retrieval:
   default_max_tokens: 8000
   strategies:
     - vector
     - graph
-    - fts`}
-          </code>
-        </pre>
-      </div>
+    - fts`}</CodeBlock>
+      <Callout type="note">
+        <p>
+          For very large codebases, consider running the initial index with{' '}
+          <code>ctx-sys index --no-embed</code> first to verify that the correct
+          files are being parsed, then run <code>ctx-sys embed run</code>{' '}
+          separately.
+        </p>
+      </Callout>
 
-      <h3>Keyword-Only Setup (No Ollama Required)</h3>
+      <h3>Cloud-Based (OpenAI for Embeddings)</h3>
+      <p>
+        Use OpenAI for faster embeddings and higher-quality summarization.
+        Requires an API key. Note that code content will be sent to the OpenAI
+        API.
+      </p>
+      <CodeBlock title="~/.ctx-sys/config.yaml">{`providers:
+  openai:
+    api_key: \${OPENAI_API_KEY}
+
+defaults:
+  embeddings:
+    provider: openai
+    model: text-embedding-3-small
+  summarization:
+    provider: openai
+    model: gpt-4o-mini`}</CodeBlock>
+      <Callout type="warning">
+        <p>
+          When using a cloud provider, entity source code is sent to the
+          provider API for processing. Do not use this configuration with
+          codebases that contain sensitive or proprietary code unless your
+          organization permits it.
+        </p>
+      </Callout>
+
+      <h3>Keyword-Only (No Ollama Required)</h3>
       <p>
         If you do not want to run Ollama or use an external API, you can
-        disable summarization and rely on keyword and graph search only.
+        disable embeddings and summarization entirely. Keyword (full-text) and
+        graph search still work without any AI models.
       </p>
-      <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
-        <pre className="m-0 p-0 bg-transparent border-0">
-          <code className="text-sm text-slate-50 font-mono">
-{`# .ctx-sys/config.yaml
-project:
+      <CodeBlock title=".ctx-sys/config.yaml">{`project:
   name: my-project
 
 summarization:
@@ -522,16 +272,25 @@ summarization:
 retrieval:
   strategies:
     - graph
-    - fts`}
-          </code>
-        </pre>
-      </div>
+    - fts`}</CodeBlock>
+      <p>
+        Index with the <code>--no-embed</code> flag to skip embedding
+        generation:
+      </p>
+      <CodeBlock>{`ctx-sys index --no-embed`}</CodeBlock>
+      <Callout type="tip">
+        <p>
+          This is a good starting point if you want to try ctx-sys without
+          installing Ollama. You can always add embeddings later by pulling the
+          model and running <code>ctx-sys embed run</code>.
+        </p>
+      </Callout>
 
       {/* Next Steps */}
       <h2>Next Steps</h2>
       <ul>
         <li>
-          <Link href="/docs/ollama">Ollama Setup</Link> &mdash; install and
+          <Link href="/docs/integrations#ollama">Ollama Setup</Link> &mdash; install and
           configure local models for embeddings and summarization
         </li>
         <li>
@@ -539,8 +298,8 @@ retrieval:
           for all available commands
         </li>
         <li>
-          <Link href="/docs/how-it-works">How It Works</Link> &mdash;
-          understand the architecture behind hybrid RAG
+          <Link href="/docs/troubleshooting">Troubleshooting</Link> &mdash;
+          common issues and how to resolve them
         </li>
       </ul>
     </>

@@ -1,27 +1,38 @@
+import Link from 'next/link';
+import { ParamTable, Callout } from '../../../components/docs';
+
 export default function McpToolsPage() {
   return (
     <>
       <h1>MCP Tools Reference</h1>
       <p>
-        ctx-sys exposes 30 tools through the Model Context Protocol (MCP). AI
-        assistants like Claude Desktop and Cursor can call these tools
-        automatically to understand your codebase, track conversations, and
-        retrieve relevant context.
+        ctx-sys exposes <strong>30 tools</strong> through the{' '}
+        <Link href="https://modelcontextprotocol.io">Model Context Protocol (MCP)</Link>.
+        AI assistants like Claude Desktop, Cursor, and Claude Code can call
+        these tools automatically to understand your codebase, track
+        conversations, and retrieve relevant context.
       </p>
-      <p>
-        All tools are organized into the following categories:
-      </p>
+
+      <Callout type="tip">
+        <p>
+          The most important tool is{' '}
+          <a href="#context_query"><code>context_query</code></a>. It combines
+          keyword, semantic, and graph search into a single hybrid RAG query
+          and is the primary way to retrieve context from an indexed project.
+        </p>
+      </Callout>
+
+      <h2>Table of Contents</h2>
       <ul>
         <li><a href="#project-management">Project Management</a> &mdash; 4 tools</li>
         <li><a href="#entity-management">Entity Management</a> &mdash; 3 tools</li>
-        <li><a href="#codebase-indexing">Codebase Indexing</a> &mdash; 5 tools</li>
+        <li><a href="#codebase-indexing">Codebase Indexing</a> &mdash; 4 tools</li>
+        <li><a href="#context-retrieval">Context Retrieval</a> &mdash; 1 tool</li>
         <li><a href="#conversation-memory">Conversation Memory</a> &mdash; 5 tools</li>
         <li><a href="#graph-relationships">Graph Relationships</a> &mdash; 3 tools</li>
-        <li><a href="#context-retrieval">Context Retrieval</a> &mdash; 1 tool</li>
         <li><a href="#agent-checkpoints">Agent Checkpoints</a> &mdash; 3 tools</li>
         <li><a href="#agent-memory">Agent Memory</a> &mdash; 3 tools</li>
         <li><a href="#agent-reflections">Agent Reflections</a> &mdash; 2 tools</li>
-        <li><a href="#analytics">Analytics</a> &mdash; 3 tools</li>
         <li><a href="#git-hooks">Git Hooks</a> &mdash; 2 tools</li>
       </ul>
 
@@ -41,51 +52,20 @@ export default function McpToolsPage() {
         codebase or repository and stores all entities, relationships, and
         conversation history in its own database.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">name</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Unique project name in slug format (lowercase, alphanumeric, hyphens)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">path</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Absolute path to the project root directory</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">config</td>
-              <td className="px-4 py-2">object</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Optional configuration overrides</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'name', type: 'string', required: true, description: 'Project name in slug format (lowercase, alphanumeric, hyphens)' },
+          { name: 'path', type: 'string', required: true, description: 'Absolute path to project root directory' },
+          { name: 'config', type: 'object', required: false, description: 'Optional configuration overrides' },
+        ]}
+      />
 
       <h3 id="list_projects"><code>list_projects</code></h3>
       <p>
         List all registered projects. Returns an array of project names, paths,
         and their current status.
       </p>
-      <p>
-        This tool takes no parameters.
-      </p>
+      <p>This tool takes no parameters.</p>
 
       <h3 id="set_active_project"><code>set_active_project</code></h3>
       <p>
@@ -93,63 +73,23 @@ export default function McpToolsPage() {
         active, all other tools that accept an optional <code>project</code>{' '}
         parameter will default to it.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">name</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Project name or ID to set as active</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'name', type: 'string', required: true, description: 'Project name or ID' },
+        ]}
+      />
 
       <h3 id="delete_project"><code>delete_project</code></h3>
       <p>
         Delete a project and optionally its data. By default, both the project
         registration and its underlying data tables are removed.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">name</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Project name or ID to delete</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">keep_data</td>
-              <td className="px-4 py-2">boolean</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>false</code></td>
-              <td className="px-4 py-2">Keep project data tables instead of deleting them</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'name', type: 'string', required: true, description: 'Project name or ID' },
+          { name: 'keep_data', type: 'boolean', required: false, description: 'Keep project data tables (default: false)' },
+        ]}
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* ENTITY MANAGEMENT                                                   */}
@@ -158,165 +98,53 @@ export default function McpToolsPage() {
       <h2 id="entity-management">Entity Management</h2>
       <p>
         Tools for adding, retrieving, and searching entities. Entities represent
-        code constructs (functions, classes, modules) as well as custom concepts
-        like architectural patterns or technologies.
+        any meaningful unit in your codebase: functions, classes, concepts,
+        technologies, patterns, and more.
       </p>
 
       <h3 id="add_entity"><code>add_entity</code></h3>
       <p>
-        Add a custom entity such as a concept, technology, pattern, or any other
-        knowledge item. Indexed code entities are created automatically during
-        indexing; this tool is for manually adding supplementary entities.
+        Add a custom entity such as a concept, technology, or pattern. This is
+        useful for manually annotating your project with domain knowledge that
+        automated indexing may not capture.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">type</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Entity type (e.g., function, class, concept, technology, pattern)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">name</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Entity name</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">content</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Entity description or full content</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">summary</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Brief summary of the entity</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">metadata</td>
-              <td className="px-4 py-2">object</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Additional metadata as key-value pairs</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'type', type: 'string', required: true, description: 'Entity type (function, class, concept, technology, pattern, etc.)' },
+          { name: 'name', type: 'string', required: true, description: 'Entity name' },
+          { name: 'project', type: 'string', required: false, description: 'Target project name (default: active project)' },
+          { name: 'content', type: 'string', required: false, description: 'Entity description or content' },
+          { name: 'summary', type: 'string', required: false, description: 'Brief summary of the entity' },
+          { name: 'metadata', type: 'object', required: false, description: 'Additional metadata' },
+        ]}
+      />
 
       <h3 id="get_entity"><code>get_entity</code></h3>
       <p>
-        Get an entity by its ID or qualified name. Qualified names follow the
-        format <code>src/file.ts::functionName</code>. Provide either{' '}
-        <code>id</code> or <code>qualified_name</code>, not both.
+        Get an entity by its ID or qualified name. At least one
+        of <code>id</code> or <code>qualified_name</code> must be provided.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">id</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Entity ID</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">qualified_name</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Entity qualified name (e.g., <code>src/file.ts::functionName</code>)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'id', type: 'string', required: false, description: 'Entity ID' },
+          { name: 'qualified_name', type: 'string', required: false, description: 'Qualified name (e.g., src/file.ts::functionName)' },
+          { name: 'project', type: 'string', required: false, description: 'Target project name (default: active project)' },
+        ]}
+      />
 
       <h3 id="search_entities"><code>search_entities</code></h3>
       <p>
         Search entities by text query. Returns matching entities ranked by
-        relevance, with optional filtering by entity type.
+        relevance.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">query</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Search query text</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">type</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Filter by entity type</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">limit</td>
-              <td className="px-4 py-2">number</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>10</code></td>
-              <td className="px-4 py-2">Maximum number of results to return</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'query', type: 'string', required: true, description: 'Search query' },
+          { name: 'type', type: 'string', required: false, description: 'Filter by entity type' },
+          { name: 'limit', type: 'number', required: false, description: 'Maximum results (default: 10)' },
+          { name: 'project', type: 'string', required: false, description: 'Target project name (default: active project)' },
+        ]}
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* CODEBASE INDEXING                                                    */}
@@ -324,1281 +152,413 @@ export default function McpToolsPage() {
 
       <h2 id="codebase-indexing">Codebase Indexing</h2>
       <p>
-        Tools for indexing source code and documentation files, syncing the
-        index with git changes, and checking indexing status.
+        Tools for indexing source code and documentation files. Indexing parses
+        your codebase, extracts entities and relationships, and generates
+        embeddings for semantic search.
       </p>
 
       <h3 id="index_codebase"><code>index_codebase</code></h3>
       <p>
-        Index a codebase for context retrieval. Parses code files and extracts
-        entities such as functions, classes, and modules along with their
-        relationships.
+        Index a codebase for context retrieval. Parses source files, extracts
+        entities (functions, classes, types, etc.), builds the relationship
+        graph, and generates vector embeddings.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">path</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Project path</td>
-              <td className="px-4 py-2">Path to the codebase root directory</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">depth</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>full</code></td>
-              <td className="px-4 py-2">Indexing depth: <code>full</code>, <code>signatures</code>, or <code>selective</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">ignore</td>
-              <td className="px-4 py-2">string[]</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Glob patterns to ignore (e.g., <code>node_modules</code>)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">languages</td>
-              <td className="px-4 py-2">string[]</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">All detected</td>
-              <td className="px-4 py-2">Languages to index (defaults to all detected languages)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">force</td>
-              <td className="px-4 py-2">boolean</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>false</code></td>
-              <td className="px-4 py-2">Force re-index even if the index is not stale</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'path', type: 'string', required: false, description: 'Path to codebase root (default: project path)' },
+          { name: 'languages', type: 'array', required: false, description: 'Languages to index (default: all detected)' },
+          { name: 'ignore', type: 'array', required: false, description: 'Patterns to ignore (e.g., node_modules)' },
+          { name: 'force', type: 'boolean', required: false, description: 'Force re-index even if not stale' },
+          { name: 'depth', type: 'string', required: false, description: 'Indexing depth (default: full)' },
+        ]}
+      />
 
       <h3 id="sync_from_git"><code>sync_from_git</code></h3>
       <p>
-        Sync the codebase index from git changes. Updates entities for files
-        that have changed since the last sync or a specified commit, making it
-        faster than a full re-index.
+        Sync the codebase index from git changes. Instead of re-indexing the
+        entire codebase, this tool updates only the entities affected by recent
+        commits.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">since</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>last_sync</code></td>
-              <td className="px-4 py-2">Commit SHA or <code>&quot;last_sync&quot;</code> to sync from</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">summarize</td>
-              <td className="px-4 py-2">boolean</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>false</code></td>
-              <td className="px-4 py-2">Generate AI summaries for changed entities</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'since', type: 'string', required: false, description: 'Commit SHA or "last_sync" (default: last_sync)' },
+          { name: 'summarize', type: 'boolean', required: false, description: 'Generate AI summaries for changed entities' },
+        ]}
+      />
 
       <h3 id="index_document"><code>index_document</code></h3>
       <p>
-        Index a documentation file such as a markdown document, requirements
-        file, or API specification. Extracted sections are stored as entities
-        and optionally linked to related code entities.
+        Index a documentation file such as a markdown file, requirements
+        document, or architecture decision record. Optionally links extracted
+        sections to existing code entities.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">path</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Path to the document file</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">type</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Document type: <code>markdown</code>, <code>requirements</code>, or <code>api_spec</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">link_to_code</td>
-              <td className="px-4 py-2">boolean</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>true</code></td>
-              <td className="px-4 py-2">Attempt to link document sections to code entities</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'path', type: 'string', required: true, description: 'Path to document file' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'type', type: 'string', required: false, description: 'Document type' },
+          { name: 'link_to_code', type: 'boolean', required: false, description: 'Attempt to link to code entities (default: true)' },
+        ]}
+      />
 
       <h3 id="get_index_status"><code>get_index_status</code></h3>
       <p>
-        Get the current indexing status for a project, including the number of
-        indexed files, entities, relationships, and the timestamp of the last
-        index run.
+        Get the current indexing status for a project, including total entities,
+        last index time, and whether the index is stale.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+        ]}
+      />
 
       {/* ------------------------------------------------------------------ */}
-      {/* CONVERSATION MEMORY                                                 */}
+      {/* CONTEXT RETRIEVAL                                                    */}
+      {/* ------------------------------------------------------------------ */}
+
+      <h2 id="context-retrieval">Context Retrieval</h2>
+      <p>
+        The primary search interface for retrieving relevant context from an
+        indexed project using hybrid RAG (Retrieval-Augmented Generation).
+      </p>
+
+      <h3 id="context_query"><code>context_query</code></h3>
+      <p>
+        Query for relevant context using hybrid RAG. Combines keyword search,
+        semantic vector search, and graph traversal into a single unified query.
+        This is the main tool AI assistants should use to find information about
+        a codebase.
+      </p>
+      <ParamTable
+        params={[
+          { name: 'query', type: 'string', required: true, description: 'The search query' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'strategies', type: 'array', required: false, description: 'Search strategies to use: keyword, semantic, graph (default: all)' },
+          { name: 'include_types', type: 'array', required: false, description: 'Entity types to include in results' },
+          { name: 'min_score', type: 'number', required: false, description: 'Minimum relevance score 0-1 (default: 0.3)' },
+          { name: 'max_tokens', type: 'number', required: false, description: 'Token budget for response (default: 4000)' },
+          { name: 'expand', type: 'boolean', required: false, description: 'Auto-include related entities such as parent classes, imports, and type definitions (default: true)' },
+          { name: 'expand_tokens', type: 'number', required: false, description: 'Token budget for expansion (default: 2000)' },
+          { name: 'decompose', type: 'boolean', required: false, description: 'Break complex queries into sub-queries for better coverage' },
+          { name: 'gate', type: 'boolean', required: false, description: 'Skip retrieval for trivial queries (default: true)' },
+          { name: 'hyde', type: 'boolean', required: false, description: 'Use HyDE (Hypothetical Document Embeddings) for better semantic search' },
+          { name: 'hyde_model', type: 'string', required: false, description: 'Model for HyDE hypothetical generation (default: gemma3:12b)' },
+          { name: 'include_sources', type: 'boolean', required: false, description: 'Include source attribution in results (default: true)' },
+        ]}
+      />
+
+      {/* ------------------------------------------------------------------ */}
+      {/* CONVERSATION MEMORY                                                  */}
       {/* ------------------------------------------------------------------ */}
 
       <h2 id="conversation-memory">Conversation Memory</h2>
       <p>
-        Tools for storing and retrieving conversation messages, summarizing
-        sessions, and searching for architectural decisions made during past
-        conversations.
+        Tools for storing and retrieving conversation history. Conversations are
+        organized into sessions that can be summarized and searched for
+        architectural decisions.
       </p>
 
       <h3 id="store_message"><code>store_message</code></h3>
       <p>
         Store a conversation message for context tracking. Messages are
-        organized into sessions. If no session is specified, a new session is
-        created automatically.
+        associated with a session and can be recalled later.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">content</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Message content</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">role</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Message role: <code>user</code>, <code>assistant</code>, or <code>system</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">New session</td>
-              <td className="px-4 py-2">Session ID (creates a new session if not specified)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">metadata</td>
-              <td className="px-4 py-2">object</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Additional metadata as key-value pairs</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'content', type: 'string', required: true, description: 'Message content' },
+          { name: 'role', type: 'string', required: true, description: 'Message role (user, assistant, system)' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'session', type: 'string', required: false, description: 'Session ID (creates new if not specified)' },
+          { name: 'metadata', type: 'object', required: false, description: 'Additional metadata' },
+        ]}
+      />
 
       <h3 id="get_history"><code>get_history</code></h3>
       <p>
         Get conversation history for a session. Returns messages in
-        chronological order with optional pagination.
+        chronological order with support for pagination.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Most recent</td>
-              <td className="px-4 py-2">Session ID (defaults to the most recent session)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">limit</td>
-              <td className="px-4 py-2">number</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>50</code></td>
-              <td className="px-4 py-2">Maximum number of messages to return</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">before</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Get messages before this message ID (for pagination)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'session', type: 'string', required: false, description: 'Session ID (default: most recent)' },
+          { name: 'limit', type: 'number', required: false, description: 'Maximum messages to return (default: 50)' },
+          { name: 'before', type: 'string', required: false, description: 'Get messages before this message ID' },
+        ]}
+      />
 
       <h3 id="summarize_session"><code>summarize_session</code></h3>
       <p>
-        Generate a summary of a conversation session. The summary captures key
-        topics discussed, decisions made, and any action items identified during
-        the session.
+        Generate a summary of a conversation session. Useful for creating
+        condensed recaps of long conversations.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Session ID to summarize</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'session', type: 'string', required: true, description: 'Session ID to summarize' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+        ]}
+      />
 
       <h3 id="search_decisions"><code>search_decisions</code></h3>
       <p>
-        Search for architectural decisions across sessions. Returns decisions
-        that were recorded during past conversations, allowing AI assistants to
-        recall why certain choices were made.
+        Search for architectural decisions across conversation sessions. Finds
+        design choices, trade-offs, and rationale discussed in past
+        conversations.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">query</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Search query for finding relevant decisions</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">limit</td>
-              <td className="px-4 py-2">number</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>10</code></td>
-              <td className="px-4 py-2">Maximum number of results to return</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'query', type: 'string', required: true, description: 'Search query' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'limit', type: 'number', required: false, description: 'Maximum results (default: 10)' },
+        ]}
+      />
 
       <h3 id="list_sessions"><code>list_sessions</code></h3>
       <p>
-        List conversation sessions. Returns sessions in reverse chronological
-        order with optional filtering by status.
+        List conversation sessions for a project. Returns session IDs,
+        creation times, and status.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">status</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Filter by status: <code>active</code>, <code>archived</code>, or <code>summarized</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'status', type: 'string', required: false, description: 'Filter by session status' },
+        ]}
+      />
 
       {/* ------------------------------------------------------------------ */}
-      {/* GRAPH RELATIONSHIPS                                                 */}
+      {/* GRAPH RELATIONSHIPS                                                  */}
       {/* ------------------------------------------------------------------ */}
 
       <h2 id="graph-relationships">Graph Relationships</h2>
       <p>
-        Tools for creating relationships between entities and traversing the
-        entity graph. The graph captures how code constructs relate to each
-        other through calls, imports, implementations, and custom links.
+        Tools for creating and querying the entity relationship graph. The graph
+        captures how entities relate to each other through calls, imports,
+        implementations, and other connections.
       </p>
 
       <h3 id="link_entities"><code>link_entities</code></h3>
       <p>
-        Create a relationship between two entities. Relationships have a type
-        and an optional weight indicating strength.
+        Create a relationship between two entities. Relationships form the edges
+        of the knowledge graph and are used by graph-based context retrieval.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">source</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Source entity ID or name</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">target</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Target entity ID or name</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">type</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Relationship type (e.g., <code>calls</code>, <code>imports</code>, <code>implements</code>, <code>relates_to</code>)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">weight</td>
-              <td className="px-4 py-2">number</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>1.0</code></td>
-              <td className="px-4 py-2">Relationship strength between 0 and 1</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">metadata</td>
-              <td className="px-4 py-2">object</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Additional relationship metadata</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'source', type: 'string', required: true, description: 'Source entity ID or name' },
+          { name: 'target', type: 'string', required: true, description: 'Target entity ID or name' },
+          { name: 'type', type: 'string', required: true, description: 'Relationship type (calls, imports, implements, relates_to, etc.)' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'weight', type: 'number', required: false, description: 'Relationship strength 0-1 (default: 1.0)' },
+          { name: 'metadata', type: 'object', required: false, description: 'Additional relationship metadata' },
+        ]}
+      />
 
       <h3 id="query_graph"><code>query_graph</code></h3>
       <p>
         Traverse the entity relationship graph starting from a given entity.
-        Returns connected entities up to the specified depth, with optional
-        filtering by relationship type and direction.
+        Returns connected entities up to the specified depth.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">entity</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Starting entity ID or name</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">depth</td>
-              <td className="px-4 py-2">number</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>2</code></td>
-              <td className="px-4 py-2">Maximum number of hops to traverse</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">relationships</td>
-              <td className="px-4 py-2">string[]</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">All types</td>
-              <td className="px-4 py-2">Filter by relationship types</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">direction</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>both</code></td>
-              <td className="px-4 py-2">Traversal direction: <code>in</code>, <code>out</code>, or <code>both</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'entity', type: 'string', required: true, description: 'Starting entity ID or name' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'depth', type: 'number', required: false, description: 'Maximum hops (default: 2)' },
+          { name: 'direction', type: 'string', required: false, description: 'Traversal direction (default: both)' },
+          { name: 'relationships', type: 'array', required: false, description: 'Filter by relationship types' },
+        ]}
+      />
 
       <h3 id="get_graph_stats"><code>get_graph_stats</code></h3>
       <p>
         Get statistics about the entity relationship graph, including total
-        node and edge counts, relationship type distribution, and connectivity
-        metrics.
+        entity count, relationship count, and type distributions.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+        ]}
+      />
 
       {/* ------------------------------------------------------------------ */}
-      {/* CONTEXT RETRIEVAL                                                   */}
-      {/* ------------------------------------------------------------------ */}
-
-      <h2 id="context-retrieval">Context Retrieval</h2>
-      <p>
-        The primary tool AI assistants use to get relevant information from your
-        codebase and conversation history.
-      </p>
-
-      <h3 id="context_query"><code>context_query</code></h3>
-      <p>
-        Query for relevant context using hybrid RAG (Retrieval-Augmented
-        Generation). This is the primary tool AI assistants use to understand
-        your codebase. It combines three search strategies and merges results
-        using Reciprocal Rank Fusion:
-      </p>
-      <ul>
-        <li><strong>Keyword search</strong> &mdash; FTS5 full-text search with BM25 ranking</li>
-        <li><strong>Semantic search</strong> &mdash; vector similarity using embeddings</li>
-        <li><strong>Graph traversal</strong> &mdash; follows entity relationships to find structurally related code</li>
-      </ul>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">query</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">The search query in natural language</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">max_tokens</td>
-              <td className="px-4 py-2">number</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>4000</code></td>
-              <td className="px-4 py-2">Token budget for the response</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">strategies</td>
-              <td className="px-4 py-2">string[]</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">All strategies</td>
-              <td className="px-4 py-2">Search strategies to use: <code>keyword</code>, <code>semantic</code>, <code>graph</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">include_types</td>
-              <td className="px-4 py-2">string[]</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">All types</td>
-              <td className="px-4 py-2">Entity types to include in results</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">include_sources</td>
-              <td className="px-4 py-2">boolean</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>true</code></td>
-              <td className="px-4 py-2">Include source attribution in results</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">min_score</td>
-              <td className="px-4 py-2">number</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>0.3</code></td>
-              <td className="px-4 py-2">Minimum relevance score between 0 and 1</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* AGENT CHECKPOINTS                                                   */}
+      {/* AGENT CHECKPOINTS                                                    */}
       {/* ------------------------------------------------------------------ */}
 
       <h2 id="agent-checkpoints">Agent Checkpoints</h2>
       <p>
-        Tools for saving and restoring agent state. Checkpoints allow AI
-        assistants to persist their working state across sessions so they can
-        resume tasks where they left off.
+        Tools for saving and restoring agent state. Checkpoints allow long-running
+        tasks to be paused and resumed across sessions.
       </p>
 
       <h3 id="checkpoint_save"><code>checkpoint_save</code></h3>
       <p>
         Save an agent state checkpoint for a resumable task. The state object
-        can contain any serializable data the agent needs to continue later.
+        can contain any serializable data the agent needs to resume later.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Session or task ID to associate the checkpoint with</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">state</td>
-              <td className="px-4 py-2">object</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Agent state to save (any serializable object)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">description</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Human-readable description of the checkpoint</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'session', type: 'string', required: true, description: 'Session or task ID' },
+          { name: 'state', type: 'object', required: true, description: 'Agent state to save' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'description', type: 'string', required: false, description: 'Checkpoint description' },
+        ]}
+      />
 
       <h3 id="checkpoint_load"><code>checkpoint_load</code></h3>
       <p>
         Load agent state from a checkpoint. By default, loads the most recent
-        checkpoint for the given session. A specific checkpoint can be loaded
-        by providing its ID.
+        checkpoint for the given session.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Session or task ID</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">checkpoint_id</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Latest</td>
-              <td className="px-4 py-2">Specific checkpoint ID to load (defaults to the latest)</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'session', type: 'string', required: true, description: 'Session or task ID' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'checkpoint_id', type: 'string', required: false, description: 'Specific checkpoint ID (default: latest)' },
+        ]}
+      />
 
       <h3 id="checkpoint_list"><code>checkpoint_list</code></h3>
       <p>
-        List all checkpoints for a session. Returns checkpoints in
-        chronological order with their IDs, descriptions, and timestamps.
+        List all checkpoints for a session. Returns checkpoint IDs, timestamps,
+        and descriptions.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Session or task ID</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'session', type: 'string', required: true, description: 'Session or task ID' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+        ]}
+      />
 
       {/* ------------------------------------------------------------------ */}
-      {/* AGENT MEMORY                                                        */}
+      {/* AGENT MEMORY                                                         */}
       {/* ------------------------------------------------------------------ */}
 
       <h2 id="agent-memory">Agent Memory</h2>
       <p>
-        Tools for managing the hot/cold memory system. Hot memory contains
-        recently accessed items kept in active context. Cold storage holds
-        older items that can be recalled on demand, reducing token usage while
-        preserving full history.
+        Tools for managing hot and cold memory tiers. Hot memory is the
+        actively used context, while cold storage holds items that can be
+        recalled on demand to free up context window space.
       </p>
 
       <h3 id="memory_spill"><code>memory_spill</code></h3>
       <p>
-        Spill hot memory items to cold storage to free up context. Items that
-        exceed the token threshold are moved to cold storage where they remain
-        searchable but no longer consume active context tokens.
+        Spill hot memory items to cold storage to free up context. Items
+        exceeding the token threshold are moved to cold storage where they
+        can be recalled later.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Session ID</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">threshold</td>
-              <td className="px-4 py-2">number</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Token threshold for spilling items to cold storage</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'session', type: 'string', required: true, description: 'Session ID' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'threshold', type: 'number', required: false, description: 'Token threshold for spilling' },
+        ]}
+      />
 
       <h3 id="memory_recall"><code>memory_recall</code></h3>
       <p>
-        Recall relevant items from cold storage back into hot memory. Uses the
-        provided query to find the most relevant cold items and bring them back
-        into active context.
+        Recall relevant items from cold storage back into hot memory. Uses
+        semantic search to find the most relevant stored items for the given
+        query.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Session ID</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">query</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Query for finding relevant items to recall</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'session', type: 'string', required: true, description: 'Session ID' },
+          { name: 'query', type: 'string', required: true, description: 'Query for relevant items to recall' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+        ]}
+      />
 
       <h3 id="memory_status"><code>memory_status</code></h3>
       <p>
-        Get the current memory status showing the distribution of items between
-        hot and cold storage, along with token usage metrics.
+        Get the current memory status including hot and cold item counts and
+        token distribution across tiers.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Session ID</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'session', type: 'string', required: true, description: 'Session ID' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+        ]}
+      />
 
       {/* ------------------------------------------------------------------ */}
-      {/* AGENT REFLECTIONS                                                   */}
+      {/* AGENT REFLECTIONS                                                    */}
       {/* ------------------------------------------------------------------ */}
 
       <h2 id="agent-reflections">Agent Reflections</h2>
       <p>
-        Tools for storing and querying learning reflections. Reflections allow
-        AI assistants to record lessons learned, observations, and decisions
-        from their experiences, building institutional knowledge over time.
+        Tools for storing and querying agent learning reflections. Reflections
+        capture lessons learned, successful strategies, and mistakes to avoid,
+        enabling agents to improve over time.
       </p>
 
       <h3 id="reflection_store"><code>reflection_store</code></h3>
       <p>
         Store a learning reflection from agent experience. Reflections are
-        tagged and categorized so they can be queried later to inform future
-        decisions.
+        tagged and searchable, allowing agents to build up institutional
+        knowledge across sessions.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">session</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Session ID</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">content</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Reflection content describing the learning or observation</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">type</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Reflection type: <code>lesson</code>, <code>observation</code>, or <code>decision</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">outcome</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Outcome of the experience: <code>success</code>, <code>failure</code>, or <code>partial</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">tags</td>
-              <td className="px-4 py-2">string[]</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Tags for categorization</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'session', type: 'string', required: true, description: 'Session ID' },
+          { name: 'content', type: 'string', required: true, description: 'Reflection content' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'type', type: 'string', required: false, description: 'Reflection type' },
+          { name: 'outcome', type: 'string', required: false, description: 'Outcome of the experience' },
+          { name: 'tags', type: 'array', required: false, description: 'Tags for categorization' },
+        ]}
+      />
 
       <h3 id="reflection_query"><code>reflection_query</code></h3>
       <p>
-        Query stored reflections for relevant learnings. Returns reflections
-        matching the query with optional filtering by type and outcome.
+        Query stored reflections for relevant learnings. Search across all
+        reflections with optional filtering by type and outcome.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">query</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Search query for finding relevant reflections</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">type</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Filter by reflection type</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">outcome</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Filter by outcome</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'query', type: 'string', required: true, description: 'Search query' },
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'type', type: 'string', required: false, description: 'Filter by reflection type' },
+          { name: 'outcome', type: 'string', required: false, description: 'Filter by outcome' },
+        ]}
+      />
 
       {/* ------------------------------------------------------------------ */}
-      {/* ANALYTICS                                                           */}
-      {/* ------------------------------------------------------------------ */}
-
-      <h2 id="analytics">Analytics</h2>
-      <p>
-        Tools for tracking usage statistics, viewing dashboard data, and
-        recording feedback on query results to improve relevance over time.
-      </p>
-
-      <h3 id="analytics_get_stats"><code>analytics_get_stats</code></h3>
-      <p>
-        Get token savings and usage analytics for a project over a given time
-        period.
-      </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">period</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>week</code></td>
-              <td className="px-4 py-2">Time period: <code>day</code>, <code>week</code>, <code>month</code>, or <code>all</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 id="analytics_dashboard"><code>analytics_dashboard</code></h3>
-      <p>
-        Get dashboard data including aggregate statistics, recent queries, and
-        top entities for a project.
-      </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 id="analytics_feedback"><code>analytics_feedback</code></h3>
-      <p>
-        Record feedback on a query result. This feedback is used to improve
-        search relevance over time by learning which results are helpful.
-      </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">query_id</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Query log ID to provide feedback on</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">was_useful</td>
-              <td className="px-4 py-2">boolean</td>
-              <td className="px-4 py-2">Yes</td>
-              <td className="px-4 py-2">&mdash;</td>
-              <td className="px-4 py-2">Whether the query result was useful</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* GIT HOOKS                                                           */}
+      {/* GIT HOOKS                                                            */}
       {/* ------------------------------------------------------------------ */}
 
       <h2 id="git-hooks">Git Hooks</h2>
       <p>
-        Tools for installing git hooks that automatically keep the index
-        up to date, and for generating impact analysis reports on pending
-        changes.
+        Tools for installing git hooks and analyzing the impact of pending
+        changes. Git hooks keep the index automatically up to date as you
+        commit.
       </p>
 
       <h3 id="hooks_install"><code>hooks_install</code></h3>
       <p>
-        Install git hooks for automatic indexing. Once installed, the index is
-        updated automatically after commits, checkouts, and merges without
-        manual intervention.
+        Install git hooks for automatic indexing. After installation, the index
+        is updated automatically on each commit.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">repo_path</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Project path</td>
-              <td className="px-4 py-2">Path to the git repository</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">hooks</td>
-              <td className="px-4 py-2">string[]</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>post-commit</code></td>
-              <td className="px-4 py-2">Hooks to install: <code>post-commit</code>, <code>post-checkout</code>, <code>post-merge</code></td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'repo_path', type: 'string', required: false, description: 'Path to git repository (default: project path)' },
+          { name: 'hooks', type: 'array', required: false, description: 'Hooks to install (default: post-commit)' },
+        ]}
+      />
 
       <h3 id="hooks_impact_report"><code>hooks_impact_report</code></h3>
       <p>
-        Get an impact analysis report for pending changes. Compares two
-        branches to identify which entities and relationships are affected,
-        helping AI assistants understand the scope of a change before it is
-        merged.
+        Get an impact analysis report for pending changes. Compares the target
+        branch against the base branch and reports which entities and
+        relationships are affected.
       </p>
-      <div className="not-prose overflow-x-auto my-4">
-        <table className="min-w-full text-sm border border-slate-200 dark:border-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-800">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Parameter</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Type</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Required</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Default</th>
-              <th className="text-left px-4 py-2 font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">base_branch</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>main</code></td>
-              <td className="px-4 py-2">Base branch for comparison</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">target_branch</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2"><code>HEAD</code></td>
-              <td className="px-4 py-2">Target branch to analyze</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-2 font-mono text-xs">project</td>
-              <td className="px-4 py-2">string</td>
-              <td className="px-4 py-2">No</td>
-              <td className="px-4 py-2">Active project</td>
-              <td className="px-4 py-2">Target project name (defaults to active project)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ParamTable
+        params={[
+          { name: 'project', type: 'string', required: false, description: 'Target project (default: active project)' },
+          { name: 'base_branch', type: 'string', required: false, description: 'Base branch for comparison (default: main)' },
+          { name: 'target_branch', type: 'string', required: false, description: 'Target branch (default: HEAD)' },
+        ]}
+      />
     </>
   );
 }

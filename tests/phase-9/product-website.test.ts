@@ -98,9 +98,7 @@ describe('F9.4 Product Website', () => {
       { path: 'page.tsx', name: 'Docs hub' },
       { path: 'quickstart/page.tsx', name: 'Quick Start' },
       { path: 'installation/page.tsx', name: 'Installation' },
-      { path: 'claude-desktop/page.tsx', name: 'Claude Desktop' },
-      { path: 'cursor/page.tsx', name: 'Cursor IDE' },
-      { path: 'ollama/page.tsx', name: 'Ollama Setup' },
+      { path: 'integrations/page.tsx', name: 'Integrations' },
       { path: 'cli/page.tsx', name: 'CLI Reference' },
       { path: 'mcp-tools/page.tsx', name: 'MCP Tools' },
       { path: 'configuration/page.tsx', name: 'Configuration' },
@@ -136,14 +134,14 @@ describe('F9.4 Product Website', () => {
       expect(lower).toContain('context_query');
     });
 
-    it('should have Ollama setup guide with model instructions', () => {
-      const content = fs.readFileSync(path.join(docsDir, 'ollama/page.tsx'), 'utf-8');
-      expect(content).toContain('nomic-embed-text');
+    it('should have integrations page with Ollama setup and model instructions', () => {
+      const content = fs.readFileSync(path.join(docsDir, 'integrations/page.tsx'), 'utf-8');
+      expect(content).toContain('mxbai-embed-large');
       expect(content).toContain('ollama pull');
     });
 
-    it('should have Claude Desktop guide with MCP config', () => {
-      const content = fs.readFileSync(path.join(docsDir, 'claude-desktop/page.tsx'), 'utf-8');
+    it('should have integrations page with MCP config', () => {
+      const content = fs.readFileSync(path.join(docsDir, 'integrations/page.tsx'), 'utf-8');
       expect(content).toContain('mcpServers');
       expect(content).toContain('ctx-sys');
     });
@@ -218,9 +216,9 @@ describe('F9.4 Product Website', () => {
       const pagePath = path.join(WEBSITE_DIR, 'src/app/page.tsx');
       const content = fs.readFileSync(pagePath, 'utf-8');
 
-      expect(content).toContain('ctx init');
-      expect(content).toContain('ctx index');
-      expect(content).toContain('ctx serve');
+      expect(content).toContain('ctx-sys init');
+      expect(content).toContain('ctx-sys index');
+      expect(content).toContain('ctx-sys serve');
     });
 
     it('should indicate open source / MIT license', () => {
@@ -302,9 +300,7 @@ describe('F9.4 Product Website', () => {
 
       expect(content).toContain('/docs/quickstart');
       expect(content).toContain('/docs/installation');
-      expect(content).toContain('/docs/claude-desktop');
-      expect(content).toContain('/docs/cursor');
-      expect(content).toContain('/docs/ollama');
+      expect(content).toContain('/docs/integrations');
       expect(content).toContain('/docs/cli');
       expect(content).toContain('/docs/mcp-tools');
       expect(content).toContain('/docs/configuration');

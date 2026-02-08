@@ -16,9 +16,7 @@ const sections = [
   {
     title: 'Integration Guides',
     links: [
-      { href: '/docs/claude-desktop', label: 'Claude Desktop' },
-      { href: '/docs/cursor', label: 'Cursor IDE' },
-      { href: '/docs/ollama', label: 'Ollama Setup' },
+      { href: '/docs/integrations', label: 'Integrations' },
     ],
   },
   {

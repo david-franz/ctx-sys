@@ -277,12 +277,12 @@ export default function Home() {
             <IntegrationCard
               title="Claude Desktop"
               description="First-class integration with Claude Desktop. Add ctx-sys to your MCP config and get intelligent context in every conversation."
-              href="/docs/claude-desktop"
+              href="/docs/integrations#claude-desktop"
             />
             <IntegrationCard
               title="Cursor IDE"
               description="Use ctx-sys as an MCP server in Cursor for enhanced code understanding and context-aware AI assistance while you code."
-              href="/docs/cursor"
+              href="/docs/integrations#cursor"
             />
             <IntegrationCard
               title="Any MCP Client"
