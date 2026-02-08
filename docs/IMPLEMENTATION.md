@@ -341,6 +341,28 @@ Shareable knowledge bases, full retrieval pipeline integration, conversation int
 
 ---
 
+## Phase 10f: Retrieval Quality
+
+Fix retrieval quality issues discovered during end-to-end testing: noise filtering, confidence metrics, source attribution, and result capping.
+
+| Feature | Description | Doc | Status |
+|---------|-------------|-----|--------|
+| **F10f.1** | Relevance Floor — Stop Returning Noise | [F10f.1-relevance-floor.md](phase-10f/F10f.1-relevance-floor.md) | Planned |
+| **F10f.2** | Fix Confidence Metric (weighted top-k) | [F10f.2-confidence-metric.md](phase-10f/F10f.2-confidence-metric.md) | Planned |
+| **F10f.3** | Fix Source File Paths (property name mismatch) | [F10f.3-source-file-paths.md](phase-10f/F10f.3-source-file-paths.md) | Planned |
+| **F10f.4** | Cap Result Count — Quality Over Quantity | [F10f.4-result-count-cap.md](phase-10f/F10f.4-result-count-cap.md) | Planned |
+| **F10f.5** | HyDE Quality Guard | [F10f.5-hyde-guard.md](phase-10f/F10f.5-hyde-guard.md) | Planned |
+| **F10f.6** | Entity Type Scoring — Prefer Code Over File Stubs | [F10f.6-entity-type-scoring.md](phase-10f/F10f.6-entity-type-scoring.md) | Planned |
+
+**Key Problems:**
+- Queries with no matches return 20+ noise results instead of "nothing found"
+- Confidence metric averages all scores (including garbage) producing misleading numbers
+- Source file paths always show `-` due to `file` vs `filePath` property mismatch
+- Token budget fills with file stubs and irrelevant entities
+- HyDE can make results worse when the concept doesn't exist in the codebase
+
+---
+
 ## Phase 11: Integration & Team
 
 Deep IDE integration, automatic context injection, and team collaboration features.

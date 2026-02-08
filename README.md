@@ -193,6 +193,19 @@ Shareable knowledge bases, full retrieval pipeline, conversation intelligence, a
 | **F10e.6** | Incremental session summaries with version history | Done |
 | **F10e.7** | Team instructions with scope-based priority boosting | Done |
 
+### Phase 10f: Retrieval Quality
+
+Fix retrieval quality issues: noise filtering, broken confidence metrics, missing file paths, and result capping.
+
+| Feature | Description | Status |
+| ------- | ----------- | ------ |
+| **F10f.1** | Relevance floor — stop returning noise results | Planned |
+| **F10f.2** | Fix confidence metric (weighted top-k, not simple average) | Planned |
+| **F10f.3** | Fix source file paths (property name mismatch bug) | Planned |
+| **F10f.4** | Cap result count — quality over quantity | Planned |
+| **F10f.5** | HyDE quality guard — discard bad hypothetical matches | Planned |
+| **F10f.6** | Entity type scoring — prefer code over file stubs | Planned |
+
 ---
 
 ## Features
