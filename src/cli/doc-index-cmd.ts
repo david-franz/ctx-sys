@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
+import { ProjectManager } from '../project';
 import { EntityStore } from '../entities';
 import { RelationshipStore } from '../graph/relationship-store';
 import { DocumentIndexer } from '../documents/document-indexer';
@@ -56,7 +57,15 @@ async function runDocIndex(
 
   try {
     const projectId = config.projectConfig.project.name || path.basename(projectPath);
-    db.createProject(projectId);
+    const projectManager = new ProjectManager(db);
+    const existingProject = await projectManager.getByName(projectId);
+    if (!existingProject) {
+      try {
+        await projectManager.create(projectId, projectPath);
+      } catch {
+        db.createProject(projectId);
+      }
+    }
 
     const entityStore = new EntityStore(db, projectId);
     const relationshipStore = new RelationshipStore(db, projectId);

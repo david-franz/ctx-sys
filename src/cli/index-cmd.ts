@@ -7,6 +7,7 @@ import * as path from 'path';
 import { CodebaseIndexer, IndexOptions, IndexResult } from '../indexer';
 import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
+import { ProjectManager } from '../project';
 import { EntityStore } from '../entities';
 import { RelationshipStore } from '../graph/relationship-store';
 import { EmbeddingManager } from '../embeddings/manager';
@@ -75,8 +76,16 @@ async function runIndex(
     // Set up entity store (use project name as ID)
     const projectId = config.projectConfig.project.name || path.basename(projectPath);
 
-    // Ensure project tables exist
-    db.createProject(projectId);
+    // Ensure project is registered and tables exist
+    const projectManager = new ProjectManager(db);
+    const existingProject = await projectManager.getByName(projectId);
+    if (!existingProject) {
+      try {
+        await projectManager.create(projectId, projectPath);
+      } catch {
+        db.createProject(projectId);
+      }
+    }
 
     const entityStore = new EntityStore(db, projectId);
     const relationshipStore = new RelationshipStore(db, projectId);
