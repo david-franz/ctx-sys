@@ -1024,6 +1024,10 @@ export class ToolRegistry {
               type: 'boolean',
               description: 'Use HyDE (Hypothetical Document Embeddings) for better semantic search'
             },
+            hyde_model: {
+              type: 'string',
+              description: 'Model for HyDE hypothetical generation (default: qwen3:0.6b)'
+            },
             project: {
               type: 'string',
               description: 'Target project (default: active)'
@@ -1033,7 +1037,7 @@ export class ToolRegistry {
         }
       },
       async (args) => {
-        const { query, max_tokens, strategies, include_types, include_sources, min_score, expand, expand_tokens, decompose, gate, hyde, project } = args as {
+        const { query, max_tokens, strategies, include_types, include_sources, min_score, expand, expand_tokens, decompose, gate, hyde, hyde_model, project } = args as {
           query: string;
           max_tokens?: number;
           strategies?: string[];
@@ -1045,6 +1049,7 @@ export class ToolRegistry {
           decompose?: boolean;
           gate?: boolean;
           hyde?: boolean;
+          hyde_model?: string;
           project?: string;
         };
 
@@ -1059,7 +1064,8 @@ export class ToolRegistry {
           expandTokens: expand_tokens,
           decompose,
           gate,
-          hyde
+          hyde,
+          hydeModel: hyde_model
         });
 
         return {

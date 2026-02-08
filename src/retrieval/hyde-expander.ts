@@ -349,13 +349,13 @@ export function buildHypotheticalPrompt(
     ? `Recent context: ${options.recentContext}\n`
     : '';
 
-  return `You are a documentation assistant. Write a brief, factual answer (2-3 sentences) to the following question as if you had access to the codebase documentation.
+  return `You are a code documentation expert. Write a brief technical description (2-3 sentences) answering this question about a codebase. Include specific class names, function names, parameter types, and implementation patterns.
 
 ${contextHint}Question: ${query}
 
 ${typeHint}
 
-Write a hypothetical but plausible answer that uses natural vocabulary and explains the concept. Do not say "I don't know" or hedge - write as if you know the answer.
+Write as if you know the codebase. Use concrete technical terms, not generic descriptions. Mention specific types, modules, and patterns.
 
 Answer:`;
 }

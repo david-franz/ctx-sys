@@ -30,6 +30,7 @@ export function createContextCommand(output: CLIOutput = defaultOutput): Command
     .option('--decompose', 'Break complex queries into sub-queries')
     .option('--gate', 'Skip retrieval for trivial queries')
     .option('--hyde', 'Use HyDE (Hypothetical Document Embeddings) for better semantic search')
+    .option('--hyde-model <model>', 'Model for HyDE hypothetical generation (default: qwen3:0.6b)')
     .option('--max-results <n>', 'Maximum number of results to include', '15')
     .option('--format <format>', 'Output format (markdown, json, text)', 'markdown')
     .option('-d, --db <path>', 'Custom database path')
@@ -63,6 +64,7 @@ async function runContext(
     decompose?: boolean;
     gate?: boolean;
     hyde?: boolean;
+    hydeModel?: string;
     maxResults?: string;
     format?: string;
     db?: string;
@@ -101,6 +103,7 @@ async function runContext(
       decompose: options.decompose,
       gate: options.gate,
       hyde: options.hyde,
+      hydeModel: options.hydeModel,
       maxResults: options.maxResults ? parseInt(options.maxResults, 10) : undefined
     });
 

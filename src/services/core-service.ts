@@ -624,7 +624,8 @@ export class CoreService {
         const project = await this.context.projectManager.get(projectId);
         const embeddingManager = this.context.getEmbeddingManager(projectId, project?.config);
         const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-        const hydeProvider = new OllamaHypotheticalProvider({ baseUrl });
+        const hydeModel = options?.hydeModel || process.env.CTX_HYDE_MODEL;
+        const hydeProvider = new OllamaHypotheticalProvider({ baseUrl, model: hydeModel });
         const hyde = new HyDEQueryExpander(hydeProvider, embeddingManager);
         const result = await hyde.getSearchEmbedding(query, projectId, {
           entityTypes: options?.includeTypes
