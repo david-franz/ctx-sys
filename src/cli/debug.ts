@@ -68,6 +68,7 @@ export function createExportCommand(output: CLIOutput = defaultOutput): Command 
     .option('-f, --format <format>', 'Export format: json, sql', 'json')
     .option('--entities', 'Export entities only')
     .option('--relationships', 'Export relationships only')
+    .option('--full', 'Include checkpoints, memory items, reflections')
     .option('-d, --db <path>', 'Custom database path')
     .action(async (outputFile: string, options) => {
       try {
@@ -91,6 +92,7 @@ export function createImportCommand(output: CLIOutput = defaultOutput): Command 
     .argument('<input-file>', 'Input file path')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('--merge', 'Merge with existing data (default: replace)')
+    .option('--force', 'Skip embedding model mismatch warning')
     .option('-d, --db <path>', 'Custom database path')
     .action(async (inputFile: string, options) => {
       try {
@@ -268,6 +270,7 @@ async function exportData(
     format?: string;
     entities?: boolean;
     relationships?: boolean;
+    full?: boolean;
     db?: string;
   },
   output: CLIOutput
@@ -282,11 +285,12 @@ async function exportData(
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
   const prefix = sanitizeProjectId(projectId);
 
-  const data: Record<string, unknown[]> = {};
+  const data: Record<string, unknown> = {};
 
-  // Export entities
+  // Export entities and their vectors
   if (!options.relationships) {
     data.entities = db.all(`SELECT * FROM ${prefix}_entities`);
+    data.vectors = db.all(`SELECT * FROM ${prefix}_vectors`);
   }
 
   // Export relationships
@@ -300,30 +304,74 @@ async function exportData(
     data.messages = db.all(`SELECT * FROM ${prefix}_messages`);
   }
 
+  // Full export: include checkpoints, memory items, reflections
+  if (options.full && !options.entities && !options.relationships) {
+    data.checkpoints = db.all(`SELECT * FROM ${prefix}_checkpoints`);
+    data.memory_items = db.all(`SELECT * FROM ${prefix}_memory_items`);
+    data.reflections = db.all(`SELECT * FROM ${prefix}_reflections`);
+  }
+
+  // Get embedding model info
+  const embeddingModel = db.get<{ name: string }>(`SELECT name FROM embedding_models LIMIT 1`);
+
+  // Build metadata header
+  const counts: Record<string, number> = {};
+  for (const [key, val] of Object.entries(data)) {
+    if (Array.isArray(val)) {
+      counts[key] = val.length;
+    }
+  }
+
+  const exportPayload: Record<string, unknown> = {
+    _meta: {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      projectId,
+      embeddingModel: embeddingModel?.name || null,
+      counts
+    },
+    ...data
+  };
+
   await db.close();
 
   const format = options.format || 'json';
   const outputPath = path.resolve(outputFile);
 
   if (format === 'json') {
-    fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
+    fs.writeFileSync(outputPath, JSON.stringify(exportPayload, null, 2));
   } else if (format === 'sql') {
     // Generate SQL insert statements
     const lines: string[] = [];
-    for (const [table, rows] of Object.entries(data)) {
+    // Map data keys to actual table names
+    const tableMap: Record<string, string> = {
+      entities: `${prefix}_entities`,
+      vectors: `${prefix}_vectors`,
+      relationships: `${prefix}_relationships`,
+      sessions: `${prefix}_sessions`,
+      messages: `${prefix}_messages`,
+      checkpoints: `${prefix}_checkpoints`,
+      memory_items: `${prefix}_memory_items`,
+      reflections: `${prefix}_reflections`,
+    };
+    for (const [key, rows] of Object.entries(data)) {
+      if (!Array.isArray(rows)) continue;
+      const tableName = tableMap[key] || `${prefix}_${key}`;
       for (const row of rows as Record<string, unknown>[]) {
         const cols = Object.keys(row).join(', ');
         const vals = Object.values(row).map(v =>
           v === null ? 'NULL' : typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v
         ).join(', ');
-        lines.push(`INSERT INTO ${prefix}_${table} (${cols}) VALUES (${vals});`);
+        lines.push(`INSERT INTO ${tableName} (${cols}) VALUES (${vals});`);
       }
     }
     fs.writeFileSync(outputPath, lines.join('\n'));
   }
 
   const stats = fs.statSync(outputPath);
+  const countSummary = Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(', ');
   output.log(`Exported to ${outputPath} (${formatBytes(stats.size)})`);
+  output.log(`  ${countSummary}`);
 }
 
 async function importData(
@@ -331,6 +379,7 @@ async function importData(
   inputFile: string,
   options: {
     merge?: boolean;
+    force?: boolean;
     db?: string;
   },
   output: CLIOutput
@@ -349,55 +398,210 @@ async function importData(
   const content = fs.readFileSync(inputPath, 'utf-8');
   const data = JSON.parse(content);
 
-  let imported = 0;
-
-  // Clear existing data if not merging
-  if (!options.merge) {
-    db.run(`DELETE FROM ${prefix}_relationships`);
-    db.run(`DELETE FROM ${prefix}_entities`);
-    db.run(`DELETE FROM ${prefix}_messages`);
-    db.run(`DELETE FROM ${prefix}_sessions`);
+  // Check metadata if present
+  if (data._meta) {
+    output.log(`Import: version ${data._meta.version}, exported ${data._meta.exportedAt}`);
+    if (data._meta.embeddingModel) {
+      const currentModel = db.get<{ name: string }>(`SELECT name FROM embedding_models LIMIT 1`);
+      if (currentModel && currentModel.name !== data._meta.embeddingModel && !options.force) {
+        output.log(colors.yellow(
+          `Warning: Export used embedding model "${data._meta.embeddingModel}" but current is "${currentModel.name}". ` +
+          `Vectors may not be compatible. Use --force to import anyway.`
+        ));
+      }
+    }
   }
 
-  // Import entities
+  const counts: Record<string, number> = {};
+
+  // Clear existing data if not merging (order matters for foreign keys)
+  if (!options.merge) {
+    db.run(`DELETE FROM ${prefix}_vectors`);
+    db.run(`DELETE FROM ${prefix}_relationships`);
+    db.run(`DELETE FROM ${prefix}_messages`);
+    db.run(`DELETE FROM ${prefix}_sessions`);
+    db.run(`DELETE FROM ${prefix}_checkpoints`);
+    db.run(`DELETE FROM ${prefix}_memory_items`);
+    db.run(`DELETE FROM ${prefix}_reflections`);
+    db.run(`DELETE FROM ${prefix}_entities`);
+  }
+
+  // Import entities (with content and metadata)
   if (data.entities) {
+    let entityCount = 0;
     for (const entity of data.entities) {
       try {
         db.run(`
           INSERT OR REPLACE INTO ${prefix}_entities
-          (id, qualified_name, name, type, file_path, start_line, end_line, summary, hash, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (id, qualified_name, name, type, content, summary, metadata,
+           file_path, start_line, end_line, hash, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
           entity.id, entity.qualified_name, entity.name, entity.type,
+          entity.content, entity.summary,
+          typeof entity.metadata === 'string' ? entity.metadata : JSON.stringify(entity.metadata || null),
           entity.file_path, entity.start_line, entity.end_line,
-          entity.summary, entity.hash || entity.content_hash, entity.created_at, entity.updated_at
+          entity.hash || entity.content_hash, entity.created_at, entity.updated_at
         ]);
-        imported++;
+        entityCount++;
       } catch {
         // Skip duplicates in merge mode
       }
     }
+    counts.entities = entityCount;
+  }
+
+  // Import vectors
+  if (data.vectors) {
+    let vectorCount = 0;
+    for (const v of data.vectors) {
+      try {
+        db.run(`
+          INSERT OR REPLACE INTO ${prefix}_vectors
+          (id, entity_id, model_id, embedding, content_hash, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `, [
+          v.id, v.entity_id, v.model_id,
+          typeof v.embedding === 'string' ? v.embedding : JSON.stringify(v.embedding),
+          v.content_hash, v.created_at
+        ]);
+        vectorCount++;
+      } catch {
+        // Skip orphaned vectors (entity_id not found)
+      }
+    }
+    counts.vectors = vectorCount;
   }
 
   // Import relationships
   if (data.relationships) {
+    let relCount = 0;
     for (const rel of data.relationships) {
       try {
         db.run(`
           INSERT OR REPLACE INTO ${prefix}_relationships
-          (id, source_id, target_id, relationship, weight, created_at)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `, [rel.id, rel.source_id, rel.target_id, rel.relationship || rel.type, rel.weight, rel.created_at]);
-        imported++;
+          (id, source_id, target_id, relationship, weight, metadata, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [
+          rel.id, rel.source_id, rel.target_id,
+          rel.relationship || rel.type, rel.weight,
+          typeof rel.metadata === 'string' ? rel.metadata : JSON.stringify(rel.metadata || null),
+          rel.created_at
+        ]);
+        relCount++;
       } catch {
-        // Skip duplicates
+        // Skip orphaned relationships
       }
     }
+    counts.relationships = relCount;
+  }
+
+  // Import sessions
+  if (data.sessions) {
+    let sessionCount = 0;
+    for (const session of data.sessions) {
+      try {
+        db.run(`
+          INSERT OR REPLACE INTO ${prefix}_sessions
+          (id, name, status, summary, message_count, created_at, updated_at, archived_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          session.id, session.name, session.status, session.summary,
+          session.message_count, session.created_at, session.updated_at, session.archived_at
+        ]);
+        sessionCount++;
+      } catch { /* skip */ }
+    }
+    counts.sessions = sessionCount;
+  }
+
+  // Import messages
+  if (data.messages) {
+    let msgCount = 0;
+    for (const msg of data.messages) {
+      try {
+        db.run(`
+          INSERT OR REPLACE INTO ${prefix}_messages
+          (id, session_id, role, content, metadata, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `, [
+          msg.id, msg.session_id, msg.role, msg.content,
+          typeof msg.metadata === 'string' ? msg.metadata : JSON.stringify(msg.metadata || null),
+          msg.created_at
+        ]);
+        msgCount++;
+      } catch { /* skip */ }
+    }
+    counts.messages = msgCount;
+  }
+
+  // Import checkpoints (if present, from --full export)
+  if (data.checkpoints) {
+    let cpCount = 0;
+    for (const cp of data.checkpoints) {
+      try {
+        db.run(`
+          INSERT OR REPLACE INTO ${prefix}_checkpoints
+          (id, session_id, step_number, created_at, state_json, description, trigger_type, duration_ms, token_usage)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          cp.id, cp.session_id, cp.step_number, cp.created_at,
+          cp.state_json, cp.description, cp.trigger_type, cp.duration_ms, cp.token_usage
+        ]);
+        cpCount++;
+      } catch { /* skip */ }
+    }
+    counts.checkpoints = cpCount;
+  }
+
+  // Import memory items (if present)
+  if (data.memory_items) {
+    let memCount = 0;
+    for (const mi of data.memory_items) {
+      try {
+        db.run(`
+          INSERT OR REPLACE INTO ${prefix}_memory_items
+          (id, session_id, content, type, tier, access_count, last_accessed_at, created_at,
+           relevance_score, token_count, metadata_json, embedding_json)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          mi.id, mi.session_id, mi.content, mi.type, mi.tier,
+          mi.access_count, mi.last_accessed_at, mi.created_at,
+          mi.relevance_score, mi.token_count, mi.metadata_json, mi.embedding_json
+        ]);
+        memCount++;
+      } catch { /* skip */ }
+    }
+    counts.memory_items = memCount;
+  }
+
+  // Import reflections (if present)
+  if (data.reflections) {
+    let refCount = 0;
+    for (const ref of data.reflections) {
+      try {
+        db.run(`
+          INSERT OR REPLACE INTO ${prefix}_reflections
+          (id, session_id, created_at, task_description, attempt_number, outcome,
+           what_worked_json, what_did_not_work_json, next_strategy, tags_json,
+           embedding_json, related_entity_ids_json)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          ref.id, ref.session_id, ref.created_at, ref.task_description,
+          ref.attempt_number, ref.outcome, ref.what_worked_json,
+          ref.what_did_not_work_json, ref.next_strategy, ref.tags_json,
+          ref.embedding_json, ref.related_entity_ids_json
+        ]);
+        refCount++;
+      } catch { /* skip */ }
+    }
+    counts.reflections = refCount;
   }
 
   await db.close();
 
-  output.log(`Imported ${imported} records from ${inputPath}`);
+  const countSummary = Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(', ');
+  output.log(`Imported ${countSummary} from ${inputPath}`);
 }
 
 async function checkHealth(
