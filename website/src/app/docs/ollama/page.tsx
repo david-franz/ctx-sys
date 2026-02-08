@@ -71,12 +71,12 @@ export default function OllamaPage() {
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`ollama pull nomic-embed-text`}
+{`ollama pull mxbai-embed-large:latest`}
           </code>
         </pre>
       </div>
       <p>
-        <code>nomic-embed-text</code> produces 768-dimensional vectors and is
+        <code>mxbai-embed-large</code> produces 1024-dimensional vectors and is
         used by ctx-sys for all semantic search operations. It is compact and
         runs well on most hardware.
       </p>
@@ -108,7 +108,7 @@ export default function OllamaPage() {
         </pre>
       </div>
       <p>
-        You should see both <code>nomic-embed-text</code> and{' '}
+        You should see both <code>mxbai-embed-large</code> and{' '}
         <code>qwen3:0.6b</code> in the output.
       </p>
 
@@ -158,13 +158,13 @@ export default function OllamaPage() {
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`ctx embed`}
+{`ctx-sys embed run`}
           </code>
         </pre>
       </div>
       <p>
         This processes all indexed entities through the{' '}
-        <code>nomic-embed-text</code> model and stores the resulting vectors
+        <code>mxbai-embed-large</code> model and stores the resulting vectors
         for semantic search.
       </p>
 
@@ -176,7 +176,7 @@ export default function OllamaPage() {
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`ctx summarize`}
+{`ctx-sys summarize`}
           </code>
         </pre>
       </div>
@@ -211,7 +211,7 @@ export default function OllamaPage() {
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`ollama pull nomic-embed-text
+{`ollama pull mxbai-embed-large:latest
 ollama pull qwen3:0.6b`}
           </code>
         </pre>
@@ -250,7 +250,7 @@ ollama pull qwen3:0.6b`}
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
 {`export OPENAI_API_KEY=sk-your-key-here
-ctx embed`}
+ctx-sys embed run`}
           </code>
         </pre>
       </div>

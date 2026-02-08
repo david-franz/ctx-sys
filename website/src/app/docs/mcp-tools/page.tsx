@@ -3,7 +3,7 @@ export default function McpToolsPage() {
     <>
       <h1>MCP Tools Reference</h1>
       <p>
-        ctx-sys exposes 33 tools through the Model Context Protocol (MCP). AI
+        ctx-sys exposes 30 tools through the Model Context Protocol (MCP). AI
         assistants like Claude Desktop and Cursor can call these tools
         automatically to understand your codebase, track conversations, and
         retrieve relevant context.

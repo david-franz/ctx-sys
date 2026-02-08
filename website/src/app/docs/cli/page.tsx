@@ -72,7 +72,7 @@ export default function CLIReferencePage() {
       <p>
         ctx-sys provides <strong>33 CLI commands</strong> organized by function.
         Both <code>ctx</code> and <code>ctx-sys</code> work as the command
-        name &mdash; all examples below use <code>ctx</code> for brevity.
+        name &mdash; all examples below use <code>ctx-sys</code>.
       </p>
 
       {/* ------------------------------------------------------------------ */}
@@ -198,7 +198,7 @@ export default function CLIReferencePage() {
         Initialize a ctx-sys project. Creates a <code>.ctx-sys/</code> directory
         with default configuration in the target directory.
       </p>
-      <CmdBlock>{`ctx init [directory]`}</CmdBlock>
+      <CmdBlock>{`ctx-sys init [directory]`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-n, --name <name>', description: 'Set a custom project name' },
@@ -206,7 +206,7 @@ export default function CLIReferencePage() {
           { flag: '--global', description: 'Write to the global configuration directory instead' },
         ]}
       />
-      <CmdBlock>{`$ ctx init --name my-api
+      <CmdBlock>{`$ ctx-sys init --name my-api
 Initialized ctx-sys project "my-api" in /home/user/my-api
 Created .ctx-sys/config.yaml`}</CmdBlock>
 
@@ -217,7 +217,7 @@ Created .ctx-sys/config.yaml`}</CmdBlock>
         entities (functions, classes, modules, etc.), and discovers relationships
         between them.
       </p>
-      <CmdBlock>{`ctx index [directory]`}</CmdBlock>
+      <CmdBlock>{`ctx-sys index [directory]`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-f, --force', description: 'Force re-index even if files have not changed' },
@@ -232,7 +232,7 @@ Created .ctx-sys/config.yaml`}</CmdBlock>
           { flag: '--embed-batch-size <n>', description: 'Batch size for embedding generation' },
         ]}
       />
-      <CmdBlock>{`$ ctx index --embed --exclude "vendor/**,dist/**"
+      <CmdBlock>{`$ ctx-sys index --exclude "vendor/**,dist/**"
 Indexing codebase...
 Parsed 142 files
 Extracted 387 entities
@@ -246,7 +246,7 @@ Done in 18.4s`}</CmdBlock>
         Search the indexed codebase. Supports keyword, semantic (vector), and
         hybrid search modes. Results are ranked by relevance score.
       </p>
-      <CmdBlock>{`ctx search <query>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys search <query>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -259,7 +259,7 @@ Done in 18.4s`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx search --semantic --limit 5 "authentication middleware"
+      <CmdBlock>{`$ ctx-sys search --semantic --limit 5 "authentication middleware"
 Results (5 matches):
 
   1. src/middleware/auth.ts::authenticateRequest  [0.92]
@@ -274,7 +274,7 @@ Results (5 matches):
         Watch the project directory for file changes and automatically re-index
         affected files. Useful during active development.
       </p>
-      <CmdBlock>{`ctx watch [directory]`}</CmdBlock>
+      <CmdBlock>{`ctx-sys watch [directory]`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-d, --db <path>', description: 'Path to database file' },
@@ -284,7 +284,7 @@ Results (5 matches):
           { flag: '-q, --quiet', description: 'Suppress progress output' },
         ]}
       />
-      <CmdBlock>{`$ ctx watch --debounce 500
+      <CmdBlock>{`$ ctx-sys watch --debounce 500
 Watching /home/user/my-api for changes...
 [12:34:01] Changed: src/routes/users.ts (re-indexed 3 entities)`}</CmdBlock>
 
@@ -295,10 +295,10 @@ Watching /home/user/my-api for changes...
         <code>get</code>, <code>set</code>, <code>list</code>, and{' '}
         <code>path</code>.
       </p>
-      <CmdBlock>{`ctx config get <key>
-ctx config set <key> <value>
-ctx config list
-ctx config path`}</CmdBlock>
+      <CmdBlock>{`ctx-sys config get <key>
+ctx-sys config set <key> <value>
+ctx-sys config list
+ctx-sys config path`}</CmdBlock>
       <p>
         Each subcommand accepts scope flags to target either the project-level
         or global configuration:
@@ -309,12 +309,12 @@ ctx config path`}</CmdBlock>
           { flag: '-g, --global', description: 'Target global configuration (config get, set, list)' },
         ]}
       />
-      <CmdBlock>{`$ ctx config set embedding.model nomic-embed-text --project
-Set embedding.model = nomic-embed-text (project)
+      <CmdBlock>{`$ ctx-sys config set embedding.model mxbai-embed-large:latest --project
+Set embedding.model = mxbai-embed-large:latest (project)
 
-$ ctx config list --global
+$ ctx-sys config list --global
 embedding.provider = ollama
-embedding.model = nomic-embed-text
+embedding.model = mxbai-embed-large:latest
 summarization.provider = ollama`}</CmdBlock>
 
       {/* ---- status ------------------------------------------------------ */}
@@ -323,14 +323,14 @@ summarization.provider = ollama`}</CmdBlock>
         Show the current project status and statistics, including entity counts,
         relationship counts, embedding coverage, and last index time.
       </p>
-      <CmdBlock>{`ctx status [directory]`}</CmdBlock>
+      <CmdBlock>{`ctx-sys status [directory]`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-d, --db <path>', description: 'Path to database file' },
           { flag: '--json', description: 'Output as JSON' },
         ]}
       />
-      <CmdBlock>{`$ ctx status
+      <CmdBlock>{`$ ctx-sys status
 Project: my-api (/home/user/my-api)
 Database: .ctx-sys/ctx.db (4.2 MB)
 
@@ -347,7 +347,7 @@ Last indexed:  2 minutes ago`}</CmdBlock>
         communicates over stdio and exposes all ctx-sys tools to AI assistants
         such as Claude Desktop and Cursor.
       </p>
-      <CmdBlock>{`ctx serve`}</CmdBlock>
+      <CmdBlock>{`ctx-sys serve`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-d, --db <path>', description: 'Path to database file' },
@@ -355,7 +355,7 @@ Last indexed:  2 minutes ago`}</CmdBlock>
           { flag: '-v, --version <version>', description: 'Server version advertised to clients' },
         ]}
       />
-      <CmdBlock>{`$ ctx serve --name my-api
+      <CmdBlock>{`$ ctx-sys serve --name my-api
 Starting MCP server on stdio...
 Project: /home/user/my-api
 Entities: 387 | Relationships: 612
@@ -372,7 +372,7 @@ Ready for connections.`}</CmdBlock>
         List entities in the project. Results can be filtered by type or source
         file and paginated with limit and offset.
       </p>
-      <CmdBlock>{`ctx entities`}</CmdBlock>
+      <CmdBlock>{`ctx-sys entities`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -384,7 +384,7 @@ Ready for connections.`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx entities --type function --limit 5
+      <CmdBlock>{`$ ctx-sys entities --type function --limit 5
 ID   Type      Name                  File
 ---  --------  --------------------  --------------------------
 1    function  authenticateRequest   src/middleware/auth.ts
@@ -399,7 +399,7 @@ ID   Type      Name                  File
         Show detailed information about a single entity, including its metadata,
         relationships, and optionally its full source content.
       </p>
-      <CmdBlock>{`ctx entity <id>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys entity <id>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -408,7 +408,7 @@ ID   Type      Name                  File
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx entity 1 --content
+      <CmdBlock>{`$ ctx-sys entity 1 --content
 Entity: authenticateRequest
 Type:   function
 File:   src/middleware/auth.ts
@@ -430,7 +430,7 @@ Content:
         Delete an entity from the project database. Associated relationships and
         embeddings are also removed.
       </p>
-      <CmdBlock>{`ctx entity-delete <id>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys entity-delete <id>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -438,7 +438,7 @@ Content:
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx entity-delete 42 --force
+      <CmdBlock>{`$ ctx-sys entity-delete 42 --force
 Deleted entity 42 (authenticateRequest)`}</CmdBlock>
 
       {/* ---- entity-stats ------------------------------------------------ */}
@@ -446,7 +446,7 @@ Deleted entity 42 (authenticateRequest)`}</CmdBlock>
       <p>
         Show a breakdown of entity counts by type, file, and other dimensions.
       </p>
-      <CmdBlock>{`ctx entity-stats`}</CmdBlock>
+      <CmdBlock>{`ctx-sys entity-stats`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -454,7 +454,7 @@ Deleted entity 42 (authenticateRequest)`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx entity-stats
+      <CmdBlock>{`$ ctx-sys entity-stats
 Entity Statistics:
 
 By Type:
@@ -477,7 +477,7 @@ Total: 387 entities across 142 files`}</CmdBlock>
         Traverse the entity relationship graph starting from a given entity.
         Shows connected entities up to the specified depth.
       </p>
-      <CmdBlock>{`ctx graph <entity>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys graph <entity>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -488,7 +488,7 @@ Total: 387 entities across 142 files`}</CmdBlock>
           { flag: '--db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx graph authenticateRequest --depth 1 --direction outgoing
+      <CmdBlock>{`$ ctx-sys graph authenticateRequest --depth 1 --direction outgoing
 authenticateRequest (function)
   -- calls --> verifyToken (function)
   -- calls --> getUserById (function)
@@ -500,7 +500,7 @@ authenticateRequest (function)
         Show statistics about the entity relationship graph, including node and
         edge counts and type distributions.
       </p>
-      <CmdBlock>{`ctx graph-stats`}</CmdBlock>
+      <CmdBlock>{`ctx-sys graph-stats`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -508,7 +508,7 @@ authenticateRequest (function)
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx graph-stats
+      <CmdBlock>{`$ ctx-sys graph-stats
 Graph Statistics:
 
 Nodes: 387
@@ -526,7 +526,7 @@ By Relationship Type:
         List relationships in the project. Filter by type, source entity, or
         target entity.
       </p>
-      <CmdBlock>{`ctx relationships`}</CmdBlock>
+      <CmdBlock>{`ctx-sys relationships`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -538,7 +538,7 @@ By Relationship Type:
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx relationships --type calls --source 1 --limit 10
+      <CmdBlock>{`$ ctx-sys relationships --type calls --source 1 --limit 10
 Source                  Type    Target              Weight
 ----------------------  ------  ------------------  ------
 authenticateRequest     calls   verifyToken         1.0
@@ -550,7 +550,7 @@ authenticateRequest     calls   getUserById         1.0`}</CmdBlock>
         Manually create a relationship between two entities. Useful for adding
         domain-specific connections that the parser cannot detect automatically.
       </p>
-      <CmdBlock>{`ctx link <source> <type> <target>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys link <source> <type> <target>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -558,7 +558,7 @@ authenticateRequest     calls   getUserById         1.0`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx link authenticateRequest depends_on AuthConfig --weight 0.8
+      <CmdBlock>{`$ ctx-sys link authenticateRequest depends_on AuthConfig --weight 0.8
 Created relationship: authenticateRequest --depends_on--> AuthConfig (0.8)`}</CmdBlock>
 
       {/* ================================================================== */}
@@ -573,7 +573,7 @@ Created relationship: authenticateRequest --depends_on--> AuthConfig (0.8)`}</Cm
         search and are stored in the project database. Requires a running
         Ollama instance or configured embedding provider.
       </p>
-      <CmdBlock>{`ctx embed`}</CmdBlock>
+      <CmdBlock>{`ctx-sys embed run`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -584,7 +584,7 @@ Created relationship: authenticateRequest --depends_on--> AuthConfig (0.8)`}</Cm
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx embed --type function --limit 100
+      <CmdBlock>{`$ ctx-sys embed run --type function --limit 100
 Embedding 100 function entities...
 [========================================] 100/100
 Done in 12.3s`}</CmdBlock>
@@ -595,7 +595,7 @@ Done in 12.3s`}</CmdBlock>
         Show the current embedding coverage: how many entities have embeddings
         and how many are pending.
       </p>
-      <CmdBlock>{`ctx embed-status`}</CmdBlock>
+      <CmdBlock>{`ctx-sys embed-status`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -603,7 +603,7 @@ Done in 12.3s`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx embed-status
+      <CmdBlock>{`$ ctx-sys embed-status
 Embedding Status:
 
 Total entities:  387
@@ -623,7 +623,7 @@ By Type:
         Remove orphaned embeddings whose parent entities no longer exist. Frees
         database space after entities are deleted or re-indexed.
       </p>
-      <CmdBlock>{`ctx embed-cleanup`}</CmdBlock>
+      <CmdBlock>{`ctx-sys embed-cleanup`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -631,7 +631,7 @@ By Type:
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx embed-cleanup --force
+      <CmdBlock>{`$ ctx-sys embed-cleanup --force
 Removed 12 orphaned embeddings
 Freed 1.4 MB`}</CmdBlock>
 
@@ -647,7 +647,7 @@ Freed 1.4 MB`}</CmdBlock>
         model. Summaries improve search relevance and provide context to AI
         assistants.
       </p>
-      <CmdBlock>{`ctx summarize`}</CmdBlock>
+      <CmdBlock>{`ctx-sys summarize`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -661,7 +661,7 @@ Freed 1.4 MB`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx summarize --provider ollama --limit 50
+      <CmdBlock>{`$ ctx-sys summarize --provider ollama --limit 50
 Summarizing 50 entities...
 [========================================] 50/50
 Done in 34.1s`}</CmdBlock>
@@ -672,7 +672,7 @@ Done in 34.1s`}</CmdBlock>
         Show the current summarization coverage: how many entities have
         summaries and how many are pending.
       </p>
-      <CmdBlock>{`ctx summarize-status`}</CmdBlock>
+      <CmdBlock>{`ctx-sys summarize-status`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -680,7 +680,7 @@ Done in 34.1s`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx summarize-status
+      <CmdBlock>{`$ ctx-sys summarize-status
 Summarization Status:
 
 Total entities:   387
@@ -693,13 +693,13 @@ Missing:          245 (63%)`}</CmdBlock>
         List available LLM providers and their connection status. Shows which
         providers are configured and reachable.
       </p>
-      <CmdBlock>{`ctx providers`}</CmdBlock>
+      <CmdBlock>{`ctx-sys providers`}</CmdBlock>
       <OptTable
         options={[
           { flag: '--json', description: 'Output as JSON' },
         ]}
       />
-      <CmdBlock>{`$ ctx providers
+      <CmdBlock>{`$ ctx-sys providers
 Available Providers:
 
   ollama     connected  (http://localhost:11434)
@@ -717,7 +717,7 @@ Available Providers:
         List conversation sessions. Sessions are created automatically when AI
         assistants interact with ctx-sys via the MCP server.
       </p>
-      <CmdBlock>{`ctx sessions`}</CmdBlock>
+      <CmdBlock>{`ctx-sys sessions`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -727,7 +727,7 @@ Available Providers:
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx sessions --status active --limit 5
+      <CmdBlock>{`$ ctx-sys sessions --status active --limit 5
 ID                                    Status   Messages  Created
 ------------------------------------  -------  --------  -------------------
 a1b2c3d4-e5f6-7890-abcd-ef1234567890  active   24        2025-01-15 10:30:00
@@ -739,7 +739,7 @@ f0e1d2c3-b4a5-6789-0fed-cba987654321  active   12        2025-01-15 09:15:00`}</
         View messages in a conversation session. If no session ID is provided,
         shows messages from the most recent session.
       </p>
-      <CmdBlock>{`ctx messages [sessionId]`}</CmdBlock>
+      <CmdBlock>{`ctx-sys messages [sessionId]`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -749,7 +749,7 @@ f0e1d2c3-b4a5-6789-0fed-cba987654321  active   12        2025-01-15 09:15:00`}</
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx messages --limit 3
+      <CmdBlock>{`$ ctx-sys messages --limit 3
 Session: a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
 [user]  How does the auth middleware work?
@@ -768,7 +768,7 @@ Session: a1b2c3d4-e5f6-7890-abcd-ef1234567890
         of documents. Extracted content is linked to related code entities when
         possible.
       </p>
-      <CmdBlock>{`ctx doc-index <path>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys doc-index <path>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -779,7 +779,7 @@ Session: a1b2c3d4-e5f6-7890-abcd-ef1234567890
           { flag: '-q, --quiet', description: 'Suppress progress output' },
         ]}
       />
-      <CmdBlock>{`$ ctx doc-index docs/ --extract-entities --embed
+      <CmdBlock>{`$ ctx-sys doc-index docs/ --extract-entities --embed
 Indexing documents in docs/...
 Processed 8 files
 Extracted 23 entities
@@ -793,7 +793,7 @@ Done in 5.1s`}</CmdBlock>
         that static analysis cannot detect. Analyzes entity content and infers
         semantic connections.
       </p>
-      <CmdBlock>{`ctx extract-relationships`}</CmdBlock>
+      <CmdBlock>{`ctx-sys extract-relationships`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -804,7 +804,7 @@ Done in 5.1s`}</CmdBlock>
           { flag: '-q, --quiet', description: 'Suppress progress output' },
         ]}
       />
-      <CmdBlock>{`$ ctx extract-relationships --limit 20 --dry-run
+      <CmdBlock>{`$ ctx-sys extract-relationships --limit 20 --dry-run
 Analyzing 20 entities for relationships...
 Discovered 14 new relationships:
   authenticateRequest  --depends_on-->  JwtConfig
@@ -818,7 +818,7 @@ Discovered 14 new relationships:
         Search for architectural decisions recorded across conversation
         sessions. Useful for finding past rationale and design choices.
       </p>
-      <CmdBlock>{`ctx search-decisions <query>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys search-decisions <query>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -828,7 +828,7 @@ Discovered 14 new relationships:
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx search-decisions "database schema migration"
+      <CmdBlock>{`$ ctx-sys search-decisions "database schema migration"
 Results (2 matches):
 
   1. [session a1b2c3d4] Decision: Use incremental migrations
@@ -848,7 +848,7 @@ Results (2 matches):
         View usage analytics for the project, including query counts, token
         usage, and search performance over a configurable time period.
       </p>
-      <CmdBlock>{`ctx analytics`}</CmdBlock>
+      <CmdBlock>{`ctx-sys analytics`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -857,7 +857,7 @@ Results (2 matches):
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx analytics --period week
+      <CmdBlock>{`$ ctx-sys analytics --period week
 Analytics (last 7 days):
 
 Queries:         142
@@ -871,7 +871,7 @@ Token savings:   ~34,000 tokens`}</CmdBlock>
         Show a high-level project dashboard with key statistics, recent queries,
         and the most-accessed entities.
       </p>
-      <CmdBlock>{`ctx dashboard`}</CmdBlock>
+      <CmdBlock>{`ctx-sys dashboard`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -879,7 +879,7 @@ Token savings:   ~34,000 tokens`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx dashboard
+      <CmdBlock>{`$ ctx-sys dashboard
 Project Dashboard: my-api
 
 Entities: 387 | Relationships: 612 | Embeddings: 100%
@@ -905,7 +905,7 @@ Recent Queries:
         Inspect the contents of database tables directly. Useful for debugging
         indexing issues or verifying data integrity.
       </p>
-      <CmdBlock>{`ctx inspect`}</CmdBlock>
+      <CmdBlock>{`ctx-sys inspect`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -914,7 +914,7 @@ Recent Queries:
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx inspect --table entities
+      <CmdBlock>{`$ ctx-sys inspect --table entities
 Table: entities (387 rows)
 
 Columns: id, type, name, qualified_name, file_path, start_line, end_line, content, summary, ...
@@ -929,7 +929,7 @@ Sample rows:
         Execute a raw SQL query against the project database. Intended for
         advanced debugging and ad-hoc analysis.
       </p>
-      <CmdBlock>{`ctx query <sql>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys query <sql>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -937,7 +937,7 @@ Sample rows:
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx query "SELECT type, COUNT(*) as count FROM entities GROUP BY type"
+      <CmdBlock>{`$ ctx-sys query "SELECT type, COUNT(*) as count FROM entities GROUP BY type"
 type        count
 ----------  -----
 function    214
@@ -952,7 +952,7 @@ variable     50`}</CmdBlock>
         Export project data to a file. Supports JSON and SQL formats. You can
         export all data or limit to entities and/or relationships.
       </p>
-      <CmdBlock>{`ctx export <output-file>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys export <output-file>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -962,7 +962,7 @@ variable     50`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx export backup.json --format json --entities
+      <CmdBlock>{`$ ctx-sys export backup.json --format json --entities
 Exported 387 entities to backup.json (142 KB)`}</CmdBlock>
 
       {/* ---- import ------------------------------------------------------ */}
@@ -972,7 +972,7 @@ Exported 387 entities to backup.json (142 KB)`}</CmdBlock>
         <code>--merge</code> to combine with existing data instead of replacing
         it.
       </p>
-      <CmdBlock>{`ctx import <input-file>`}</CmdBlock>
+      <CmdBlock>{`ctx-sys import <input-file>`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -980,7 +980,7 @@ Exported 387 entities to backup.json (142 KB)`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx import backup.json --merge
+      <CmdBlock>{`$ ctx-sys import backup.json --merge
 Imported 387 entities (12 new, 375 updated)`}</CmdBlock>
 
       {/* ---- health ------------------------------------------------------ */}
@@ -990,7 +990,7 @@ Imported 387 entities (12 new, 375 updated)`}</CmdBlock>
         configuration is valid, and optional services (Ollama, LLM providers)
         are reachable.
       </p>
-      <CmdBlock>{`ctx health`}</CmdBlock>
+      <CmdBlock>{`ctx-sys debug health`}</CmdBlock>
       <OptTable
         options={[
           { flag: '-p, --project <path>', description: 'Path to the project' },
@@ -998,12 +998,12 @@ Imported 387 entities (12 new, 375 updated)`}</CmdBlock>
           { flag: '-d, --db <path>', description: 'Path to database file' },
         ]}
       />
-      <CmdBlock>{`$ ctx health
+      <CmdBlock>{`$ ctx-sys debug health
 System Health:
 
   Database:    OK (4.2 MB, 387 entities)
   Config:      OK (.ctx-sys/config.yaml)
-  Ollama:      OK (http://localhost:11434, model: nomic-embed-text)
+  Ollama:      OK (http://localhost:11434, model: mxbai-embed-large)
   OpenAI:      Not configured
   Anthropic:   Not configured
 
@@ -1019,37 +1019,37 @@ All checks passed.`}</CmdBlock>
         Initialize, index with embeddings, and start the MCP server in a single
         chain:
       </p>
-      <CmdBlock>{`$ ctx init && ctx index --embed && ctx serve`}</CmdBlock>
+      <CmdBlock>{`$ ctx-sys init && ctx-sys index && ctx-sys serve`}</CmdBlock>
 
       <h3 id="workflow-reindex">Re-index after changes</h3>
       <p>
         Re-index the codebase and regenerate embeddings for changed files:
       </p>
-      <CmdBlock>{`$ ctx index --embed`}</CmdBlock>
+      <CmdBlock>{`$ ctx-sys index`}</CmdBlock>
 
       <h3 id="workflow-semantic-search">Semantic search</h3>
       <p>
         Run a natural-language search using vector embeddings:
       </p>
-      <CmdBlock>{`$ ctx search --semantic "how does the billing system calculate taxes"`}</CmdBlock>
+      <CmdBlock>{`$ ctx-sys search --semantic "how does the billing system calculate taxes"`}</CmdBlock>
 
       <h3 id="workflow-status-check">Quick status check</h3>
       <p>
         See an overview of the current project state:
       </p>
-      <CmdBlock>{`$ ctx status`}</CmdBlock>
+      <CmdBlock>{`$ ctx-sys status`}</CmdBlock>
 
       <h3 id="workflow-summarize-all">Generate summaries for all entities</h3>
       <p>
         Use a local Ollama model to summarize every entity in the project:
       </p>
-      <CmdBlock>{`$ ctx summarize --provider ollama --limit 500`}</CmdBlock>
+      <CmdBlock>{`$ ctx-sys summarize --provider ollama --limit 500`}</CmdBlock>
 
       <h3 id="workflow-export-backup">Export and back up project data</h3>
       <p>
         Export the full project to a JSON file for backup or migration:
       </p>
-      <CmdBlock>{`$ ctx export project-backup.json --format json`}</CmdBlock>
+      <CmdBlock>{`$ ctx-sys export project-backup.json --format json`}</CmdBlock>
 
       <hr />
       <p>

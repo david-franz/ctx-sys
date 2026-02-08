@@ -80,7 +80,7 @@ ctx-sys v1.0.0`}
 {`# Install Ollama (visit https://ollama.ai for platform-specific instructions)
 
 # Pull the embedding model
-$ ollama pull nomic-embed-text
+$ ollama pull mxbai-embed-large:latest
 
 # Pull the summarization model
 $ ollama pull qwen3:0.6b`}
@@ -115,13 +115,13 @@ $ ollama pull qwen3:0.6b`}
       <h2>Project Initialization</h2>
       <p>
         Navigate to the root of a project you want to index and run{' '}
-        <code>ctx init</code>:
+        <code>ctx-sys init</code>:
       </p>
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
 {`$ cd /path/to/your/project
-$ ctx init
+$ ctx-sys init
 
 Initialized ctx-sys project in /path/to/your/project
 Created .ctx-sys/config.yaml`}
@@ -182,7 +182,7 @@ Created .ctx-sys/config.yaml`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx index --embed
+{`$ ctx-sys index
 
 Indexing codebase...
 Parsed 142 files
@@ -194,7 +194,7 @@ Done in 18.4s`}
         </pre>
       </div>
       <p>
-        Subsequent runs of <code>ctx index</code> are incremental &mdash;
+        Subsequent runs of <code>ctx-sys index</code> are incremental &mdash;
         only changed files are re-parsed, making updates fast.
       </p>
 
@@ -235,7 +235,7 @@ $ export PATH="$HOME/.npm-global/bin:$PATH"`}
 
       <h3>Ollama connection refused</h3>
       <p>
-        If <code>ctx index --embed</code> fails to connect to Ollama, make
+        If <code>ctx-sys index</code> fails to connect to Ollama, make
         sure the Ollama service is running (<code>ollama serve</code>) and
         listening on the default port (11434).
       </p>

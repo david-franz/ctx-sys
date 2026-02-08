@@ -40,7 +40,7 @@ export default function CursorPage() {
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`ctx init && ctx index --embed`}
+{`ctx-sys init && ctx-sys index`}
           </code>
         </pre>
       </div>
@@ -96,7 +96,7 @@ export default function CursorPage() {
           The <code>ctx-sys</code> command is accessible from your system PATH
         </li>
         <li>
-          You have indexed at least one project with <code>ctx init</code>
+          You have indexed at least one project with <code>ctx-sys init</code>
         </li>
         <li>
           No other process is blocking the MCP connection
@@ -131,7 +131,7 @@ export default function CursorPage() {
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`ctx hooks install`}
+{`ctx-sys hooks install`}
           </code>
         </pre>
       </div>
@@ -142,7 +142,7 @@ export default function CursorPage() {
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`ctx index --embed`}
+{`ctx-sys index`}
           </code>
         </pre>
       </div>

@@ -6,7 +6,7 @@ export default function ClaudeDesktopPage() {
       <h1>Claude Desktop Integration</h1>
       <p>
         Connecting ctx-sys to Claude Desktop gives your AI assistant direct
-        access to <strong>33 MCP tools</strong> for navigating, searching, and
+        access to <strong>30 MCP tools</strong> for navigating, searching, and
         understanding your codebase. Claude can query your indexed code, trace
         relationships between entities, recall past conversations, and much
         more &mdash; all without you having to copy-paste context manually.
@@ -38,7 +38,7 @@ export default function ClaudeDesktopPage() {
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`ctx init && ctx index --embed`}
+{`ctx-sys init && ctx-sys index`}
           </code>
         </pre>
       </div>
@@ -122,7 +122,7 @@ export default function ClaudeDesktopPage() {
 
       <h2>Available Tools</h2>
       <p>
-        ctx-sys exposes <strong>33 tools</strong> across 9 categories. Here is
+        ctx-sys exposes <strong>30 tools</strong> across 9 categories. Here is
         an overview of each category with key tools:
       </p>
 
@@ -289,8 +289,8 @@ export default function ClaudeDesktopPage() {
       <ul>
         <li>
           <strong>Keep your index up to date.</strong> Run{' '}
-          <code>ctx index --embed</code> after major changes, or install git
-          hooks with <code>ctx hooks install</code> to automate it.
+          <code>ctx-sys index</code> after major changes, or install git
+          hooks with <code>ctx-sys hooks install</code> to automate it.
         </li>
         <li>
           <strong>Be specific in your questions.</strong> Claude can search more
@@ -304,7 +304,7 @@ export default function ClaudeDesktopPage() {
         </li>
         <li>
           <strong>Index documentation too.</strong> Use{' '}
-          <code>ctx index-doc README.md</code> to include markdown files in the
+          <code>ctx-sys index-doc README.md</code> to include markdown files in the
           search index.
         </li>
         <li>
@@ -316,7 +316,7 @@ export default function ClaudeDesktopPage() {
 
       <h2>Next Steps</h2>
       <p>
-        For the complete list of all 33 tools with detailed parameter
+        For the complete list of all 30 tools with detailed parameter
         descriptions and usage examples, see the{' '}
         <Link href="/docs/mcp-tools">MCP Tools Reference</Link>.
       </p>

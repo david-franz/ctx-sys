@@ -47,10 +47,7 @@ export default function DocsPage() {
       {/* Quick Start Guide */}
       <h2>Quick Start</h2>
       <p>
-        Get up and running in under a minute. Both{' '}
-        <code>ctx</code> and <code>ctx-sys</code> commands are available after
-        installation &mdash; the examples below use <code>ctx</code> for
-        brevity.
+        Get up and running in under 5 minutes.
       </p>
 
       <div className="not-prose rounded-2xl bg-slate-800 p-6 overflow-x-auto">
@@ -58,41 +55,35 @@ export default function DocsPage() {
           {/* Step 1 */}
           <div>
             <p className="text-slate-400 mb-1">
-              # 1. Install ctx-sys globally
+              # 1. Install ctx-sys and pull the embedding model
             </p>
             <p className="text-green-400">npm install -g ctx-sys</p>
+            <p className="text-green-400">ollama pull mxbai-embed-large:latest</p>
           </div>
 
           {/* Step 2 */}
           <div>
             <p className="text-slate-400 mb-1">
-              # 2. Initialize in your project directory
+              # 2. Initialize and index your project (includes docs + embeddings)
             </p>
-            <p className="text-green-400">ctx init</p>
+            <p className="text-green-400">cd your-project</p>
+            <p className="text-green-400">ctx-sys init &amp;&amp; ctx-sys index</p>
           </div>
 
           {/* Step 3 */}
           <div>
             <p className="text-slate-400 mb-1">
-              # 3. Index your codebase with embeddings
+              # 3. Search your codebase
             </p>
-            <p className="text-green-400">ctx index --embed</p>
+            <p className="text-green-400">ctx-sys search &quot;how does authentication work&quot;</p>
           </div>
 
           {/* Step 4 */}
           <div>
             <p className="text-slate-400 mb-1">
-              # 4. Search your codebase
+              # 4. Start the MCP server for your AI assistant
             </p>
-            <p className="text-green-400">ctx search &quot;your query&quot;</p>
-          </div>
-
-          {/* Step 5 */}
-          <div>
-            <p className="text-slate-400 mb-1">
-              # 5. Connect to Claude Desktop via MCP
-            </p>
-            <p className="text-green-400">ctx serve</p>
+            <p className="text-green-400">ctx-sys serve</p>
           </div>
         </div>
       </div>
@@ -183,7 +174,7 @@ export default function DocsPage() {
         </Link>
 
         <Link
-          href="#"
+          href="https://github.com/davidfranz/ctx-sys"
           className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 transition-colors no-underline"
         >
           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">

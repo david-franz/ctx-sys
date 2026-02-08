@@ -41,7 +41,7 @@ export default function ConfigurationPage() {
         The global configuration file lives at{' '}
         <code>~/.ctx-sys/config.yaml</code>. It controls database location,
         provider credentials, default model choices, and CLI behavior. Create
-        this file manually or use <code>ctx config set</code> to modify
+        this file manually or use <code>ctx-sys config set</code> to modify
         individual keys.
       </p>
 
@@ -75,7 +75,7 @@ defaults:
 
   embeddings:
     provider: ollama                   # string, default: ollama
-    model: nomic-embed-text            # string, default: nomic-embed-text
+    model: mxbai-embed-large:latest    # string, default: mxbai-embed-large:latest
 
 # CLI preferences
 cli:
@@ -147,7 +147,7 @@ cli:
           <tr>
             <td><code>defaults.embeddings.model</code></td>
             <td>string</td>
-            <td><code>nomic-embed-text</code></td>
+            <td><code>mxbai-embed-large:latest</code></td>
             <td>Default model for embedding generation</td>
           </tr>
           <tr>
@@ -170,7 +170,7 @@ cli:
       <p>
         Each project has its own configuration file at{' '}
         <code>.ctx-sys/config.yaml</code> relative to the project root. This
-        file is created automatically when you run <code>ctx init</code>.
+        file is created automatically when you run <code>ctx-sys init</code>.
         Project-level settings override the corresponding global defaults.
       </p>
 
@@ -207,7 +207,7 @@ summarization:
 # Embedding settings
 embeddings:
   provider: ollama                     # string, default: ollama
-  model: nomic-embed-text              # string, default: nomic-embed-text
+  model: mxbai-embed-large:latest      # string, default: mxbai-embed-large:latest
 
 # Session management
 sessions:
@@ -293,7 +293,7 @@ retrieval:
           <tr>
             <td><code>embeddings.model</code></td>
             <td>string</td>
-            <td><code>nomic-embed-text</code></td>
+            <td><code>mxbai-embed-large:latest</code></td>
             <td>Model used for generating vector embeddings</td>
           </tr>
           <tr>
@@ -381,14 +381,14 @@ export OLLAMA_BASE_URL=http://gpu-server:11434`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx config list
+{`$ ctx-sys config list
 
 database.path              = ~/.ctx-sys/ctx-sys.db
 providers.ollama.base_url  = http://localhost:11434
 defaults.summarization.provider = ollama
 defaults.summarization.model    = qwen3:0.6b
 defaults.embeddings.provider    = ollama
-defaults.embeddings.model       = nomic-embed-text
+defaults.embeddings.model       = mxbai-embed-large:latest
 cli.colors                 = true
 cli.progress               = true`}
           </code>
@@ -399,9 +399,9 @@ cli.progress               = true`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx config get defaults.embeddings.model
+{`$ ctx-sys config get defaults.embeddings.model
 
-nomic-embed-text`}
+mxbai-embed-large:latest`}
           </code>
         </pre>
       </div>
@@ -410,7 +410,7 @@ nomic-embed-text`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx config set defaults.embeddings.provider openai
+{`$ ctx-sys config set defaults.embeddings.provider openai
 
 Set defaults.embeddings.provider = openai`}
           </code>
@@ -439,7 +439,7 @@ defaults:
     model: qwen3:0.6b
   embeddings:
     provider: ollama
-    model: nomic-embed-text`}
+    model: mxbai-embed-large:latest`}
           </code>
         </pre>
       </div>

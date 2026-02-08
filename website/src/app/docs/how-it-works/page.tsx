@@ -128,7 +128,7 @@ export default function HowItWorksPage() {
       </p>
       <p>
         By default, embeddings are generated using the{' '}
-        <strong>nomic-embed-text</strong> model (768 dimensions) running
+        <strong>mxbai-embed-large</strong> model (1024 dimensions) running
         locally via <strong>Ollama</strong>. This keeps all data on your
         machine. Alternatively, you can configure <strong>OpenAI</strong> as
         the embedding provider for faster processing.
@@ -307,7 +307,7 @@ export default function HowItWorksPage() {
         ctx-sys exposes all of its functionality through the{' '}
         <strong>Model Context Protocol (MCP)</strong>, an open standard for
         connecting AI assistants to external tools and data sources. When you
-        run <code>ctx serve</code>, ctx-sys starts an MCP server that
+        run <code>ctx-sys serve</code>, ctx-sys starts an MCP server that
         communicates over stdio.
       </p>
       <p>

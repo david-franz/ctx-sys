@@ -31,7 +31,7 @@ export default function Home() {
                 Get Started
               </Link>
               <Link
-                href="#"
+                href="https://github.com/davidfranz/ctx-sys"
                 className="rounded-xl border border-slate-600 hover:border-slate-500 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-slate-800"
               >
                 View on GitHub
@@ -53,17 +53,17 @@ export default function Home() {
               <p className="text-slate-400"># Install ctx-sys (also available as &apos;ctx&apos;)</p>
               <p className="text-green-400">$ npm install -g ctx-sys</p>
               <p className="text-slate-400 mt-4"># Initialize and index your codebase</p>
-              <p className="text-green-400">$ ctx init &amp;&amp; ctx index --embed</p>
+              <p className="text-green-400">$ ctx-sys init &amp;&amp; ctx-sys index</p>
               <p className="text-cyan-400 mt-1">&#10003; Created project &quot;my-app&quot;</p>
               <p className="text-cyan-400">&#10003; Indexed 1,247 entities across 5 languages</p>
-              <p className="text-cyan-400">&#10003; Generated embeddings with nomic-embed-text</p>
+              <p className="text-cyan-400">&#10003; Generated embeddings with mxbai-embed-large</p>
               <p className="text-slate-400 mt-4"># Search your codebase</p>
-              <p className="text-green-400">$ ctx search &quot;authentication middleware&quot;</p>
+              <p className="text-green-400">$ ctx-sys search &quot;authentication middleware&quot;</p>
               <p className="text-cyan-400 mt-1">&#10003; Found 8 relevant results (hybrid RAG)</p>
               <p className="text-slate-400 mt-4"># Start MCP server for AI assistants</p>
-              <p className="text-green-400">$ ctx serve</p>
+              <p className="text-green-400">$ ctx-sys serve</p>
               <p className="text-cyan-400 mt-1">&#10003; MCP server running on stdio</p>
-              <p className="text-white mt-1">Ready! 33 tools available for AI assistants.</p>
+              <p className="text-white mt-1">Ready! 30 tools available for AI assistants.</p>
             </div>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4 text-center">
             <Stat value="33" label="CLI Commands" />
-            <Stat value="33" label="MCP Tools" />
+            <Stat value="30" label="MCP Tools" />
             <Stat value="5" label="Languages" />
             <Stat value="MIT" label="Open Source" />
           </div>
@@ -177,7 +177,7 @@ export default function Home() {
             />
             <FeatureCard
               title="MCP Protocol"
-              description="Native Model Context Protocol integration exposes 33 tools that AI assistants can call automatically for context retrieval."
+              description="Native Model Context Protocol integration exposes 30 tools that AI assistants can call automatically for context retrieval."
             />
             <FeatureCard
               title="Local-First"
@@ -208,12 +208,12 @@ export default function Home() {
             <Step
               number="1"
               title="Index Your Codebase"
-              description="Run ctx init && ctx index --embed to parse your code with tree-sitter, extract entities and relationships, and generate semantic embeddings."
+              description="Run ctx-sys init && ctx-sys index to parse your code with tree-sitter, extract entities and relationships, and generate semantic embeddings."
             />
             <Step
               number="2"
               title="Connect Your AI"
-              description="Run ctx serve and add it to your Claude Desktop or Cursor config. It exposes 33 MCP tools that your AI calls automatically."
+              description="Run ctx-sys serve and add it to your Claude Desktop or Cursor config. It exposes 30 MCP tools that your AI calls automatically."
             />
             <Step
               number="3"
@@ -244,7 +244,7 @@ export default function Home() {
             />
             <PipelineCard
               title="Semantic Search"
-              tech="Ollama + nomic-embed-text"
+              tech="Ollama + mxbai-embed-large"
               description="Vector embeddings capture meaning beyond keywords. Finds conceptually related code even when terminology differs."
             />
             <PipelineCard
@@ -286,7 +286,7 @@ export default function Home() {
             />
             <IntegrationCard
               title="Any MCP Client"
-              description="ctx-sys implements the Model Context Protocol standard. Any MCP-compatible client can connect and use all 33 tools."
+              description="ctx-sys implements the Model Context Protocol standard. Any MCP-compatible client can connect and use all 30 tools."
               href="/docs/mcp-tools"
             />
           </div>
@@ -310,7 +310,7 @@ export default function Home() {
               Quick Start Guide
             </Link>
             <Link
-              href="#"
+              href="https://github.com/davidfranz/ctx-sys"
               className="rounded-xl border-2 border-white/30 hover:border-white/50 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-white/10"
             >
               View on GitHub

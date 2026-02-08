@@ -8,7 +8,7 @@ export default function TroubleshootingPage() {
         This page covers common issues you may encounter when using ctx-sys,
         organized by category. If your issue is not listed here, check the{' '}
         <a
-          href="#"
+          href="https://github.com/davidfranz/ctx-sys/issues"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -124,7 +124,7 @@ $ ollama serve`}
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
 {`# Pull the embedding model
-$ ollama pull nomic-embed-text
+$ ollama pull mxbai-embed-large:latest
 
 # Pull the summarization model
 $ ollama pull qwen3:0.6b
@@ -181,7 +181,7 @@ $ ollama list`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx config set providers.ollama.base_url http://localhost:11435
+{`$ ctx-sys config set providers.ollama.base_url http://localhost:11435
 
 # Or set via environment variable:
 $ export OLLAMA_BASE_URL=http://your-server:11434`}
@@ -194,7 +194,7 @@ $ export OLLAMA_BASE_URL=http://your-server:11434`}
 
       <h3>No entities found after indexing</h3>
       <p>
-        Running <code>ctx index</code> completes but reports zero entities.
+        Running <code>ctx-sys index</code> completes but reports zero entities.
       </p>
       <p><strong>Possible causes and solutions:</strong></p>
       <ul>
@@ -211,7 +211,7 @@ $ export OLLAMA_BASE_URL=http://your-server:11434`}
         </li>
         <li>
           <strong>Wrong directory</strong> &mdash; make sure you are running{' '}
-          <code>ctx index</code> from the project root where{' '}
+          <code>ctx-sys index</code> from the project root where{' '}
           <code>.ctx-sys/</code> is located.
         </li>
       </ul>
@@ -219,10 +219,10 @@ $ export OLLAMA_BASE_URL=http://your-server:11434`}
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
 {`# Check current project status
-$ ctx status
+$ ctx-sys status
 
 # Verify which files are being indexed
-$ ctx index --dry-run`}
+$ ctx-sys index --dry-run`}
           </code>
         </pre>
       </div>
@@ -241,7 +241,7 @@ $ ctx index --dry-run`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx index --concurrency 8`}
+{`$ ctx-sys index --concurrency 8`}
           </code>
         </pre>
       </div>
@@ -281,7 +281,7 @@ $ ctx index --dry-run`}
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
 {`# Review your project config
-$ ctx config list
+$ ctx-sys config list
 
 # Check if the file extension is supported
 # Supported: .ts, .tsx, .js, .jsx, .py, .rs, .go, .java`}
@@ -300,7 +300,7 @@ $ ctx config list
 
       <h3>No search results</h3>
       <p>
-        Running <code>ctx search</code> returns no matches.
+        Running <code>ctx-sys search</code> returns no matches.
       </p>
       <p><strong>Solutions:</strong></p>
       <ul>
@@ -311,7 +311,7 @@ $ ctx config list
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx status
+{`$ ctx-sys status
 
 Project: my-project
 Entities: 387 | Relationships: 612 | Embeddings: 387
@@ -321,7 +321,7 @@ Last indexed: 2 minutes ago`}
       </div>
       <ul>
         <li>
-          If the entity count is zero, run <code>ctx index</code> first.
+          If the entity count is zero, run <code>ctx-sys index</code> first.
         </li>
         <li>
           Try broader search terms or different phrasing.
@@ -342,7 +342,7 @@ Last indexed: 2 minutes ago`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx embed`}
+{`$ ctx-sys embed run`}
           </code>
         </pre>
       </div>
@@ -355,7 +355,7 @@ Last indexed: 2 minutes ago`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx search "authentication flow" --semantic`}
+{`$ ctx-sys search "authentication flow" --semantic`}
           </code>
         </pre>
       </div>
@@ -381,7 +381,7 @@ Last indexed: 2 minutes ago`}
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
 {`$ curl http://localhost:11434/api/tags
-$ ollama pull nomic-embed-text`}
+$ ollama pull mxbai-embed-large:latest`}
           </code>
         </pre>
       </div>
@@ -393,9 +393,9 @@ $ ollama pull nomic-embed-text`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx status
+{`$ ctx-sys status
 # Look for "Embeddings: 387" - if it shows 0, run:
-$ ctx embed`}
+$ ctx-sys embed run`}
           </code>
         </pre>
       </div>
@@ -527,7 +527,7 @@ $ chmod 644 ~/.ctx-sys/ctx-sys.db`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx health
+{`$ ctx-sys debug health
 
 Database: OK
 Tables: 8/8 present
@@ -545,7 +545,7 @@ Integrity check: PASSED`}
       <div className="not-prose rounded-xl bg-slate-800 p-5 overflow-x-auto my-4">
         <pre className="m-0 p-0 bg-transparent border-0">
           <code className="text-sm text-slate-50 font-mono">
-{`$ ctx index --force --embed`}
+{`$ ctx-sys index --force`}
           </code>
         </pre>
       </div>
@@ -559,7 +559,7 @@ Integrity check: PASSED`}
         and summarization, which runs entirely on your local machine. If you
         configure OpenAI or Anthropic as providers, entity content will be
         sent to those APIs for processing. You can verify your provider
-        settings with <code>ctx config list</code>.
+        settings with <code>ctx-sys config list</code>.
       </p>
 
       <h3>Which languages are supported?</h3>
@@ -588,7 +588,7 @@ Integrity check: PASSED`}
       <h3>How do I reset everything and start over?</h3>
       <p>
         Delete the <code>.ctx-sys/</code> directory in your project root and
-        run <code>ctx init</code> again. To also remove the global database,
+        run <code>ctx-sys init</code> again. To also remove the global database,
         delete <code>~/.ctx-sys/ctx-sys.db</code>.
       </p>
 
@@ -596,7 +596,7 @@ Integrity check: PASSED`}
       <p>
         If this page does not resolve your issue, you can open an issue on the{' '}
         <a
-          href="#"
+          href="https://github.com/davidfranz/ctx-sys"
           target="_blank"
           rel="noopener noreferrer"
         >
