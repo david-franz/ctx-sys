@@ -1,8 +1,22 @@
 import Database from 'better-sqlite3';
-import * as sqliteVec from 'sqlite-vec';
 import * as fs from 'fs';
 import * as path from 'path';
 import { GLOBAL_SCHEMA, createProjectTables, dropProjectTables } from './schema';
+
+/**
+ * Attempt to load sqlite-vec. Returns null if unavailable (unsupported platform, missing binary).
+ * Vector search will be disabled but keyword + graph search still work.
+ */
+function loadSqliteVec(): typeof import('sqlite-vec') | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('sqlite-vec');
+  } catch {
+    return null;
+  }
+}
+
+const sqliteVecModule = loadSqliteVec();
 
 export interface RunResult {
   changes: number;
@@ -17,6 +31,7 @@ export class DatabaseConnection {
   private db: Database.Database | null = null;
   private dbPath: string;
   private initialized: boolean = false;
+  private _vecAvailable: boolean = false;
 
   constructor(dbPath: string) {
     this.dbPath = dbPath;
@@ -37,7 +52,16 @@ export class DatabaseConnection {
     this.db = new Database(this.dbPath);
 
     // Load sqlite-vec extension for native vector search
-    sqliteVec.load(this.db);
+    if (sqliteVecModule) {
+      try {
+        sqliteVecModule.load(this.db);
+        this._vecAvailable = true;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`sqlite-vec failed to load: ${msg}`);
+        console.warn('Vector search disabled. Keyword and graph search still work.');
+      }
+    }
 
     // Enable foreign keys and WAL mode for better performance
     this.db.pragma('foreign_keys = ON');
@@ -151,6 +175,13 @@ export class DatabaseConnection {
    */
   isInitialized(): boolean {
     return this.initialized;
+  }
+
+  /**
+   * Check if sqlite-vec (vector search) is available.
+   */
+  isVecAvailable(): boolean {
+    return this._vecAvailable;
   }
 
   /**

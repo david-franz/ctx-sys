@@ -42,6 +42,13 @@ export class EmbeddingManager {
     private projectId: string,
     private provider: EmbeddingProvider
   ) {
+    if (!db.isVecAvailable()) {
+      throw new Error(
+        'sqlite-vec is not available. Vector search requires the sqlite-vec extension.\n' +
+        'Try: npm install -g ctx-sys (reinstall to get platform binaries)\n' +
+        'Keyword and graph search still work without it.'
+      );
+    }
     this.projectPrefix = sanitizeProjectId(projectId);
     this.vectorMetaTable = `${this.projectPrefix}_vector_meta`;
     this.vecTable = `${this.projectPrefix}_vec`;
