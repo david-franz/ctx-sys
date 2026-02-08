@@ -630,7 +630,16 @@ export class CoreService {
           entityTypes: options?.includeTypes
         });
         if (result.usedHyDE) {
-          queryEmbedding = result.embedding;
+          // F10f.5: Quality guard — verify HyDE embedding finds something relevant
+          const quickCheck = await embeddingManager.findSimilarByVector(result.embedding, {
+            limit: 1,
+            entityTypes: options?.includeTypes?.map(t => t as string)
+          });
+
+          if (quickCheck.length > 0 && quickCheck[0].score >= 0.3) {
+            queryEmbedding = result.embedding;
+          }
+          // else: HyDE embedding didn't match anything well, discard it
         }
       } catch {
         // HyDE failed (e.g. Ollama not running) — fall back to normal search
