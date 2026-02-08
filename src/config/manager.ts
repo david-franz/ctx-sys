@@ -391,7 +391,7 @@ export class ConfigManager {
       },
       defaults: {
         summarization: { provider: 'ollama', model: 'qwen2.5-coder:7b' },
-        embeddings: { provider: 'ollama', model: 'nomic-embed-text' }
+        embeddings: { provider: 'ollama', model: 'mxbai-embed-large:latest' }
       },
       cli: {
         colors: true,
@@ -418,7 +418,7 @@ export class ConfigManager {
       },
       embeddings: {
         provider: 'ollama',
-        model: 'nomic-embed-text'
+        model: 'mxbai-embed-large:latest'
       },
       sessions: {
         retention: 30,
@@ -427,6 +427,9 @@ export class ConfigManager {
       retrieval: {
         default_max_tokens: 4000,
         strategies: ['vector', 'graph', 'fts']
+      },
+      hyde: {
+        model: 'gemma3:12b'
       }
     };
   }
@@ -444,7 +447,7 @@ export const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
   },
   defaults: {
     summarization: { provider: 'ollama', model: 'qwen2.5-coder:7b' },
-    embeddings: { provider: 'ollama', model: 'nomic-embed-text' }
+    embeddings: { provider: 'ollama', model: 'mxbai-embed-large:latest' }
   },
   cli: {
     colors: true,
@@ -469,7 +472,7 @@ export const DEFAULT_PROJECT_CONFIG_FILE: ProjectConfigFile = {
   },
   embeddings: {
     provider: 'ollama',
-    model: 'nomic-embed-text'
+    model: 'mxbai-embed-large:latest'
   },
   sessions: {
     retention: 30,
@@ -478,5 +481,8 @@ export const DEFAULT_PROJECT_CONFIG_FILE: ProjectConfigFile = {
   retrieval: {
     default_max_tokens: 4000,
     strategies: ['vector', 'graph', 'fts']
+  },
+  hyde: {
+    model: 'gemma3:12b'
   }
 };

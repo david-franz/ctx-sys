@@ -232,7 +232,7 @@ async function runIndex(
       try {
         const ollamaProvider = new OllamaEmbeddingProvider({
           baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
-          model: config.defaults?.embeddings?.model || 'nomic-embed-text'
+          model: config.defaults?.embeddings?.model || 'mxbai-embed-large:latest'
         });
         const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
 

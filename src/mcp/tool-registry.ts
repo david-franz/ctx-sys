@@ -1026,7 +1026,7 @@ export class ToolRegistry {
             },
             hyde_model: {
               type: 'string',
-              description: 'Model for HyDE hypothetical generation (default: gemma3:4b)'
+              description: 'Model for HyDE hypothetical generation (default: gemma3:12b)'
             },
             project: {
               type: 'string',

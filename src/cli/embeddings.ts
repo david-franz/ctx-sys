@@ -123,7 +123,7 @@ async function generateEmbeddings(
 
   const ollamaProvider = new OllamaEmbeddingProvider({
     baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
-    model: config.defaults?.embeddings?.model || 'nomic-embed-text'
+    model: config.defaults?.embeddings?.model || 'mxbai-embed-large:latest'
   });
 
   // Handle --model-upgrade: re-embed entities with vectors from a different model
@@ -265,7 +265,7 @@ async function generateEmbeddings(
     db.save();
   } catch (err) {
     output.error(`Embedding failed: ${err instanceof Error ? err.message : String(err)}`);
-    output.log('Make sure Ollama is running with nomic-embed-text model.');
+    output.log('Make sure Ollama is running with the configured embedding model.');
   } finally {
     await db.close();
   }
@@ -289,7 +289,7 @@ async function showEmbeddingStatus(
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
   const prefix = sanitizeProjectId(projectId);
 
-  const currentModel = config.defaults?.embeddings?.model || 'nomic-embed-text';
+  const currentModel = config.defaults?.embeddings?.model || 'mxbai-embed-large:latest';
   const ollamaProvider = new OllamaEmbeddingProvider({
     baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
     model: currentModel

@@ -30,7 +30,7 @@ export function createContextCommand(output: CLIOutput = defaultOutput): Command
     .option('--decompose', 'Break complex queries into sub-queries')
     .option('--gate', 'Skip retrieval for trivial queries')
     .option('--hyde', 'Use HyDE (Hypothetical Document Embeddings) for better semantic search')
-    .option('--hyde-model <model>', 'Model for HyDE hypothetical generation (default: gemma3:4b)')
+    .option('--hyde-model <model>', 'Model for HyDE hypothetical generation (default: gemma3:12b)')
     .option('--max-results <n>', 'Maximum number of results to include', '15')
     .option('--format <format>', 'Output format (markdown, json, text)', 'markdown')
     .option('-d, --db <path>', 'Custom database path')

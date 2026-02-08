@@ -80,8 +80,8 @@ async function runStatus(
   if (options.check) {
     // Full health check mode (replaces doctor command)
     let ollamaUrl = 'http://localhost:11434';
-    let embeddingModel = 'nomic-embed-text';
-    let hydeModel = 'gemma3:4b';
+    let embeddingModel = 'mxbai-embed-large:latest';
+    let hydeModel = 'gemma3:12b';
     let summarizationModel = 'qwen2.5-coder:7b';
 
     try {

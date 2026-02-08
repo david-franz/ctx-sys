@@ -90,7 +90,7 @@ async function runSearch(
         const baseUrl = config.providers?.ollama?.base_url || 'http://localhost:11434';
         const ollamaProvider = new OllamaEmbeddingProvider({
           baseUrl,
-          model: config.defaults?.embeddings?.model || 'nomic-embed-text'
+          model: config.defaults?.embeddings?.model || 'mxbai-embed-large:latest'
         });
         const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
 

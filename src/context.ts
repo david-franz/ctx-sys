@@ -81,12 +81,12 @@ export class AppContext {
         });
         this.embeddingProviders.set(projectId, provider);
       } else {
-        // Default to Ollama with nomic-embed-text to match stored embeddings.
+        // Default to Ollama with mxbai-embed-large to match stored embeddings.
         // Falls back to mock if Ollama is unavailable (semantic search will
         // gracefully degrade via per-strategy error handling).
         this.embeddingProviders.set(projectId, new OllamaEmbeddingProvider({
           baseUrl: 'http://localhost:11434',
-          model: 'nomic-embed-text'
+          model: 'mxbai-embed-large:latest'
         }));
       }
     }

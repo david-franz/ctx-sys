@@ -78,7 +78,7 @@ export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   },
   embeddings: {
     provider: 'ollama',
-    model: 'nomic-embed-text'
+    model: 'mxbai-embed-large:latest'
   },
   sessions: {
     retention: 30,
