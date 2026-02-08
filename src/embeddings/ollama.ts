@@ -14,18 +14,20 @@ function normalizeBaseUrl(url: string): string {
 }
 
 /**
- * Max context lengths (in tokens) for known embedding models.
- * nomic-embed-text has n_ctx_train=2048. ~4 chars per token is a safe estimate.
+ * Max input lengths (in characters) for known embedding models.
+ * Derived from context_length in tokens * ~3 chars/token (conservative for code).
+ * mxbai-embed-large: 512 tokens → ~1500 chars
+ * nomic-embed-text: 2048 tokens → ~6000 chars (we cap at 4000 for safety)
  */
 const MODEL_MAX_CHARS: Record<string, number> = {
   'nomic-embed-text': 4000,
-  'mxbai-embed-large': 2000,
+  'mxbai-embed-large': 1500,
   'all-minilm': 1000,
   'bge-base': 2000,
   'bge-large': 2000
 };
 
-const DEFAULT_MAX_CHARS = 4000;
+const DEFAULT_MAX_CHARS = 2000;
 
 const MODEL_DIMENSIONS: Record<string, number> = {
   'nomic-embed-text': 768,
@@ -57,41 +59,46 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
   readonly name = 'ollama';
   readonly modelId: string;
   readonly dimensions: number;
+  readonly maxChars: number;
 
   private baseModel: string;
 
-  constructor(private config: OllamaConfig, resolvedDimensions?: number) {
+  constructor(private config: OllamaConfig, resolved?: { dimensions?: number; maxChars?: number }) {
     this.config.baseUrl = normalizeBaseUrl(config.baseUrl);
     this.modelId = `ollama:${config.model}`;
     this.baseModel = config.model.split(':')[0];
-    this.dimensions = resolvedDimensions
+    this.dimensions = resolved?.dimensions
       ?? MODEL_DIMENSIONS[this.baseModel]
       ?? 768;
+    this.maxChars = resolved?.maxChars
+      ?? MODEL_MAX_CHARS[this.baseModel]
+      ?? DEFAULT_MAX_CHARS;
   }
 
   /**
-   * Create an OllamaEmbeddingProvider, auto-detecting dimensions from the model.
-   * Probes Ollama's /api/show endpoint, falls back to the hardcoded registry.
+   * Create an OllamaEmbeddingProvider, auto-detecting dimensions and context
+   * length from the model. Probes Ollama's /api/show endpoint, falls back to
+   * the hardcoded registry.
    */
   static async create(config: OllamaConfig): Promise<OllamaEmbeddingProvider> {
     const baseUrl = normalizeBaseUrl(config.baseUrl);
     const baseModel = config.model.split(':')[0];
 
-    // Fast path: known model in registry
-    if (MODEL_DIMENSIONS[baseModel]) {
+    // Fast path: known model in both registries
+    if (MODEL_DIMENSIONS[baseModel] && MODEL_MAX_CHARS[baseModel]) {
       return new OllamaEmbeddingProvider(config);
     }
 
     // Probe model metadata from Ollama
-    const detected = await OllamaEmbeddingProvider.detectDimensions(baseUrl, config.model);
+    const detected = await OllamaEmbeddingProvider.detectModelInfo(baseUrl, config.model);
     return new OllamaEmbeddingProvider(config, detected ?? undefined);
   }
 
   /**
-   * Detect embedding dimensions from Ollama's /api/show endpoint.
+   * Detect embedding dimensions and context length from Ollama's /api/show endpoint.
    * Returns null if detection fails (caller should fall back to defaults).
    */
-  static async detectDimensions(baseUrl: string, model: string): Promise<number | null> {
+  static async detectModelInfo(baseUrl: string, model: string): Promise<{ dimensions?: number; maxChars?: number } | null> {
     try {
       const response = await fetch(`${baseUrl}/api/show`, {
         method: 'POST',
@@ -105,16 +112,30 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
       };
       if (!data.model_info) return null;
 
-      // Look for *.embedding_length (prefix varies by architecture)
+      const result: { dimensions?: number; maxChars?: number } = {};
+
       for (const [key, value] of Object.entries(data.model_info)) {
         if (key.endsWith('.embedding_length') && typeof value === 'number') {
-          return value;
+          result.dimensions = value;
+        }
+        if (key.endsWith('.context_length') && typeof value === 'number') {
+          // Convert tokens to chars: ~3 chars/token is conservative for code
+          result.maxChars = Math.floor(value * 3);
         }
       }
-      return null;
+
+      return Object.keys(result).length > 0 ? result : null;
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Detect embedding dimensions only (backwards-compatible helper).
+   */
+  static async detectDimensions(baseUrl: string, model: string): Promise<number | null> {
+    const info = await OllamaEmbeddingProvider.detectModelInfo(baseUrl, model);
+    return info?.dimensions ?? null;
   }
 
   /**
@@ -128,9 +149,8 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
   }
 
   async embed(text: string, options?: EmbedOptions): Promise<number[]> {
-    const maxChars = MODEL_MAX_CHARS[this.baseModel] || DEFAULT_MAX_CHARS;
     const prefixed = this.applyPrefix(text, options?.isQuery ?? false);
-    const truncated = prefixed.length > maxChars ? prefixed.slice(0, maxChars) : prefixed;
+    const truncated = prefixed.length > this.maxChars ? prefixed.slice(0, this.maxChars) : prefixed;
 
     const response = await fetch(`${this.config.baseUrl}/api/embed`, {
       method: 'POST',
@@ -157,7 +177,6 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     const batchSize = options?.batchSize || 10;
     const results: number[][] = [];
     let completed = 0;
-    const maxChars = MODEL_MAX_CHARS[this.baseModel] || DEFAULT_MAX_CHARS;
     const isQuery = options?.isQuery ?? false;
 
     for (let i = 0; i < texts.length; i += batchSize) {
@@ -166,7 +185,7 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
       // Apply model-specific prefixes and truncate
       const truncatedBatch = batch.map(t => {
         const prefixed = this.applyPrefix(t, isQuery);
-        return prefixed.length > maxChars ? prefixed.slice(0, maxChars) : prefixed;
+        return prefixed.length > this.maxChars ? prefixed.slice(0, this.maxChars) : prefixed;
       });
 
       const response = await fetch(`${this.config.baseUrl}/api/embed`, {

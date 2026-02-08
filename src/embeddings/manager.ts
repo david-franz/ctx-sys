@@ -461,7 +461,8 @@ export class EmbeddingManager {
       // Chunk each entity and collect all chunk texts for batch embedding
       const allChunks: Array<{ entityId: string; text: string; chunkIndex: number; hash: string }> = [];
       for (const entity of batch) {
-        const chunks = chunkEntityForEmbedding(entity);
+        const maxChars = 'maxChars' in this.provider ? (this.provider as any).maxChars as number : undefined;
+        const chunks = chunkEntityForEmbedding(entity, maxChars ? { maxChars } : undefined);
         const hash = hashEntityContent(entity);
         for (const chunk of chunks) {
           allChunks.push({ entityId: entity.id, text: chunk.text, chunkIndex: chunk.chunkIndex, hash });
