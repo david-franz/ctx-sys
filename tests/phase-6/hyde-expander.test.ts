@@ -302,7 +302,7 @@ describe('F6.5 - HyDE Query Expansion', () => {
     it('should build basic prompt', () => {
       const prompt = buildHypotheticalPrompt('How does auth work?');
       expect(prompt).toContain('How does auth work?');
-      expect(prompt).toContain('documentation assistant');
+      expect(prompt).toContain('documentation expert');
     });
 
     it('should include entity type hint', () => {
