@@ -16,7 +16,7 @@ export interface ContextSource {
   entityId: string;
   name: string;
   type: string;
-  file?: string;
+  filePath?: string;
   line?: number;
   relevance: number;
 }
@@ -269,7 +269,7 @@ export class ContextAssembler {
           entityId: result.entity.id,
           name: result.entity.name,
           type: result.entity.type,
-          file: result.entity.filePath,
+          filePath: result.entity.filePath,
           line: result.entity.startLine,
           relevance: result.score
         });
@@ -526,8 +526,8 @@ ${this.escapeXml(content)}
         lines.push('---');
         lines.push('**Sources:**');
         for (const source of displaySources) {
-          const loc = source.file
-            ? `${source.file}${source.line ? `:${source.line}` : ''}`
+          const loc = source.filePath
+            ? `${source.filePath}${source.line ? `:${source.line}` : ''}`
             : source.type;
           lines.push(`- ${source.name} (${loc})`);
         }
@@ -539,7 +539,7 @@ ${this.escapeXml(content)}
       case 'xml':
         lines.push('<sources>');
         for (const source of displaySources) {
-          lines.push(`  <source name="${this.escapeXml(source.name)}" type="${source.type}"${source.file ? ` file="${this.escapeXml(source.file)}"` : ''} />`);
+          lines.push(`  <source name="${this.escapeXml(source.name)}" type="${source.type}"${source.filePath ? ` file="${this.escapeXml(source.filePath)}"` : ''} />`);
         }
         lines.push('</sources>');
         break;
