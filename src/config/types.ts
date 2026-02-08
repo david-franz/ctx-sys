@@ -126,6 +126,13 @@ export interface RetrievalConfig {
 }
 
 /**
+ * HyDE (Hypothetical Document Embeddings) configuration.
+ */
+export interface HyDeConfig {
+  model: string;
+}
+
+/**
  * Project-level configuration.
  */
 export interface ProjectConfigFile {
@@ -135,6 +142,7 @@ export interface ProjectConfigFile {
   embeddings: EmbeddingsConfig;
   sessions: SessionsConfig;
   retrieval: RetrievalConfig;
+  hyde?: HyDeConfig;
 }
 
 /**

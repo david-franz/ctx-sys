@@ -292,13 +292,17 @@ export class ProjectManager {
    * Deep merge two config objects.
    */
   private deepMergeConfig(base: ProjectConfig, override: Partial<ProjectConfig>): ProjectConfig {
-    return {
+    const result: ProjectConfig = {
       indexing: { ...base.indexing, ...override.indexing },
       summarization: { ...base.summarization, ...override.summarization },
       embeddings: { ...base.embeddings, ...override.embeddings },
       sessions: { ...base.sessions, ...override.sessions },
       retrieval: { ...base.retrieval, ...override.retrieval }
     };
+    if (override.hyde || base.hyde) {
+      result.hyde = { ...base.hyde, ...override.hyde } as ProjectConfig['hyde'];
+    }
+    return result;
   }
 
   /**

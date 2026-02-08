@@ -87,6 +87,7 @@ async function runStatus(
     try {
       ollamaUrl = config.providers?.ollama?.base_url || ollamaUrl;
       embeddingModel = config.projectConfig?.embeddings?.model || embeddingModel;
+      hydeModel = config.projectConfig?.hyde?.model || hydeModel;
       summarizationModel = config.projectConfig?.summarization?.model || summarizationModel;
     } catch {
       // Use defaults

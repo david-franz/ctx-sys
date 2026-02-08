@@ -13,12 +13,17 @@ export interface Project {
   lastSyncCommit?: string;
 }
 
+export interface HyDeConfig {
+  model: string;
+}
+
 export interface ProjectConfig {
   indexing: IndexingConfig;
   summarization: SummarizationConfig;
   embeddings: EmbeddingsConfig;
   sessions: SessionsConfig;
   retrieval: RetrievalConfig;
+  hyde?: HyDeConfig;
 }
 
 export interface IndexingConfig {

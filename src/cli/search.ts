@@ -99,7 +99,8 @@ async function runSearch(
 
         if (options.hyde) {
           // HyDE: generate hypothetical answer, embed that instead
-          const hydeProvider = new OllamaHypotheticalProvider({ baseUrl });
+          const hydeModel = config.projectConfig?.hyde?.model || process.env.CTX_HYDE_MODEL;
+          const hydeProvider = new OllamaHypotheticalProvider({ baseUrl, model: hydeModel });
           const hyde = new HyDEQueryExpander(hydeProvider, embeddingManager);
 
           const { embedding, usedHyDE, hypothetical } = await hyde.getSearchEmbedding(

@@ -249,6 +249,7 @@ export function createDoctorCommand(output: CLIOutput = defaultOutput): Command 
         ollamaUrl = resolved.providers?.ollama?.base_url || ollamaUrl;
         dbPath = options.db || resolved.database.path;
         embeddingModel = resolved.projectConfig?.embeddings?.model || embeddingModel;
+        hydeModel = resolved.projectConfig?.hyde?.model || hydeModel;
         summarizationModel = resolved.projectConfig?.summarization?.model || summarizationModel;
       } catch {
         // Use defaults if config resolution fails — local DB
