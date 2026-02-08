@@ -58,24 +58,27 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
   readonly modelId: string;
   readonly dimensions: number;
 
+  private baseModel: string;
+
   constructor(private config: OllamaConfig) {
     this.config.baseUrl = normalizeBaseUrl(config.baseUrl);
     this.modelId = `ollama:${config.model}`;
-    this.dimensions = MODEL_DIMENSIONS[config.model] || 768;
+    this.baseModel = config.model.split(':')[0];
+    this.dimensions = MODEL_DIMENSIONS[this.baseModel] || 768;
   }
 
   /**
    * Apply model-specific prefix to text based on whether it's a query or document.
    */
   private applyPrefix(text: string, isQuery: boolean): string {
-    const prefixes = MODEL_PREFIXES[this.config.model];
+    const prefixes = MODEL_PREFIXES[this.baseModel];
     if (!prefixes) return text;
     const prefix = isQuery ? prefixes.query : prefixes.document;
     return prefix + text;
   }
 
   async embed(text: string, options?: EmbedOptions): Promise<number[]> {
-    const maxChars = MODEL_MAX_CHARS[this.config.model] || DEFAULT_MAX_CHARS;
+    const maxChars = MODEL_MAX_CHARS[this.baseModel] || DEFAULT_MAX_CHARS;
     const prefixed = this.applyPrefix(text, options?.isQuery ?? false);
     const truncated = prefixed.length > maxChars ? prefixed.slice(0, maxChars) : prefixed;
 
@@ -104,7 +107,7 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     const batchSize = options?.batchSize || 10;
     const results: number[][] = [];
     let completed = 0;
-    const maxChars = MODEL_MAX_CHARS[this.config.model] || DEFAULT_MAX_CHARS;
+    const maxChars = MODEL_MAX_CHARS[this.baseModel] || DEFAULT_MAX_CHARS;
     const isQuery = options?.isQuery ?? false;
 
     for (let i = 0; i < texts.length; i += batchSize) {
