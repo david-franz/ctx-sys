@@ -316,6 +316,31 @@ Full system testing (CLI + MCP) revealed that the core `context_query` tool was 
 
 ---
 
+## Phase 10e: Knowledge Bases & Long-Term Context
+
+Shareable knowledge bases, full retrieval pipeline integration, conversation intelligence, and team instructions.
+
+| Feature | Description | Doc | Status |
+|---------|-------------|-----|--------|
+| **F10e.1** | Wire Full Retrieval Pipeline | [F10e.1-wire-retrieval-pipeline.md](phase-10e/F10e.1-wire-retrieval-pipeline.md) | Planned |
+| **F10e.2** | Fix Export/Import (Vectors + Content) | [F10e.2-fix-export-import.md](phase-10e/F10e.2-fix-export-import.md) | Planned |
+| **F10e.3** | Embedding Model Version Tracking | [F10e.3-model-version-tracking.md](phase-10e/F10e.3-model-version-tracking.md) | Planned |
+| **F10e.4** | Knowledge Base Packaging (.ctx-kb) | [F10e.4-knowledge-base-packaging.md](phase-10e/F10e.4-knowledge-base-packaging.md) | Planned |
+| **F10e.5** | Conversation Intelligence | [F10e.5-conversation-intelligence.md](phase-10e/F10e.5-conversation-intelligence.md) | Planned |
+| **F10e.6** | Incremental Session Summaries | [F10e.6-incremental-summaries.md](phase-10e/F10e.6-incremental-summaries.md) | Planned |
+| **F10e.7** | Team Instructions | [F10e.7-team-instructions.md](phase-10e/F10e.7-team-instructions.md) | Planned |
+
+**Key Deliverables:**
+
+- Wire RetrievalGate, ContextExpander, QueryDecomposer, HyDE as opt-in options on context_query (CLI + MCP)
+- Fix export/import to include vectors, content, and metadata — unblocks all distribution
+- Knowledge base packaging: `ctx-sys kb create/install/info` with `.ctx-kb` format
+- Conversation intelligence: message FTS5 + embeddings, persistent decisions, entity-message linking
+- Incremental session summaries with version history
+- Team instruction entity type with scope-based priority boosting
+
+---
+
 ## Phase 11: Integration & Team
 
 Deep IDE integration, automatic context injection, and team collaboration features.

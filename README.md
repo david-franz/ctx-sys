@@ -179,6 +179,20 @@ Full end-to-end system testing revealed critical issues. Analytics removed, core
 | **F10d.7** | CLI `context` command (mirrors MCP context_query) | Done |
 | **F10d.8** | HTML document indexing (.html/.htm support) | Done |
 
+### Phase 10e: Knowledge Bases & Long-Term Context
+
+Shareable knowledge bases, full retrieval pipeline, conversation intelligence, and team instructions.
+
+| Feature | Description | Status |
+| ------- | ----------- | ------ |
+| **F10e.1** | Wire full retrieval pipeline (gate, expander, decomposer, HyDE) as opt-in | Planned |
+| **F10e.2** | Fix export/import to include vectors, content, and metadata | Planned |
+| **F10e.3** | Embedding model version tracking for stale vector detection | Planned |
+| **F10e.4** | Knowledge base packaging (.ctx-kb create/install/info) | Planned |
+| **F10e.5** | Conversation intelligence (message FTS5, embeddings, persistent decisions) | Planned |
+| **F10e.6** | Incremental session summaries with version history | Planned |
+| **F10e.7** | Team instructions with scope-based priority boosting | Planned |
+
 ---
 
 ## Features
