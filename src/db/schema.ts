@@ -294,6 +294,27 @@ CREATE TRIGGER IF NOT EXISTS ${prefix}_entities_au AFTER UPDATE ON ${prefix}_ent
   VALUES (new.rowid, new.name, new.content, new.summary);
 END;
 
+-- F10e.6: Session summary versions for incremental summarization
+CREATE TABLE IF NOT EXISTS ${prefix}_session_summaries (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  version INTEGER NOT NULL,
+  summary TEXT NOT NULL,
+  topics TEXT,
+  decisions TEXT,
+  code_references TEXT,
+  key_points TEXT,
+  message_range_start TEXT,
+  message_range_end TEXT,
+  message_count INTEGER,
+  model TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (session_id) REFERENCES ${prefix}_sessions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_${prefix}_summaries_session
+  ON ${prefix}_session_summaries(session_id, version DESC);
+
 -- F10e.5: FTS5 for message search with porter stemming
 CREATE VIRTUAL TABLE IF NOT EXISTS ${prefix}_messages_fts USING fts5(
   content,
@@ -376,6 +397,7 @@ DROP TABLE IF EXISTS ${prefix}_entities_fts;
 DROP TABLE IF EXISTS ${prefix}_messages_fts;
 DROP TABLE IF EXISTS ${prefix}_decisions_fts;
 DROP TABLE IF EXISTS ${prefix}_decisions;
+DROP TABLE IF EXISTS ${prefix}_session_summaries;
 DROP TABLE IF EXISTS ${prefix}_context_suggestions;
 DROP TABLE IF EXISTS ${prefix}_context_subscriptions;
 DROP TABLE IF EXISTS ${prefix}_reflections;
@@ -417,6 +439,7 @@ export function getProjectTableNames(projectId: string): string[] {
     `${prefix}_memory_items`,
     `${prefix}_reflections`,
     `${prefix}_decisions`,
+    `${prefix}_session_summaries`,
     `${prefix}_context_subscriptions`,
     `${prefix}_context_suggestions`
   ];

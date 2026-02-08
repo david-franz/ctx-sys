@@ -1,6 +1,7 @@
 import { Message, ConversationSummary, Session } from './types';
 import { MessageStore } from './message-store';
 import { SessionManager } from './session-manager';
+import { SummaryVersionStore } from './summary-store';
 
 /**
  * Provider interface for generating summaries.
@@ -53,14 +54,16 @@ export interface SummarizerOptions {
  */
 export class ConversationSummarizer {
   private maxTranscriptLength: number;
+  private summaryStore?: SummaryVersionStore;
 
   constructor(
     private provider: SummaryProvider,
     private messageStore: MessageStore,
     private sessionManager: SessionManager,
-    options?: SummarizerOptions
+    options?: SummarizerOptions & { summaryStore?: SummaryVersionStore }
   ) {
     this.maxTranscriptLength = options?.maxTranscriptLength ?? 8000;
+    this.summaryStore = options?.summaryStore;
   }
 
   /**
@@ -113,6 +116,131 @@ export class ConversationSummarizer {
 
     const transcript = this.buildTranscript(messages);
     return this.generateSummary(transcript);
+  }
+
+  /**
+   * Incremental summarization: only process new messages since last summary.
+   * Falls back to full summarization if no previous summary exists.
+   */
+  async summarizeIncremental(sessionId: string, model?: string): Promise<{
+    summary: ConversationSummary;
+    version: number;
+    isIncremental: boolean;
+    messagesProcessed: number;
+  }> {
+    const session = this.sessionManager.get(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    // Get the latest summary version
+    const latestVersion = this.summaryStore?.getLatest(sessionId);
+    const lastMessageId = latestVersion?.messageRangeEnd;
+
+    // Get messages (all or just new ones)
+    const allMessages = this.messageStore.getBySession(sessionId);
+    if (allMessages.length === 0) {
+      return { summary: this.emptySummary(), version: 0, isIncremental: false, messagesProcessed: 0 };
+    }
+
+    let newMessages: Message[];
+    let isIncremental = false;
+
+    if (lastMessageId && latestVersion) {
+      // Find messages after the last summarized one
+      const lastIdx = allMessages.findIndex(m => m.id === lastMessageId);
+      if (lastIdx >= 0 && lastIdx < allMessages.length - 1) {
+        newMessages = allMessages.slice(lastIdx + 1);
+        isIncremental = true;
+      } else {
+        // Last message not found or no new messages
+        newMessages = allMessages;
+      }
+    } else {
+      newMessages = allMessages;
+    }
+
+    if (newMessages.length === 0 && latestVersion) {
+      return {
+        summary: latestVersion.summary,
+        version: latestVersion.version,
+        isIncremental: true,
+        messagesProcessed: 0
+      };
+    }
+
+    // Generate summary
+    let summary: ConversationSummary;
+    if (isIncremental && latestVersion) {
+      // Incremental: pass previous summary + new messages
+      const transcript = this.buildTranscript(newMessages);
+      const prompt = this.buildIncrementalPrompt(latestVersion.summary.overview, transcript);
+      const response = await this.provider.summarize(prompt);
+      summary = this.parseResponse(response);
+    } else {
+      // Full: process all messages
+      const transcript = this.buildTranscript(allMessages);
+      summary = await this.generateSummary(transcript);
+    }
+
+    // Store version
+    let version = 1;
+    if (this.summaryStore) {
+      const stored = this.summaryStore.create({
+        sessionId,
+        summary,
+        messageRangeStart: newMessages[0]?.id,
+        messageRangeEnd: newMessages[newMessages.length - 1]?.id,
+        messageCount: newMessages.length,
+        model
+      });
+      version = stored.version;
+    }
+
+    // Update session with latest summary
+    this.sessionManager.markSummarized(sessionId, summary.overview);
+
+    return {
+      summary,
+      version,
+      isIncremental,
+      messagesProcessed: newMessages.length
+    };
+  }
+
+  /**
+   * Build prompt for incremental summarization.
+   */
+  private buildIncrementalPrompt(previousSummary: string, newTranscript: string): string {
+    return `You are updating a conversation summary. The existing summary covers earlier messages.
+New messages have been added since then.
+
+Existing summary:
+${previousSummary}
+
+New messages:
+${newTranscript}
+
+Produce an updated summary incorporating the new messages.
+Use this exact format:
+
+OVERVIEW: (2-3 sentence updated summary)
+
+TOPICS:
+- topic 1
+- topic 2
+
+DECISIONS:
+- decision 1
+
+CODE_REFERENCES:
+- file or function 1
+
+KEY_POINTS:
+- important point 1
+
+Add new topics/decisions, update the overview, and preserve important earlier context.
+If a section has no items, write "none".`;
   }
 
   /**
