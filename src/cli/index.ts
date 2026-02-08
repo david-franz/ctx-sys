@@ -66,6 +66,9 @@ import { createKBCommand } from './kb';
 // Team instruction commands (F10e.7)
 import { createInstructionCommand } from './instructions';
 
+// Doctor command (F10h.1)
+import { createDoctorCommand } from './doctor';
+
 // Debug commands (F10.7)
 import {
   createInspectCommand,
@@ -130,6 +133,9 @@ program.addCommand(createKBCommand());
 
 // Team instruction commands
 program.addCommand(createInstructionCommand());
+
+// Doctor command (F10h.1)
+program.addCommand(createDoctorCommand());
 
 // Debug commands (also available as top-level: inspect, query, export, import, health)
 const debugCommand = new Command('debug')
