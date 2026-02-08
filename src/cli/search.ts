@@ -88,7 +88,7 @@ async function runSearch(
       // Vector similarity search using embeddings (default: on)
       try {
         const baseUrl = config.providers?.ollama?.base_url || 'http://localhost:11434';
-        const ollamaProvider = new OllamaEmbeddingProvider({
+        const ollamaProvider = await OllamaEmbeddingProvider.create({
           baseUrl,
           model: config.defaults?.embeddings?.model || 'mxbai-embed-large:latest'
         });

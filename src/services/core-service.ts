@@ -139,7 +139,7 @@ export class CoreService {
     if (!this.searchServices.has(projectId)) {
       const entityStore = this.context.getEntityStore(projectId);
       const project = await this.context.projectManager.get(projectId);
-      const embeddingManager = this.context.getEmbeddingManager(projectId, project?.config);
+      const embeddingManager = await this.context.getEmbeddingManager(projectId, project?.config);
       const graphTraversal = this.getGraphTraversal(projectId);
       this.searchServices.set(projectId, new MultiStrategySearch(
         entityStore,
@@ -213,7 +213,7 @@ export class CoreService {
     // Generate embedding if content provided
     if (input.content) {
       const project = await this.context.projectManager.get(projectId);
-      const embeddingManager = this.context.getEmbeddingManager(projectId, project?.config);
+      const embeddingManager = await this.context.getEmbeddingManager(projectId, project?.config);
       await embeddingManager.embed(entity.id, input.content);
     }
 
@@ -263,7 +263,7 @@ export class CoreService {
     if (options?.generateEmbeddings !== false) {
       try {
         const entityStore = this.context.getEntityStore(projectId);
-        const embeddingManager = this.context.getEmbeddingManager(projectId);
+        const embeddingManager = await this.context.getEmbeddingManager(projectId);
 
         // Get all entities that need embeddings
         const entities = await entityStore.list({ limit: 10000 });
@@ -625,7 +625,7 @@ export class CoreService {
     if (options?.hyde) {
       try {
         const project = await this.context.projectManager.get(projectId);
-        const embeddingManager = this.context.getEmbeddingManager(projectId, project?.config);
+        const embeddingManager = await this.context.getEmbeddingManager(projectId, project?.config);
         const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
         const hydeModel = options?.hydeModel || project?.config?.hyde?.model || process.env.CTX_HYDE_MODEL;
         const hydeProvider = new OllamaHypotheticalProvider({ baseUrl, model: hydeModel });

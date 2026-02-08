@@ -121,7 +121,7 @@ async function generateEmbeddings(
   const projectId = config.projectConfig.project.name || path.basename(projectPath);
   const prefix = sanitizeProjectId(projectId);
 
-  const ollamaProvider = new OllamaEmbeddingProvider({
+  const ollamaProvider = await OllamaEmbeddingProvider.create({
     baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
     model: config.defaults?.embeddings?.model || 'mxbai-embed-large:latest'
   });
@@ -290,7 +290,7 @@ async function showEmbeddingStatus(
   const prefix = sanitizeProjectId(projectId);
 
   const currentModel = config.defaults?.embeddings?.model || 'mxbai-embed-large:latest';
-  const ollamaProvider = new OllamaEmbeddingProvider({
+  const ollamaProvider = await OllamaEmbeddingProvider.create({
     baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
     model: currentModel
   });

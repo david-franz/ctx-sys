@@ -217,7 +217,7 @@ export class ProviderFactory {
 
     switch (config.provider) {
       case 'ollama':
-        return new OllamaEmbeddingProvider({
+        return OllamaEmbeddingProvider.create({
           baseUrl: globalConfig.providers.ollama?.base_url ?? 'http://localhost:11434',
           model: config.model
         });

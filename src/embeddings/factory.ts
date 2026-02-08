@@ -9,10 +9,10 @@ export class EmbeddingProviderFactory {
   /**
    * Create an embedding provider from configuration.
    */
-  static create(config: ProviderConfig): EmbeddingProvider {
+  static async create(config: ProviderConfig): Promise<EmbeddingProvider> {
     switch (config.provider) {
       case 'ollama':
-        return new OllamaEmbeddingProvider({
+        return OllamaEmbeddingProvider.create({
           baseUrl: config.baseUrl || 'http://localhost:11434',
           model: config.model
         });
@@ -38,13 +38,13 @@ export class EmbeddingProviderFactory {
     primary: ProviderConfig,
     fallback: ProviderConfig
   ): Promise<EmbeddingProvider> {
-    const primaryProvider = this.create(primary);
+    const primaryProvider = await this.create(primary);
 
     if (await primaryProvider.isAvailable()) {
       return primaryProvider;
     }
 
     console.warn('Primary embedding provider unavailable, using fallback');
-    return this.create(fallback);
+    return await this.create(fallback);
   }
 }

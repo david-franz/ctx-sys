@@ -297,8 +297,8 @@ describe('F1.4 Embedding Pipeline', () => {
   });
 
   describe('EmbeddingProviderFactory', () => {
-    it('should create Ollama provider', () => {
-      const provider = EmbeddingProviderFactory.create({
+    it('should create Ollama provider', async () => {
+      const provider = await EmbeddingProviderFactory.create({
         provider: 'ollama',
         model: 'nomic-embed-text'
       });
@@ -307,8 +307,8 @@ describe('F1.4 Embedding Pipeline', () => {
       expect(provider.modelId).toBe('ollama:nomic-embed-text');
     });
 
-    it('should create OpenAI provider', () => {
-      const provider = EmbeddingProviderFactory.create({
+    it('should create OpenAI provider', async () => {
+      const provider = await EmbeddingProviderFactory.create({
         provider: 'openai',
         model: 'text-embedding-3-small',
         apiKey: 'test-key'
@@ -318,22 +318,22 @@ describe('F1.4 Embedding Pipeline', () => {
       expect(provider.modelId).toBe('openai:text-embedding-3-small');
     });
 
-    it('should throw for OpenAI without API key', () => {
-      expect(() => {
+    it('should throw for OpenAI without API key', async () => {
+      await expect(
         EmbeddingProviderFactory.create({
           provider: 'openai',
           model: 'text-embedding-3-small'
-        });
-      }).toThrow('API key required');
+        })
+      ).rejects.toThrow('API key required');
     });
 
-    it('should throw for unknown provider', () => {
-      expect(() => {
+    it('should throw for unknown provider', async () => {
+      await expect(
         EmbeddingProviderFactory.create({
           provider: 'unknown' as any,
           model: 'model'
-        });
-      }).toThrow('Unknown provider');
+        })
+      ).rejects.toThrow('Unknown provider');
     });
   });
 

@@ -60,11 +60,61 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
 
   private baseModel: string;
 
-  constructor(private config: OllamaConfig) {
+  constructor(private config: OllamaConfig, resolvedDimensions?: number) {
     this.config.baseUrl = normalizeBaseUrl(config.baseUrl);
     this.modelId = `ollama:${config.model}`;
     this.baseModel = config.model.split(':')[0];
-    this.dimensions = MODEL_DIMENSIONS[this.baseModel] || 768;
+    this.dimensions = resolvedDimensions
+      ?? MODEL_DIMENSIONS[this.baseModel]
+      ?? 768;
+  }
+
+  /**
+   * Create an OllamaEmbeddingProvider, auto-detecting dimensions from the model.
+   * Probes Ollama's /api/show endpoint, falls back to the hardcoded registry.
+   */
+  static async create(config: OllamaConfig): Promise<OllamaEmbeddingProvider> {
+    const baseUrl = normalizeBaseUrl(config.baseUrl);
+    const baseModel = config.model.split(':')[0];
+
+    // Fast path: known model in registry
+    if (MODEL_DIMENSIONS[baseModel]) {
+      return new OllamaEmbeddingProvider(config);
+    }
+
+    // Probe model metadata from Ollama
+    const detected = await OllamaEmbeddingProvider.detectDimensions(baseUrl, config.model);
+    return new OllamaEmbeddingProvider(config, detected ?? undefined);
+  }
+
+  /**
+   * Detect embedding dimensions from Ollama's /api/show endpoint.
+   * Returns null if detection fails (caller should fall back to defaults).
+   */
+  static async detectDimensions(baseUrl: string, model: string): Promise<number | null> {
+    try {
+      const response = await fetch(`${baseUrl}/api/show`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model })
+      });
+      if (!response.ok) return null;
+
+      const data = await response.json() as {
+        model_info?: Record<string, unknown>;
+      };
+      if (!data.model_info) return null;
+
+      // Look for *.embedding_length (prefix varies by architecture)
+      for (const [key, value] of Object.entries(data.model_info)) {
+        if (key.endsWith('.embedding_length') && typeof value === 'number') {
+          return value;
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
   }
 
   /**

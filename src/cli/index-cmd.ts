@@ -230,7 +230,7 @@ async function runIndex(
       }
 
       try {
-        const ollamaProvider = new OllamaEmbeddingProvider({
+        const ollamaProvider = await OllamaEmbeddingProvider.create({
           baseUrl: config.providers?.ollama?.base_url || 'http://localhost:11434',
           model: config.defaults?.embeddings?.model || 'mxbai-embed-large:latest'
         });

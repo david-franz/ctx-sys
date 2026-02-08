@@ -58,9 +58,9 @@ export class AppContext {
   /**
    * Get EmbeddingManager for a project.
    */
-  getEmbeddingManager(projectId: string, config?: ProjectConfig): EmbeddingManager {
+  async getEmbeddingManager(projectId: string, config?: ProjectConfig): Promise<EmbeddingManager> {
     if (!this.embeddingManagers.has(projectId)) {
-      const provider = this.getEmbeddingProvider(projectId, config);
+      const provider = await this.getEmbeddingProvider(projectId, config);
       this.embeddingManagers.set(
         projectId,
         new EmbeddingManager(this.db, projectId, provider)
@@ -72,10 +72,10 @@ export class AppContext {
   /**
    * Get or create an embedding provider for a project.
    */
-  private getEmbeddingProvider(projectId: string, config?: ProjectConfig): EmbeddingProvider {
+  private async getEmbeddingProvider(projectId: string, config?: ProjectConfig): Promise<EmbeddingProvider> {
     if (!this.embeddingProviders.has(projectId)) {
       if (config?.embeddings) {
-        const provider = EmbeddingProviderFactory.create({
+        const provider = await EmbeddingProviderFactory.create({
           provider: config.embeddings.provider,
           model: config.embeddings.model
         });
@@ -84,7 +84,7 @@ export class AppContext {
         // Default to Ollama with mxbai-embed-large to match stored embeddings.
         // Falls back to mock if Ollama is unavailable (semantic search will
         // gracefully degrade via per-strategy error handling).
-        this.embeddingProviders.set(projectId, new OllamaEmbeddingProvider({
+        this.embeddingProviders.set(projectId, await OllamaEmbeddingProvider.create({
           baseUrl: 'http://localhost:11434',
           model: 'mxbai-embed-large:latest'
         }));
