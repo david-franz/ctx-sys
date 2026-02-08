@@ -369,11 +369,11 @@ Structural improvements to the retrieval pipeline: ignore patterns, score normal
 
 | Feature | Description | Doc | Status |
 |---------|-------------|-----|--------|
-| **F10g.1** | .ctxignore + .gitignore Improvements | [F10g.1-ctxignore-gitignore.md](phase-10g/F10g.1-ctxignore-gitignore.md) | Planned |
-| **F10g.2** | Score Normalization (Multiplicative Reranking) | [F10g.2-score-normalization.md](phase-10g/F10g.2-score-normalization.md) | Planned |
-| **F10g.3** | Richer Relationship Extraction | [F10g.3-richer-relationships.md](phase-10g/F10g.3-richer-relationships.md) | Planned |
-| **F10g.4** | Improve extractCodeSummary Display | [F10g.4-extract-code-summary.md](phase-10g/F10g.4-extract-code-summary.md) | Planned |
-| **F10g.5** | HyDE Model Selection & Testing | [F10g.5-hyde-model-selection.md](phase-10g/F10g.5-hyde-model-selection.md) | Planned |
+| **F10g.1** | .ctxignore + .gitignore Improvements | [F10g.1-ctxignore-gitignore.md](phase-10g/F10g.1-ctxignore-gitignore.md) | ✅ Done |
+| **F10g.2** | Score Normalization (Multiplicative Reranking) | [F10g.2-score-normalization.md](phase-10g/F10g.2-score-normalization.md) | ✅ Done |
+| **F10g.3** | Richer Relationship Extraction | [F10g.3-richer-relationships.md](phase-10g/F10g.3-richer-relationships.md) | ✅ Done |
+| **F10g.4** | Improve extractCodeSummary Display | [F10g.4-extract-code-summary.md](phase-10g/F10g.4-extract-code-summary.md) | ✅ Done |
+| **F10g.5** | HyDE Model Selection & Testing | [F10g.5-hyde-model-selection.md](phase-10g/F10g.5-hyde-model-selection.md) | ✅ Done |
 
 **Key Goals:**
 - Centralized ignore pattern resolution (.ctxignore + .gitignore) for indexer and document indexer
