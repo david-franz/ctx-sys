@@ -702,7 +702,7 @@ async function checkHealth(
     const embeddingStats = db.get<{ total: number; embedded: number }>(`
       SELECT
         (SELECT COUNT(*) FROM ${prefix}_entities WHERE hash IS NOT NULL) as total,
-        (SELECT COUNT(*) FROM ${prefix}_vector_meta) as embedded
+        (SELECT COUNT(DISTINCT entity_id) FROM ${prefix}_vector_meta) as embedded
     `);
     const coverage = embeddingStats?.total
       ? (embeddingStats.embedded / embeddingStats.total) * 100
