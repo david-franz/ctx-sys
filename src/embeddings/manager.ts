@@ -3,6 +3,7 @@ import { sanitizeProjectId, createVecTable } from '../db/schema';
 import { EmbeddingProvider, SimilarityResult } from './types';
 import { Entity } from '../entities';
 import { hashEntityContent, buildEmbeddingContent } from './content-hasher';
+import { chunkEntityForEmbedding } from './code-chunker';
 
 /**
  * Result of incremental embedding operation.
@@ -73,19 +74,59 @@ export class EmbeddingManager {
   }
 
   /**
-   * Ensure vec0 tables exist.
+   * Ensure vec0 tables exist with multi-chunk schema.
+   * Migrates old tables (without chunk_index) on first access.
    */
   private ensureVecTables(): void {
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS ${this.vectorMetaTable} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        entity_id TEXT NOT NULL,
-        model_id TEXT NOT NULL,
-        content_hash TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (entity_id) REFERENCES ${this.entitiesTable}(id) ON DELETE CASCADE,
-        UNIQUE(entity_id, model_id)
+    const tableExists = this.db.get<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+      [this.vectorMetaTable]
+    );
+
+    if (tableExists) {
+      // Check if chunk_index column exists (new schema)
+      const columns = this.db.all<{ name: string }>(
+        `PRAGMA table_info(${this.vectorMetaTable})`
       );
+      const hasChunkIndex = columns.some(c => c.name === 'chunk_index');
+
+      if (!hasChunkIndex) {
+        // Migrate: recreate table with chunk_index and new unique constraint
+        this.db.exec(`ALTER TABLE ${this.vectorMetaTable} RENAME TO ${this.vectorMetaTable}_old`);
+        this.db.exec(`
+          CREATE TABLE ${this.vectorMetaTable} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entity_id TEXT NOT NULL,
+            model_id TEXT NOT NULL,
+            chunk_index INTEGER DEFAULT 0,
+            content_hash TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (entity_id) REFERENCES ${this.entitiesTable}(id) ON DELETE CASCADE,
+            UNIQUE(entity_id, model_id, chunk_index)
+          )
+        `);
+        this.db.exec(`
+          INSERT INTO ${this.vectorMetaTable} (id, entity_id, model_id, chunk_index, content_hash, created_at)
+          SELECT id, entity_id, model_id, 0, content_hash, created_at FROM ${this.vectorMetaTable}_old
+        `);
+        this.db.exec(`DROP TABLE ${this.vectorMetaTable}_old`);
+      }
+    } else {
+      this.db.exec(`
+        CREATE TABLE ${this.vectorMetaTable} (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entity_id TEXT NOT NULL,
+          model_id TEXT NOT NULL,
+          chunk_index INTEGER DEFAULT 0,
+          content_hash TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (entity_id) REFERENCES ${this.entitiesTable}(id) ON DELETE CASCADE,
+          UNIQUE(entity_id, model_id, chunk_index)
+        )
+      `);
+    }
+
+    this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_${this.projectPrefix}_vector_meta_entity ON ${this.vectorMetaTable}(entity_id);
       CREATE INDEX IF NOT EXISTS idx_${this.projectPrefix}_vector_meta_model ON ${this.vectorMetaTable}(model_id);
     `);
@@ -133,25 +174,20 @@ export class EmbeddingManager {
   }
 
   /**
-   * Store an embedding for an entity using native vec0 storage.
+   * Store an embedding for an entity chunk using native vec0 storage.
+   * When chunkIndex is 0, deletes all existing chunks for this entity/model first.
    */
-  private store(entityId: string, embedding: number[], contentHash?: string): void {
-    // Delete existing embedding for this entity/model
-    const existing = this.db.get<{ id: number }>(
-      `SELECT id FROM ${this.vectorMetaTable} WHERE entity_id = ? AND model_id = ?`,
-      [entityId, this.provider.modelId]
-    );
-
-    if (existing) {
-      this.db.run(`DELETE FROM ${this.vecTable} WHERE rowid = ?`, [BigInt(existing.id)]);
-      this.db.run(`DELETE FROM ${this.vectorMetaTable} WHERE id = ?`, [existing.id]);
+  private store(entityId: string, embedding: number[], contentHash?: string, chunkIndex: number = 0): void {
+    // On chunk 0, delete all existing chunks (fresh start for this entity)
+    if (chunkIndex === 0) {
+      this.deleteEntityEmbeddings(entityId);
     }
 
     // Insert new metadata
     const result = this.db.run(
-      `INSERT INTO ${this.vectorMetaTable} (entity_id, model_id, content_hash)
-       VALUES (?, ?, ?)`,
-      [entityId, this.provider.modelId, contentHash || null]
+      `INSERT INTO ${this.vectorMetaTable} (entity_id, model_id, chunk_index, content_hash)
+       VALUES (?, ?, ?, ?)`,
+      [entityId, this.provider.modelId, chunkIndex, contentHash || null]
     );
 
     // Insert vector with matching rowid
@@ -159,6 +195,23 @@ export class EmbeddingManager {
     this.db.run(
       `INSERT INTO ${this.vecTable} (rowid, embedding) VALUES (?, ?)`,
       [BigInt(result.lastInsertRowid), buf]
+    );
+  }
+
+  /**
+   * Delete all embedding chunks for an entity with the current model.
+   */
+  private deleteEntityEmbeddings(entityId: string): void {
+    const metas = this.db.all<{ id: number }>(
+      `SELECT id FROM ${this.vectorMetaTable} WHERE entity_id = ? AND model_id = ?`,
+      [entityId, this.provider.modelId]
+    );
+    for (const meta of metas) {
+      this.db.run(`DELETE FROM ${this.vecTable} WHERE rowid = ?`, [BigInt(meta.id)]);
+    }
+    this.db.run(
+      `DELETE FROM ${this.vectorMetaTable} WHERE entity_id = ? AND model_id = ?`,
+      [entityId, this.provider.modelId]
     );
   }
 
@@ -199,10 +252,10 @@ export class EmbeddingManager {
     );
     if (!vecCount || vecCount.count === 0) return [];
 
-    // Over-fetch to handle model/type filtering
+    // Over-fetch to handle model/type filtering and multi-chunk dedup
     const fetchLimit = Math.min(
       vecCount.count,
-      (options?.entityTypes?.length ? limit * 5 : limit) * 2
+      (options?.entityTypes?.length ? limit * 5 : limit) * 3
     );
 
     const rows = this.db.all<{ entity_id: string; model_id: string; distance: number }>(
@@ -214,13 +267,24 @@ export class EmbeddingManager {
     );
 
     // Filter by current model
-    let results = rows
+    const filtered = rows
       .filter(r => r.model_id === this.provider.modelId)
       .map(row => ({
         entityId: row.entity_id,
         score: 1 - row.distance,
         distance: row.distance
       }));
+
+    // Deduplicate: keep best-scoring chunk per entity
+    const bestByEntity = new Map<string, { entityId: string; score: number; distance: number }>();
+    for (const r of filtered) {
+      const existing = bestByEntity.get(r.entityId);
+      if (!existing || r.score > existing.score) {
+        bestByEntity.set(r.entityId, r);
+      }
+    }
+    let results = Array.from(bestByEntity.values());
+    results.sort((a, b) => b.score - a.score);
 
     // Filter by entity types if specified
     if (options?.entityTypes?.length && results.length > 0) {
@@ -394,20 +458,24 @@ export class EmbeddingManager {
     for (let i = 0; i < needsEmbedding.length; i += batchSize) {
       const batch = needsEmbedding.slice(i, i + batchSize);
 
-      const contents = batch.map(e => ({
-        id: e.id,
-        content: buildEmbeddingContent(e),
-        hash: hashEntityContent(e)
-      }));
+      // Chunk each entity and collect all chunk texts for batch embedding
+      const allChunks: Array<{ entityId: string; text: string; chunkIndex: number; hash: string }> = [];
+      for (const entity of batch) {
+        const chunks = chunkEntityForEmbedding(entity);
+        const hash = hashEntityContent(entity);
+        for (const chunk of chunks) {
+          allChunks.push({ entityId: entity.id, text: chunk.text, chunkIndex: chunk.chunkIndex, hash });
+        }
+      }
 
       try {
         const embeddings = await this.provider.embedBatch(
-          contents.map(c => c.content)
+          allChunks.map(c => c.text)
         );
 
-        // Store with hashes
-        for (let j = 0; j < batch.length; j++) {
-          this.store(batch[j].id, embeddings[j], contents[j].hash);
+        // Store each chunk with its index
+        for (let j = 0; j < allChunks.length; j++) {
+          this.store(allChunks[j].entityId, embeddings[j], allChunks[j].hash, allChunks[j].chunkIndex);
         }
         embedded += batch.length;
       } catch {

@@ -100,15 +100,17 @@ CREATE INDEX IF NOT EXISTS idx_${prefix}_entities_qualified ON ${prefix}_entitie
 CREATE INDEX IF NOT EXISTS idx_${prefix}_entities_hash ON ${prefix}_entities(hash);
 
 -- Vector metadata (F10h.2: replaces JSON-based _vectors table)
--- Links entity_id/model_id/content_hash to vec0 rowids
+-- Links entity_id/model_id/chunk_index/content_hash to vec0 rowids
+-- chunk_index supports multi-vector embedding for large entities
 CREATE TABLE IF NOT EXISTS ${prefix}_vector_meta (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   entity_id TEXT NOT NULL,
   model_id TEXT NOT NULL,
+  chunk_index INTEGER DEFAULT 0,
   content_hash TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (entity_id) REFERENCES ${prefix}_entities(id) ON DELETE CASCADE,
-  UNIQUE(entity_id, model_id)
+  UNIQUE(entity_id, model_id, chunk_index)
 );
 
 CREATE INDEX IF NOT EXISTS idx_${prefix}_vector_meta_entity ON ${prefix}_vector_meta(entity_id);

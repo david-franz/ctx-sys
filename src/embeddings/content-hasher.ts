@@ -9,11 +9,13 @@ import { splitIdentifier } from '../utils/identifier-splitter';
 
 /**
  * Generate a stable hash for entity content.
+ * Hashes raw content (not extracted/filtered) so any change triggers re-chunking
+ * and re-embedding of all chunks.
  * Uses first 16 characters of SHA256 for a good balance of collision resistance and storage.
  */
 export function hashEntityContent(entity: Entity): string {
-  const content = buildEmbeddingContent(entity);
-  return createHash('sha256').update(content).digest('hex').slice(0, 16);
+  const parts = [entity.type, entity.name, entity.summary || '', entity.content || ''];
+  return createHash('sha256').update(parts.join('\n')).digest('hex').slice(0, 16);
 }
 
 /**

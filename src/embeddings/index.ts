@@ -5,6 +5,7 @@ export { OpenAIEmbeddingProvider } from './openai';
 export { MockEmbeddingProvider } from './mock';
 export { hashEntityContent, buildEmbeddingContent, hashContent } from './content-hasher';
 export { chunkEntity, estimateChunkCount, Chunk, ChunkResult, ChunkOptions } from './chunker';
+export { chunkEntityForEmbedding, CodeChunk, CodeChunkOptions } from './code-chunker';
 export {
   EmbeddingProvider,
   EmbedOptions,
