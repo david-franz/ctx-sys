@@ -218,14 +218,14 @@ Structural improvements: ignore patterns, score normalization, richer relationsh
 | **F10g.4** | Improve extractCodeSummary (clean signatures, no body leakage) | Done |
 | **F10g.5** | HyDE model selection (--hyde-model flag, CTX_HYDE_MODEL env var) | Done |
 
-### Phase 10h: Infrastructure & Performance (Planned)
+### Phase 10h: Infrastructure & Performance
 
 Environment health diagnostics and native vector search for production-scale performance.
 
 | Feature | Description | Status |
 | ------- | ----------- | ------ |
-| **F10h.1** | `ctx-sys doctor` — verify Ollama, models, database, config health | Planned |
-| **F10h.2** | Native vector search with sqlite-vec (50-100x faster semantic search) | Planned |
+| **F10h.1** | `ctx-sys doctor` — verify Ollama, models, database, config health | Done |
+| **F10h.2** | Native vector search with sqlite-vec (~75x faster semantic search) | Done |
 
 ---
 
