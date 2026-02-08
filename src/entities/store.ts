@@ -354,6 +354,66 @@ export class EntityStore {
   }
 
   /**
+   * Search entities and return scored results.
+   * Exact matches get score 1.0, qualified name matches 0.95,
+   * FTS5 results use normalized BM25 rank, LIKE fallback gets 0.3.
+   */
+  searchWithScores(query: string, options?: EntitySearchOptions): Array<{ entity: Entity; score: number }> {
+    if (!query.trim()) {
+      return this.searchAll(options).map(entity => ({ entity, score: 0.5 }));
+    }
+
+    const limit = options?.limit || 20;
+    const results: Array<{ entity: Entity; score: number }> = [];
+    const seenIds = new Set<string>();
+
+    // Priority 1: Exact name match → score 1.0
+    const exactResults = this.searchExactName(query, options);
+    for (const entity of exactResults) {
+      results.push({ entity, score: 1.0 });
+      seenIds.add(entity.id);
+    }
+    if (results.length >= limit) return results.slice(0, limit);
+
+    // Priority 1.5: Qualified name suffix → score 0.95
+    const qualifiedResults = this.searchQualifiedName(query, options);
+    for (const entity of qualifiedResults) {
+      if (!seenIds.has(entity.id)) {
+        results.push({ entity, score: 0.95 });
+        seenIds.add(entity.id);
+      }
+    }
+    if (results.length >= limit) return results.slice(0, limit);
+
+    // Priority 2: FTS5 with real BM25 rank
+    try {
+      const ftsResults = this.searchFTS5WithRank(query, options);
+      for (const { entity, rank } of ftsResults) {
+        if (!seenIds.has(entity.id)) {
+          // BM25 rank is negative; more negative = more relevant
+          // Normalize to 0-1: score = 1 / (1 + |rank|)
+          const score = 1 / (1 + Math.abs(rank));
+          results.push({ entity, score });
+          seenIds.add(entity.id);
+        }
+      }
+      if (results.length > 0) return results.slice(0, limit);
+    } catch {
+      // FTS5 not available
+    }
+
+    // Priority 3: LIKE fallback → score 0.3
+    const likeResults = this.searchLike(query, options);
+    for (const entity of likeResults) {
+      if (!seenIds.has(entity.id)) {
+        results.push({ entity, score: 0.3 });
+        seenIds.add(entity.id);
+      }
+    }
+    return results.slice(0, limit);
+  }
+
+  /**
    * Exact name match search (highest priority).
    */
   private searchExactName(query: string, options?: EntitySearchOptions): Entity[] {
@@ -482,6 +542,61 @@ export class EntityStore {
 
     const rows = this.db.all<EntityRow>(sql, params);
     return rows.map(row => this.rowToEntity(row));
+  }
+
+  /**
+   * FTS5 search that preserves BM25 rank for scoring.
+   */
+  private searchFTS5WithRank(query: string, options?: EntitySearchOptions): Array<{ entity: Entity; rank: number }> {
+    const ftsTable = `${this.projectPrefix}_entities_fts`;
+    const rawTerms = query.replace(/['"]/g, '').split(/\s+/);
+    const expandedTerms = new Set<string>();
+    for (const term of rawTerms) {
+      expandedTerms.add(term);
+      const parts = splitIdentifier(term).split(/\s+/);
+      for (const part of parts) {
+        if (part.length > 1) expandedTerms.add(part);
+      }
+    }
+    const ftsQuery = [...expandedTerms].map(t => `"${t}"*`).join(' OR ');
+
+    let sql = `
+      SELECT e.*, rank
+      FROM ${ftsTable} fts
+      JOIN ${this.tableName} e ON e.rowid = fts.rowid
+      WHERE ${ftsTable} MATCH ?
+    `;
+    const params: unknown[] = [ftsQuery];
+
+    if (options?.type) {
+      const types = Array.isArray(options.type) ? options.type : [options.type];
+      const placeholders = types.map(() => '?').join(', ');
+      sql += ` AND e.type IN (${placeholders})`;
+      params.push(...types);
+    }
+
+    if (options?.filePath) {
+      sql += ' AND e.file_path = ?';
+      params.push(options.filePath);
+    }
+
+    sql += ' ORDER BY rank';
+
+    if (options?.limit) {
+      sql += ' LIMIT ?';
+      params.push(options.limit);
+    }
+
+    if (options?.offset) {
+      sql += ' OFFSET ?';
+      params.push(options.offset);
+    }
+
+    const rows = this.db.all<EntityRow & { rank: number }>(sql, params);
+    return rows.map(row => ({
+      entity: this.rowToEntity(row),
+      rank: row.rank
+    }));
   }
 
   /**

@@ -128,19 +128,11 @@ async function runSearch(
         }
       }
     } else {
-      // Keyword search using LIKE
-      const entities = await entityStore.search(query, {
+      // Keyword search with real BM25 scoring
+      results = entityStore.searchWithScores(query, {
         limit,
         type: options.type as EntityType | undefined
       });
-
-      // FTS5 results are already ranked by BM25; assign decreasing
-      // scores that reflect rank order but don't look artificially linear
-      const total = entities.length;
-      results = entities.map((entity, index) => ({
-        entity,
-        score: total <= 1 ? 1 : Math.pow(0.85, index)
-      }));
     }
 
     // Format output
