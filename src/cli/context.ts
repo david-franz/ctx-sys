@@ -23,7 +23,7 @@ export function createContextCommand(output: CLIOutput = defaultOutput): Command
     .option('-t, --tokens <n>', 'Max tokens for context', '4000')
     .option('--type <types>', 'Entity types to include (comma-separated)')
     .option('--strategy <strategies>', 'Search strategies: keyword,semantic,graph (comma-separated)')
-    .option('--min-score <n>', 'Minimum relevance score', '0')
+    .option('--min-score <n>', 'Minimum relevance score (0-1)', '0.1')
     .option('--no-sources', 'Omit source attribution')
     .option('--expand', 'Auto-include parent classes, imports, type definitions')
     .option('--expand-tokens <n>', 'Token budget for expansion (default: 2000)')

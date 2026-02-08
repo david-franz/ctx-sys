@@ -70,6 +70,8 @@ export interface AssemblyOptions {
   contextLines?: number;
   /** F10.4: Include file imports as additional context */
   includeImports?: boolean;
+  /** F10f.1: Minimum relevance score — skip results below this threshold */
+  minRelevance?: number;
 }
 
 /**
@@ -104,7 +106,8 @@ const DEFAULT_OPTIONS: Required<AssemblyOptions> = {
   readFromSource: false,
   projectRoot: process.cwd(),
   contextLines: 0,
-  includeImports: false
+  includeImports: false,
+  minRelevance: 0.1
 };
 
 /**
@@ -244,6 +247,11 @@ export class ContextAssembler {
       }
 
       for (const result of groupResults) {
+        // F10f.1: Skip results below relevance floor
+        if (opts.minRelevance && result.score < opts.minRelevance) {
+          continue;
+        }
+
         const formatted = this.formatEntity(result.entity, opts);
         const tokens = estimateTokens(formatted);
 

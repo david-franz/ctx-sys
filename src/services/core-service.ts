@@ -642,7 +642,6 @@ export class CoreService {
       strategies: options?.strategies,
       limit: 20,
       entityTypes: options?.includeTypes as EntityType[],
-      minScore: options?.minScore,
       queryEmbedding
     };
 
@@ -690,7 +689,8 @@ export class CoreService {
     const assembled = assembler.assemble(results, {
       maxTokens: options?.maxTokens || 4000,
       includeSources: options?.includeSources ?? true,
-      format: 'markdown'
+      format: 'markdown',
+      minRelevance: options?.minScore ?? 0.1
     });
 
     // Calculate average relevance
