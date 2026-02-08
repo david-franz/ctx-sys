@@ -601,17 +601,13 @@ export class ToolRegistry {
 
         const projectId = await this.resolveProjectId(project);
 
-        // Create session if not specified, or auto-create if provided ID doesn't exist
-        let sessionId = session;
-        if (!sessionId) {
+        // Resolve or auto-create session
+        let sessionId: string;
+        if (!session) {
           const newSession = await this.coreService.createSession(projectId);
           sessionId = newSession.id;
         } else {
-          const existing = await this.coreService.getSession(projectId, sessionId);
-          if (!existing) {
-            const newSession = await this.coreService.createSession(projectId, sessionId);
-            sessionId = newSession.id;
-          }
+          sessionId = await this.resolveSessionId(projectId, session);
         }
 
         const message = await this.coreService.storeMessage(projectId, sessionId, {
@@ -1392,7 +1388,8 @@ export class ToolRegistry {
         };
 
         const projectId = await this.resolveProjectId(project);
-        const result = await this.coreService.storeReflection(projectId, session, {
+        const sessionId = await this.resolveSessionId(projectId, session);
+        const result = await this.coreService.storeReflection(projectId, sessionId, {
           type,
           content,
           outcome,
@@ -1565,6 +1562,17 @@ export class ToolRegistry {
   /**
    * Resolve project ID from name or get active project.
    */
+  /**
+   * Resolve a session string to a valid session ID, auto-creating if needed.
+   * Mirrors the session resolution in store_message for consistent behavior.
+   */
+  private async resolveSessionId(projectId: string, session: string): Promise<string> {
+    const existing = await this.coreService.getSession(projectId, session);
+    if (existing) return existing.id;
+    const newSession = await this.coreService.createSession(projectId, session);
+    return newSession.id;
+  }
+
   private async resolveProjectId(projectName?: string): Promise<string> {
     if (projectName) {
       const project = await this.coreService.getProject(projectName);
