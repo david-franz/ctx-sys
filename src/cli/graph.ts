@@ -33,7 +33,7 @@ interface GraphNode {
  * Create the graph traversal command.
  */
 export function createGraphCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('graph')
+  const command = new Command('query')
     .description('Traverse entity relationship graph')
     .argument('<entity>', 'Starting entity ID or name')
     .option('-p, --project <path>', 'Project directory', '.')
@@ -59,7 +59,7 @@ export function createGraphCommand(output: CLIOutput = defaultOutput): Command {
  * Create the graph stats command.
  */
 export function createGraphStatsCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('graph-stats')
+  const command = new Command('stats')
     .description('Show graph statistics')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('--json', 'Output as JSON')

@@ -15,7 +15,7 @@ import { CLIOutput, defaultOutput } from './init';
  * Create the summarize command.
  */
 export function createSummarizeCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('summarize')
+  const command = new Command('run')
     .description('Generate LLM summaries for entities')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('-t, --type <type>', 'Only summarize entities of this type')
@@ -43,7 +43,7 @@ export function createSummarizeCommand(output: CLIOutput = defaultOutput): Comma
  * Create the summarize-status command.
  */
 export function createSummarizeStatusCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('summarize-status')
+  const command = new Command('status')
     .description('Show summarization status')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('--json', 'Output as JSON')

@@ -79,16 +79,20 @@ async function runIndex(
     // Set up entity store (use project name as ID)
     const projectId = config.projectConfig.project.name || path.basename(projectPath);
 
-    // Ensure project is registered and tables exist
+    // Ensure project is registered in projects table (for doctor/status)
     const projectManager = new ProjectManager(db);
     const existingProject = await projectManager.getByName(projectId);
     if (!existingProject) {
       try {
         await projectManager.create(projectId, projectPath);
       } catch {
-        db.createProject(projectId);
+        // Name validation failed — just register tables
       }
     }
+
+    // Always ensure name-based project tables exist
+    // (ProjectManager.create() uses a UUID internally, but CLI uses the name)
+    db.createProject(projectId);
 
     const entityStore = new EntityStore(db, projectId);
     const relationshipStore = new RelationshipStore(db, projectId);

@@ -33,7 +33,7 @@ interface EmbeddingStats {
  * Create the embed command.
  */
 export function createEmbedCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('embed')
+  const command = new Command('run')
     .description('Generate embeddings for entities')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('-t, --type <type>', 'Only embed entities of this type')
@@ -59,7 +59,7 @@ export function createEmbedCommand(output: CLIOutput = defaultOutput): Command {
  * Create the embed-status command.
  */
 export function createEmbedStatusCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('embed-status')
+  const command = new Command('status')
     .description('Show embedding status')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('--json', 'Output as JSON')
@@ -81,7 +81,7 @@ export function createEmbedStatusCommand(output: CLIOutput = defaultOutput): Com
  * Create the embed-cleanup command.
  */
 export function createEmbedCleanupCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('embed-cleanup')
+  const command = new Command('cleanup')
     .description('Remove orphaned embeddings')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('--force', 'Actually delete (otherwise dry-run)')

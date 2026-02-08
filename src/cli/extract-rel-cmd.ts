@@ -12,7 +12,7 @@ import { LLMRelationshipExtractor } from '../graph/llm-relationship-extractor';
 import { CLIOutput, defaultOutput } from './init';
 
 export function createExtractRelCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('extract-relationships')
+  const command = new Command('extract-rel')
     .description('Use LLM to discover relationships between existing entities')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('--type <type>', 'Only process entities of this type')

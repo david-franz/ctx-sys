@@ -35,7 +35,7 @@ interface EntityStatsRow {
  * Create the entities list command.
  */
 export function createEntitiesCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('entities')
+  const command = new Command('list')
     .description('List entities in the project')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('-t, --type <type>', 'Filter by entity type')
@@ -61,7 +61,7 @@ export function createEntitiesCommand(output: CLIOutput = defaultOutput): Comman
  * Create the entity show command.
  */
 export function createEntityCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('entity')
+  const command = new Command('get')
     .description('Show entity details')
     .argument('<id>', 'Entity ID or qualified name')
     .option('-p, --project <path>', 'Project directory', '.')
@@ -85,7 +85,7 @@ export function createEntityCommand(output: CLIOutput = defaultOutput): Command 
  * Create the entity delete command.
  */
 export function createEntityDeleteCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('entity-delete')
+  const command = new Command('delete')
     .description('Delete an entity')
     .argument('<id>', 'Entity ID')
     .option('-p, --project <path>', 'Project directory', '.')
@@ -108,7 +108,7 @@ export function createEntityDeleteCommand(output: CLIOutput = defaultOutput): Co
  * Create the entity stats command.
  */
 export function createEntityStatsCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('entity-stats')
+  const command = new Command('stats')
     .description('Show entity statistics')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('--json', 'Output as JSON')

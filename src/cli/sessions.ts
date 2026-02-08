@@ -31,7 +31,7 @@ interface MessageRow {
  * Create the sessions command.
  */
 export function createSessionsCommand(output: CLIOutput = defaultOutput): Command {
-  const command = new Command('sessions')
+  const command = new Command('list')
     .description('List conversation sessions')
     .option('-p, --project <path>', 'Project directory', '.')
     .option('-s, --status <status>', 'Filter by status (active/archived/summarized)')

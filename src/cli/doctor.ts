@@ -150,7 +150,8 @@ export async function checkProject(dbPath: string, projectPath: string): Promise
         return { name: 'Project', status: 'warn', detail: `"${projectName}" not indexed`, fix: 'ctx-sys index .' };
       }
 
-      const prefix = sanitizeProjectId(project.id);
+      // Use project name for table prefix (CLI creates tables by name, not UUID)
+      const prefix = sanitizeProjectId(project.name);
 
       // Check if entity table exists
       const tableCheck = db.all<{ name: string }>(
