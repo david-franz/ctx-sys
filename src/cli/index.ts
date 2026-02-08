@@ -15,6 +15,7 @@ import { createServeCommand } from './serve';
 import { createInitCommand } from './init';
 import { createIndexCommand } from './index-cmd';
 import { createSearchCommand } from './search';
+import { createContextCommand } from './context';
 import { createWatchCommand } from './watch';
 import { createConfigCommand } from './config';
 import { createStatusCommand } from './status';
@@ -79,6 +80,7 @@ program
 program.addCommand(createInitCommand());
 program.addCommand(createIndexCommand());
 program.addCommand(createSearchCommand());
+program.addCommand(createContextCommand());
 program.addCommand(createWatchCommand());
 program.addCommand(createConfigCommand());
 program.addCommand(createStatusCommand());
