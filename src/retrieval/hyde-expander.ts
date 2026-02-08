@@ -128,7 +128,7 @@ export class OllamaHypotheticalProvider implements HypotheticalProvider {
 
   constructor(options?: { baseUrl?: string; model?: string }) {
     this.baseUrl = options?.baseUrl || 'http://localhost:11434';
-    this.model = options?.model || 'qwen3:0.6b';
+    this.model = options?.model || 'gemma3:4b';
   }
 
   async generate(query: string, options?: HypotheticalOptions): Promise<string> {

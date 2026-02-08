@@ -85,7 +85,10 @@ export class CoreService {
   private getIndexer(projectId: string, projectPath: string): CodebaseIndexer {
     if (!this.indexers.has(projectId)) {
       const entityStore = this.context.getEntityStore(projectId);
-      this.indexers.set(projectId, new CodebaseIndexer(projectPath, entityStore));
+      const relationshipStore = this.getRelationshipStore(projectId);
+      this.indexers.set(projectId, new CodebaseIndexer(
+        projectPath, entityStore, undefined, undefined, relationshipStore
+      ));
     }
     return this.indexers.get(projectId)!;
   }

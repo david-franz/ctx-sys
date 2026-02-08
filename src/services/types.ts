@@ -97,7 +97,7 @@ export interface QueryOptions {
   decompose?: boolean;        // Enable QueryDecomposer (break complex queries)
   gate?: boolean;             // Enable RetrievalGate (skip trivial queries)
   hyde?: boolean;             // Enable HyDE (Hypothetical Document Embeddings)
-  hydeModel?: string;         // Model for HyDE generation (default: qwen3:0.6b)
+  hydeModel?: string;         // Model for HyDE generation (default: gemma3:4b)
   maxResults?: number;        // Max results to assemble (default: 15)
 }
 

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { existsSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { CtxSysMcpServer } from '../mcp';
 import { ConfigManager } from '../config/manager';
@@ -8,19 +8,21 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-
 
 /**
  * Resolve the database path for the MCP server.
- * Priority: explicit --db flag > project-local .ctx-sys/ > global default
+ * Uses the same ConfigManager resolution as CLI commands so both
+ * always share the same database for a given project directory.
+ * Priority: explicit --db flag > ConfigManager resolved path > global default
  */
 async function resolveDbPath(explicitDb?: string, projectDir?: string): Promise<string | undefined> {
   if (explicitDb) return explicitDb;
 
   const targetDir = projectDir ? resolve(projectDir) : process.cwd();
-  if (existsSync(join(targetDir, '.ctx-sys'))) {
+  try {
     const configManager = new ConfigManager({ inMemoryOnly: true });
     const resolved = await configManager.resolve(targetDir);
     return resolved.database.path;
+  } catch {
+    return undefined; // Fall back to AppContext default
   }
-
-  return undefined; // Fall back to AppContext default
 }
 
 /**
