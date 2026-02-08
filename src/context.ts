@@ -1,15 +1,15 @@
 import * as path from 'path';
-import * as os from 'os';
 import { DatabaseConnection } from './db/connection';
 import { ProjectManager, ProjectConfig } from './project';
 import { EntityStore } from './entities';
 import { EmbeddingManager, EmbeddingProviderFactory, EmbeddingProvider, MockEmbeddingProvider, OllamaEmbeddingProvider } from './embeddings';
 
 /**
- * Default database path.
+ * Default database path — local to the current working directory.
+ * Use a global path (~/.ctx-sys/ctx-sys.db) only when explicitly configured.
  */
 export function getDefaultDbPath(): string {
-  return path.join(os.homedir(), '.ctx-sys', 'ctx-sys.db');
+  return path.join(process.cwd(), '.ctx-sys', 'ctx-sys.db');
 }
 
 /**

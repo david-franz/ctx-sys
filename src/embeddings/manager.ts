@@ -73,10 +73,9 @@ export class EmbeddingManager {
   }
 
   /**
-   * Ensure vec0 tables exist and migrate from legacy _vectors table if needed.
+   * Ensure vec0 tables exist.
    */
   private ensureVecTables(): void {
-    // Create new tables if they don't exist
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS ${this.vectorMetaTable} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,68 +95,6 @@ export class EmbeddingManager {
         embedding float[768] distance_metric=cosine
       );
     `);
-
-    // Check for legacy _vectors table and migrate
-    const legacyTable = this.db.get<{ name: string }>(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-      [`${this.projectPrefix}_vectors`]
-    );
-    if (legacyTable) {
-      this.migrateFromLegacy();
-    }
-  }
-
-  /**
-   * Migrate data from legacy JSON-based _vectors table to native vec0.
-   */
-  private migrateFromLegacy(): void {
-    const legacyTableName = `${this.projectPrefix}_vectors`;
-
-    const oldVectors = this.db.all<{
-      entity_id: string;
-      model_id: string;
-      embedding: string;
-      content_hash: string | null;
-      created_at: string;
-    }>(`SELECT entity_id, model_id, embedding, content_hash, created_at FROM ${legacyTableName}`);
-
-    if (oldVectors.length > 0) {
-      this.db.transaction(() => {
-        for (const v of oldVectors) {
-          try {
-            const embedding = JSON.parse(v.embedding) as number[];
-
-            // Insert metadata
-            const result = this.db.run(
-              `INSERT OR IGNORE INTO ${this.vectorMetaTable} (entity_id, model_id, content_hash, created_at)
-               VALUES (?, ?, ?, ?)`,
-              [v.entity_id, v.model_id, v.content_hash, v.created_at]
-            );
-
-            if (result.changes > 0) {
-              // Get the new rowid
-              const meta = this.db.get<{ id: number }>(
-                `SELECT id FROM ${this.vectorMetaTable} WHERE entity_id = ? AND model_id = ?`,
-                [v.entity_id, v.model_id]
-              );
-              if (meta) {
-                const buf = this.vectorToBuffer(embedding);
-                this.db.run(
-                  `INSERT INTO ${this.vecTable} (rowid, embedding) VALUES (?, ?)`,
-                  [BigInt(meta.id), buf]
-                );
-              }
-            }
-          } catch {
-            // Skip invalid entries (bad JSON, etc.)
-          }
-        }
-      });
-      this.db.save();
-    }
-
-    // Drop legacy table
-    this.db.exec(`DROP TABLE IF EXISTS ${legacyTableName}`);
   }
 
   /**

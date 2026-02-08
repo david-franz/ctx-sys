@@ -165,25 +165,17 @@ async function checkProject(dbPath: string, projectPath: string): Promise<CheckR
       const entityRow = db.get<{ count: number }>(`SELECT COUNT(*) as count FROM ${prefix}_entities`);
       const entities = entityRow?.count ?? 0;
 
-      // Count vectors (F10h.2: check _vector_meta first, fall back to legacy _vectors)
+      // Count vectors
       let embeddingPct = 0;
       if (entities > 0) {
         const vectorMetaTable = `${prefix}_vector_meta`;
-        const legacyVectorTable = `${prefix}_vectors`;
         const vecMetaExists = db.get<{ name: string }>(
           "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
           [vectorMetaTable]
         );
-        const legacyExists = db.get<{ name: string }>(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-          [legacyVectorTable]
-        );
 
         if (vecMetaExists) {
           const vecRow = db.get<{ count: number }>(`SELECT COUNT(DISTINCT entity_id) as count FROM ${vectorMetaTable}`);
-          embeddingPct = Math.round(((vecRow?.count ?? 0) / entities) * 100);
-        } else if (legacyExists) {
-          const vecRow = db.get<{ count: number }>(`SELECT COUNT(DISTINCT entity_id) as count FROM ${legacyVectorTable}`);
           embeddingPct = Math.round(((vecRow?.count ?? 0) / entities) * 100);
         }
       }
@@ -258,12 +250,11 @@ export function createDoctorCommand(output: CLIOutput = defaultOutput): Command 
         embeddingModel = resolved.projectConfig?.embeddings?.model || embeddingModel;
         summarizationModel = resolved.projectConfig?.summarization?.model || summarizationModel;
       } catch {
-        // Use defaults if config resolution fails
+        // Use defaults if config resolution fails — local DB
         if (options.db) {
           dbPath = options.db;
         } else {
-          const homedir = require('os').homedir();
-          dbPath = path.join(homedir, '.ctx-sys', 'ctx-sys.db');
+          dbPath = path.join(projectPath, '.ctx-sys', 'ctx-sys.db');
         }
       }
 

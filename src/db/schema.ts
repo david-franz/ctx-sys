@@ -412,7 +412,6 @@ DROP TABLE IF EXISTS ${prefix}_sessions;
 DROP TABLE IF EXISTS ${prefix}_relationships;
 DROP TABLE IF EXISTS ${prefix}_vec;
 DROP TABLE IF EXISTS ${prefix}_vector_meta;
-DROP TABLE IF EXISTS ${prefix}_vectors;
 DROP TABLE IF EXISTS ${prefix}_ast_cache;
 DROP TABLE IF EXISTS ${prefix}_entities;
 `;
