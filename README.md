@@ -81,7 +81,7 @@ For **Claude Code**, add to your MCP settings:
 }
 ```
 
-Now your AI assistant has access to 30 tools for searching your codebase, querying the relationship graph, managing conversation memory, and more.
+Now your AI assistant has access to 12 action-based tools for searching your codebase, querying the relationship graph, managing conversation memory, and more.
 
 ## How It Works
 
@@ -183,16 +183,22 @@ ctx-sys debug export <file>       # Export project data
 
 ## MCP Tools
 
-When connected as an MCP server, ctx-sys exposes 30 tools organized into these categories:
+When connected as an MCP server, ctx-sys exposes 12 action-based tools:
 
-| Category | Key Tools | What They Do |
-| -------- | --------- | ------------ |
-| **Search** | `context_query`, `search_entities` | Hybrid RAG retrieval with source attribution |
-| **Indexing** | `index_codebase`, `index_document`, `sync_from_git` | Parse and index code and docs |
-| **Graph** | `query_graph`, `link_entities`, `get_graph_stats` | Navigate entity relationships |
-| **Memory** | `store_message`, `get_history`, `summarize_session` | Conversation context across sessions |
-| **Agent** | `checkpoint_save/load`, `memory_spill/recall`, `reflection_store` | Long-running agent workflows |
-| **Project** | `create_project`, `set_active_project` | Multi-project management |
+| Tool | Actions | What It Does |
+| ---- | ------- | ------------ |
+| **context_query** | *(standalone)* | Hybrid RAG retrieval with source attribution |
+| **entity** | add, get, search, delete | Manage code and document entities |
+| **index** | codebase, document, sync, status | Parse and index code and docs |
+| **graph** | link, query, stats | Navigate entity relationships |
+| **session** | create, list, archive, summarize | Conversation session lifecycle |
+| **message** | store, history | Conversation messages across sessions |
+| **decision** | search, create | Architectural decision tracking |
+| **checkpoint** | save, load, list, delete | Agent state persistence |
+| **memory** | spill, recall, status | Hot/cold memory tier management |
+| **reflection** | store, query | Cross-session learning and lessons |
+| **project** | create, list, set_active, delete | Multi-project management |
+| **hooks** | install, impact_report | Git hook integration |
 
 ## Configuration
 
@@ -242,8 +248,10 @@ providers:
 | Rust | tree-sitter | Functions, structs, impls, traits, imports |
 | Go | tree-sitter | Functions, structs, methods, interfaces, imports |
 | Java | tree-sitter | Classes, methods, interfaces, imports |
+| C/C++ | regex-based | Functions, classes, structs, enums, namespaces, #includes |
+| C# | regex-based | Classes, interfaces, structs, records, enums, methods, usings |
 
-Documents (Markdown, HTML, YAML, JSON, TOML, plain text) are also indexed with semantic chunking.
+Documents (Markdown, HTML, YAML, JSON, TOML, PDF, CSV, XML, plain text) are also indexed with semantic chunking.
 
 ## Requirements
 

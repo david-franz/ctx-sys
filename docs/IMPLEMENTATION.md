@@ -19,7 +19,7 @@ ctx-sys is implemented in 12 phases, progressing from foundational infrastructur
 | 9 | Analytics & Distribution | Token analytics, git hooks, support docs, website, npm | ✅ Complete |
 | 10 | RAG Enhancements | Code content, scalable indexing, LLM summaries, robustness, Graph RAG | ✅ Complete |
 | 10b | MCP Tool Fixes | Fix 15 bugs/stubs discovered during systematic MCP testing | ✅ Complete |
-| 10i | Code Quality & New Formats | CoreService split, type safety, logging, PDF/CSV/XML, MCP consolidation | Planned |
+| 10i | Code Quality & New Formats | CoreService split, type safety, logging, PDF/CSV/XML, MCP consolidation | ✅ Complete |
 | 11 | Integration & Team | VS Code extension, auto context injection, team knowledge base | Planned |
 | 12 | Commercial & Enterprise | Auth & SSO, desktop app, licensing & billing, telemetry | Planned |
 
@@ -415,29 +415,29 @@ Architectural cleanup, type safety, new document formats, and MCP tool consolida
 
 | Feature | Description | Doc | Status |
 |---------|-------------|-----|--------|
-| **F10i.1** | CoreService Decomposition | [F10i.1-core-service-decomposition.md](phase-10i/F10i.1-core-service-decomposition.md) | Planned |
-| **F10i.2** | Type Safety — Eliminate `as any` Casts | [F10i.2-type-safety.md](phase-10i/F10i.2-type-safety.md) | Planned |
-| **F10i.3** | Logging Abstraction | [F10i.3-logging-abstraction.md](phase-10i/F10i.3-logging-abstraction.md) | Planned |
-| **F10i.4** | Async Cleanup | [F10i.4-async-cleanup.md](phase-10i/F10i.4-async-cleanup.md) | Planned |
-| **F10i.5** | Reflection Store Integration | [F10i.5-reflection-store-integration.md](phase-10i/F10i.5-reflection-store-integration.md) | Planned |
-| **F10i.6** | Scalable Entity Iteration | [F10i.6-scalable-entity-iteration.md](phase-10i/F10i.6-scalable-entity-iteration.md) | Planned |
-| **F10i.7** | Test Infrastructure Fix | [F10i.7-test-infrastructure.md](phase-10i/F10i.7-test-infrastructure.md) | Planned |
-| **F10i.8** | PDF, CSV & XML Document Support | [F10i.8-pdf-csv-xml-support.md](phase-10i/F10i.8-pdf-csv-xml-support.md) | Planned |
-| **F10i.9** | MCP Tool Consolidation (30 → 12) | [F10i.9-mcp-tool-consolidation.md](phase-10i/F10i.9-mcp-tool-consolidation.md) | Planned |
-| **F10i.10** | Clean Error Messages | [F10i.10-error-messages.md](phase-10i/F10i.10-error-messages.md) | Planned |
+| **F10i.1** | CoreService Decomposition | [F10i.1-core-service-decomposition.md](phase-10i/F10i.1-core-service-decomposition.md) | ✅ Done |
+| **F10i.2** | Type Safety — Eliminate `as any` Casts | [F10i.2-type-safety.md](phase-10i/F10i.2-type-safety.md) | ✅ Done |
+| **F10i.3** | Logging Abstraction | [F10i.3-logging-abstraction.md](phase-10i/F10i.3-logging-abstraction.md) | ✅ Done |
+| **F10i.4** | Async Cleanup | [F10i.4-async-cleanup.md](phase-10i/F10i.4-async-cleanup.md) | ✅ Done |
+| **F10i.5** | Reflection Store Integration | [F10i.5-reflection-store-integration.md](phase-10i/F10i.5-reflection-store-integration.md) | ✅ Done |
+| **F10i.6** | Scalable Entity Iteration | [F10i.6-scalable-entity-iteration.md](phase-10i/F10i.6-scalable-entity-iteration.md) | ✅ Done |
+| **F10i.7** | Test Infrastructure Fix | [F10i.7-test-infrastructure.md](phase-10i/F10i.7-test-infrastructure.md) | ✅ Done |
+| **F10i.8** | PDF, CSV, XML & C/C++/C# Support | [F10i.8-pdf-csv-xml-support.md](phase-10i/F10i.8-pdf-csv-xml-support.md) | ✅ Done |
+| **F10i.9** | MCP Tool Consolidation (30 → 12) | [F10i.9-mcp-tool-consolidation.md](phase-10i/F10i.9-mcp-tool-consolidation.md) | ✅ Done |
+| **F10i.10** | Clean Error Messages | [F10i.10-error-messages.md](phase-10i/F10i.10-error-messages.md) | ✅ Done |
 
 **Key Deliverables:**
 
-- Split CoreService (1051 lines, 43 methods) into 8 focused domain services behind a facade
-- Remove all 28 `as any` casts with type guards and const-derived unions
-- Injectable logger interface replacing 19 bare `console.*` calls in library code
-- Remove vestigial `async` from 13+ synchronous EntityStore methods
-- Wire up the full ReflectionStore (557 lines, currently dead code) replacing the message-based workaround
-- Paginated entity iteration for embedding generation (replace `list({ limit: 100000 })`)
-- Fix Jest/ESM test configuration so `npm test` passes reliably
-- PDF, CSV, and XML document indexing with type-specific entity extraction
-- Consolidate 30 MCP tools into 12 action-based tools for better LLM ergonomics
-- Structured error hierarchy replacing raw `TypeError: fetch failed` with actionable messages and fix suggestions
+- ✅ Split CoreService (1051 lines, 43 methods) into 8 focused domain services behind a facade
+- ✅ Remove `as any` casts with type guards and const-derived unions
+- ✅ Injectable logger interface replacing bare `console.*` calls in library code
+- ✅ Remove vestigial `async` from synchronous EntityStore/RelationshipStore/CheckpointManager methods
+- ✅ Wire up the full ReflectionStore replacing the message-based workaround
+- ✅ Paginated entity iteration for embedding generation (replace `list({ limit: 100000 })`)
+- ✅ Fix Jest/ESM test configuration so `npm test` passes reliably
+- ✅ PDF, CSV, XML document indexing + C/C++/C# AST extraction (53 tests)
+- ✅ Consolidate 30 MCP tools into 12 action-based tools for better LLM ergonomics
+- ✅ Structured error hierarchy with `CtxError`, `OllamaUnavailableError`, `NotFoundError`, fix suggestions
 
 ---
 
@@ -505,8 +505,16 @@ ctx-sys/
 │   │   ├── memory-tier.ts     # Hot/cold memory API
 │   │   ├── reflection.ts      # Lesson storage
 │   │   └── proactive.ts       # Proactive context
-│   ├── core/                  # Core Service Layer (F10.0)
-│   │   └── service.ts         # Unified business logic API
+│   ├── services/               # Domain Services (F10.0, F10i.1)
+│   │   ├── core-service.ts     # Thin facade delegating to 8 services
+│   │   ├── project-service.ts  # Project CRUD
+│   │   ├── entity-service.ts   # Entity management
+│   │   ├── indexing-service.ts  # Codebase/document indexing
+│   │   ├── conversation-service.ts  # Sessions, messages, decisions
+│   │   ├── graph-service.ts    # Relationships and traversal
+│   │   ├── retrieval-service.ts # Hybrid RAG pipeline
+│   │   ├── agent-service.ts    # Checkpoints, memory, reflections
+│   │   └── hooks-service.ts    # Git hooks and impact analysis
 │   └── team/                  # Team Knowledge (F11.2)
 ├── vscode-extension/          # VS Code Extension (F11.1)
 │   ├── src/
@@ -531,7 +539,7 @@ ctx-sys/
 | Language | TypeScript |
 | Database | SQLite (better-sqlite3) + FTS5 |
 | AST Parsing | tree-sitter |
-| Embeddings (local) | Ollama (nomic-embed-text) |
+| Embeddings (local) | Ollama (mxbai-embed-large) |
 | Embeddings (cloud) | OpenAI (text-embedding-3-small) |
 | Summaries (local) | Ollama (qwen3:0.6b) |
 | Summaries (cloud) | OpenAI (gpt-4o-mini), Anthropic (claude-3-haiku) |
