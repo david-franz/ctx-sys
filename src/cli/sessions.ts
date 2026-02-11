@@ -134,9 +134,9 @@ async function listSessions(
   }
 
   output.log(formatTable(sessions, [
-    { header: 'ID', key: 'id', width: 12 },
+    { header: 'ID', key: 'id', width: 36 },
     { header: 'Status', key: 'status', width: 10 },
-    { header: 'Messages', key: 'message_count', width: 10 },
+    { header: 'Msgs', key: 'message_count', width: 6 },
     { header: 'Created', key: 'created_at', format: formatDate, width: 20 },
     { header: 'Summary', key: 'summary', format: (s) => truncate(s as string, 40), width: 42 }
   ]));
