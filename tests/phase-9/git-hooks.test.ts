@@ -44,7 +44,7 @@ describe('F9.2 Git Hooks', () => {
       // Create a temporary git repository
       repoPath = path.join(testDir, 'repo');
       fs.mkdirSync(repoPath);
-      execSync('git init', { cwd: repoPath, stdio: 'ignore' });
+      execSync('git init -b main', { cwd: repoPath, stdio: 'ignore' });
     });
 
     describe('install', () => {
@@ -200,7 +200,7 @@ describe('F9.2 Git Hooks', () => {
       // Create a test git repo with some commits
       repoPath = path.join(testDir, 'repo');
       fs.mkdirSync(repoPath);
-      execSync('git init', { cwd: repoPath, stdio: 'ignore' });
+      execSync('git init -b main', { cwd: repoPath, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: repoPath, stdio: 'ignore' });
       execSync('git config user.name "Test User"', { cwd: repoPath, stdio: 'ignore' });
       fs.writeFileSync(path.join(repoPath, 'initial.txt'), 'initial content');
@@ -382,7 +382,7 @@ describe('F9.2 Git Hooks', () => {
       // Create a test git repo with branches
       repoPath = path.join(testDir, 'impact-repo');
       fs.mkdirSync(repoPath);
-      execSync('git init', { cwd: repoPath, stdio: 'ignore' });
+      execSync('git init -b main', { cwd: repoPath, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: repoPath, stdio: 'ignore' });
       execSync('git config user.name "Test User"', { cwd: repoPath, stdio: 'ignore' });
 
@@ -557,7 +557,7 @@ describe('F9.2 Git Hooks', () => {
       const installer = new HookInstaller();
       const repoPath = path.join(testDir, 'integration-repo');
       fs.mkdirSync(repoPath);
-      execSync('git init', { cwd: repoPath, stdio: 'ignore' });
+      execSync('git init -b main', { cwd: repoPath, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: repoPath, stdio: 'ignore' });
       execSync('git config user.name "Test"', { cwd: repoPath, stdio: 'ignore' });
 
