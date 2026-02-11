@@ -1,5 +1,17 @@
 // Main exports for ctx-sys
 
+// Errors
+export {
+  CtxError,
+  ErrorCode,
+  OllamaUnavailableError,
+  OllamaModelNotFoundError,
+  NotFoundError,
+  AlreadyExistsError,
+  DatabaseError,
+  ProviderUnavailableError
+} from './errors';
+
 // Configuration
 export {
   ConfigManager,

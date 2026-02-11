@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { AppContext } from '../context';
 import { ToolRegistry, Tool } from './tool-registry';
+import { CtxError } from '../errors';
 
 /**
  * MCP Server configuration.
@@ -87,12 +88,14 @@ export class CtxSysMcpServer {
             ]
           };
         } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
+          const payload = error instanceof CtxError
+            ? error.toMcpResponse()
+            : { error: error instanceof Error ? error.message : String(error) };
           return {
             content: [
               {
                 type: 'text' as const,
-                text: JSON.stringify({ error: message }, null, 2)
+                text: JSON.stringify(payload, null, 2)
               }
             ],
             isError: true

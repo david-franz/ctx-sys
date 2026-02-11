@@ -1,4 +1,5 @@
 import { EmbeddingProvider, BatchOptions, EmbedOptions, ModelIdentifier } from './types';
+import { ollamaFetch } from '../utils/ollama-fetch';
 
 interface OllamaConfig {
   baseUrl: string;
@@ -152,7 +153,7 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     const prefixed = this.applyPrefix(text, options?.isQuery ?? false);
     const truncated = prefixed.length > this.maxChars ? prefixed.slice(0, this.maxChars) : prefixed;
 
-    const response = await fetch(`${this.config.baseUrl}/api/embed`, {
+    const response = await ollamaFetch(`${this.config.baseUrl}/api/embed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -160,11 +161,6 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
         input: truncated
       })
     });
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => '');
-      throw new Error(`Ollama embedding failed (${response.status}): ${body || response.statusText}`);
-    }
 
     const data = await response.json() as { embeddings: number[][] };
     if (!data.embeddings || !data.embeddings[0]) {
@@ -188,16 +184,17 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
         return prefixed.length > this.maxChars ? prefixed.slice(0, this.maxChars) : prefixed;
       });
 
-      const response = await fetch(`${this.config.baseUrl}/api/embed`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: this.config.model,
-          input: truncatedBatch
-        })
-      });
-
-      if (!response.ok) {
+      let response: Response;
+      try {
+        response = await ollamaFetch(`${this.config.baseUrl}/api/embed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: this.config.model,
+            input: truncatedBatch
+          })
+        });
+      } catch {
         // If batch fails, fall back to individual embedding
         for (const text of batch) {
           try {

@@ -3,6 +3,8 @@
  * Uses Ollama (qwen3:0.6b) to find semantic relationships.
  */
 
+import { ollamaFetch } from '../utils/ollama-fetch';
+
 const VALID_RELATIONSHIPS = [
   'CONTAINS', 'CALLS', 'IMPORTS', 'IMPLEMENTS', 'EXTENDS',
   'MENTIONS', 'RELATES_TO', 'DEPENDS_ON', 'DEFINED_IN',
@@ -95,7 +97,7 @@ Return ONLY a JSON array, no explanation.`;
 
   private async callLLM(prompt: string): Promise<ExtractedRelationship[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/generate`, {
+      const response = await ollamaFetch(`${this.baseUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -105,8 +107,6 @@ Return ONLY a JSON array, no explanation.`;
           options: { temperature: 0.1 },
         }),
       });
-
-      if (!response.ok) return [];
 
       const data = await response.json() as { response: string };
       return this.parseResponse(data.response);

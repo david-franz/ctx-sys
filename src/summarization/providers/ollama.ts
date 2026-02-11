@@ -8,6 +8,7 @@ import {
   SummarizeItem,
   OllamaOptions
 } from './types';
+import { ollamaFetch } from '../../utils/ollama-fetch';
 
 /**
  * Ollama-based local LLM summarization provider.
@@ -63,7 +64,7 @@ export class OllamaSummarizationProvider implements SummarizationProvider {
     const prompt = this.buildPrompt(content, options);
     const maxTokens = options.maxTokens ?? 150;
 
-    const response = await fetch(`${this.baseUrl}/api/generate`, {
+    const response = await ollamaFetch(`${this.baseUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -77,10 +78,6 @@ export class OllamaSummarizationProvider implements SummarizationProvider {
         }
       })
     });
-
-    if (!response.ok) {
-      throw new Error(`Ollama error: ${response.statusText}`);
-    }
 
     const data = await response.json() as { response: string };
     return this.cleanResponse(data.response);

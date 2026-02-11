@@ -3,6 +3,8 @@
  * Uses Ollama (qwen3:0.6b) to discover entities in documents.
  */
 
+import { ollamaFetch } from '../utils/ollama-fetch';
+
 export interface ExtractedEntity {
   name: string;
   type: string;
@@ -38,7 +40,7 @@ ${truncated}
 Return ONLY a JSON array, no other text. Example: [{"name":"React","type":"technology","description":"Frontend framework","confidence":0.95}]`;
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/generate`, {
+      const response = await ollamaFetch(`${this.baseUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -48,8 +50,6 @@ Return ONLY a JSON array, no other text. Example: [{"name":"React","type":"techn
           options: { temperature: 0.1 },
         }),
       });
-
-      if (!response.ok) return [];
 
       const data = await response.json() as { response: string };
       return this.parseResponse(data.response);

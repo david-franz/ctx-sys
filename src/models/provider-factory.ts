@@ -12,6 +12,7 @@ import {
 import { LLMSummarizer } from '../summarization';
 import { ConfigManager, GlobalConfig } from '../config';
 import { Logger, consoleLogger } from '../utils/logger';
+import { ollamaFetch } from '../utils/ollama-fetch';
 
 /**
  * Configuration for a model provider.
@@ -367,7 +368,7 @@ class OllamaSummarizationProvider implements LLMSummarizer {
   }
 
   private async complete(prompt: string): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/api/generate`, {
+    const response = await ollamaFetch(`${this.baseUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -377,10 +378,6 @@ class OllamaSummarizationProvider implements LLMSummarizer {
         options: { num_predict: 100 }
       })
     });
-
-    if (!response.ok) {
-      throw new Error(`Ollama request failed: ${response.statusText}`);
-    }
 
     const data = await response.json() as { response?: string };
     return data.response?.trim() ?? '';

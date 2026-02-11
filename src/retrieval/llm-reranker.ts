@@ -4,6 +4,7 @@
  */
 
 import { SearchResult } from './types';
+import { ollamaFetch } from '../utils/ollama-fetch';
 
 export interface RerankerConfig {
   baseUrl?: string;
@@ -121,7 +122,7 @@ Reply with ONLY a number 0-10.`;
     const timer = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/api/generate`, {
+      const response = await ollamaFetch(`${this.config.baseUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -132,10 +133,6 @@ Reply with ONLY a number 0-10.`;
         }),
         signal: controller.signal,
       });
-
-      if (!response.ok) {
-        throw new Error(`LLM request failed: ${response.status}`);
-      }
 
       const data = await response.json() as { response: string };
       return data.response || '';
