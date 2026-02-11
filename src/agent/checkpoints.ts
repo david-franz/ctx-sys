@@ -138,11 +138,11 @@ export class CheckpointManager {
   /**
    * Save a checkpoint of the current agent state.
    */
-  async save(
+  save(
     sessionId: string,
     state: AgentState,
     options: SaveOptions = {}
-  ): Promise<Checkpoint> {
+  ): Checkpoint {
     const checkpoint: Checkpoint = {
       id: generateId('ckpt'),
       sessionId,
@@ -177,7 +177,7 @@ export class CheckpointManager {
     );
 
     // Prune old checkpoints if exceeding limit
-    await this.pruneOldCheckpoints(sessionId);
+    this.pruneOldCheckpoints(sessionId);
 
     return checkpoint;
   }
@@ -185,7 +185,7 @@ export class CheckpointManager {
   /**
    * Load the latest checkpoint for a session.
    */
-  async loadLatest(sessionId: string): Promise<Checkpoint | null> {
+  loadLatest(sessionId: string): Checkpoint | null {
     const row = this.db.get<CheckpointRow>(
       `SELECT * FROM ${this.prefix}_checkpoints
        WHERE session_id = ?
@@ -200,7 +200,7 @@ export class CheckpointManager {
   /**
    * Load a specific checkpoint by ID.
    */
-  async load(checkpointId: string): Promise<Checkpoint | null> {
+  load(checkpointId: string): Checkpoint | null {
     const row = this.db.get<CheckpointRow>(
       `SELECT * FROM ${this.prefix}_checkpoints WHERE id = ?`,
       [checkpointId]
@@ -212,7 +212,7 @@ export class CheckpointManager {
   /**
    * Load checkpoint at a specific step number for a session.
    */
-  async loadAtStep(sessionId: string, stepNumber: number): Promise<Checkpoint | null> {
+  loadAtStep(sessionId: string, stepNumber: number): Checkpoint | null {
     const row = this.db.get<CheckpointRow>(
       `SELECT * FROM ${this.prefix}_checkpoints
        WHERE session_id = ? AND step_number = ?
@@ -227,7 +227,7 @@ export class CheckpointManager {
   /**
    * List all checkpoints for a session.
    */
-  async list(sessionId: string): Promise<CheckpointSummary[]> {
+  list(sessionId: string): CheckpointSummary[] {
     const rows = this.db.all<CheckpointRow>(
       `SELECT id, step_number, created_at, description, trigger_type, duration_ms
        FROM ${this.prefix}_checkpoints
@@ -249,7 +249,7 @@ export class CheckpointManager {
   /**
    * Delete a checkpoint by ID.
    */
-  async delete(checkpointId: string): Promise<boolean> {
+  delete(checkpointId: string): boolean {
     const result = this.db.run(
       `DELETE FROM ${this.prefix}_checkpoints WHERE id = ?`,
       [checkpointId]
@@ -260,7 +260,7 @@ export class CheckpointManager {
   /**
    * Delete all checkpoints for a session.
    */
-  async clearSession(sessionId: string): Promise<number> {
+  clearSession(sessionId: string): number {
     const result = this.db.run(
       `DELETE FROM ${this.prefix}_checkpoints WHERE session_id = ?`,
       [sessionId]
@@ -271,7 +271,7 @@ export class CheckpointManager {
   /**
    * Get the count of checkpoints for a session.
    */
-  async count(sessionId: string): Promise<number> {
+  count(sessionId: string): number {
     const row = this.db.get<{ count: number }>(
       `SELECT COUNT(*) as count FROM ${this.prefix}_checkpoints WHERE session_id = ?`,
       [sessionId]
@@ -282,7 +282,7 @@ export class CheckpointManager {
   /**
    * Prune old checkpoints to stay under the configured limit.
    */
-  private async pruneOldCheckpoints(sessionId: string): Promise<number> {
+  private pruneOldCheckpoints(sessionId: string): number {
     // Get IDs to keep (most recent by step number and creation time)
     const keepRows = this.db.all<{ id: string }>(
       `SELECT id FROM ${this.prefix}_checkpoints
@@ -312,7 +312,7 @@ export class CheckpointManager {
   /**
    * Prune checkpoints older than a specified number of days.
    */
-  async pruneByAge(days: number): Promise<number> {
+  pruneByAge(days: number): number {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
 

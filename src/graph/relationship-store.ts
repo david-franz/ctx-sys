@@ -27,7 +27,7 @@ export class RelationshipStore {
   /**
    * Create a new relationship.
    */
-  async create(input: RelationshipInput): Promise<StoredRelationship> {
+  create(input: RelationshipInput): StoredRelationship {
     const id = generateId();
 
     this.db.run(
@@ -44,7 +44,7 @@ export class RelationshipStore {
       ]
     );
 
-    const rel = await this.get(id);
+    const rel = this.get(id);
     if (!rel) {
       throw new Error('Failed to create relationship');
     }
@@ -54,7 +54,7 @@ export class RelationshipStore {
   /**
    * Create or update a relationship (avoids duplicates on re-index).
    */
-  async upsert(input: RelationshipInput): Promise<void> {
+  upsert(input: RelationshipInput): void {
     const existing = this.db.get<{ id: string }>(
       `SELECT id FROM ${this.tableName}
        WHERE source_id = ? AND target_id = ? AND relationship = ?`,
@@ -82,7 +82,7 @@ export class RelationshipStore {
   /**
    * Create multiple relationships in a transaction.
    */
-  async createMany(inputs: RelationshipInput[]): Promise<StoredRelationship[]> {
+  createMany(inputs: RelationshipInput[]): StoredRelationship[] {
     const ids: string[] = [];
 
     this.db.transaction(() => {
@@ -107,7 +107,7 @@ export class RelationshipStore {
 
     const relationships: StoredRelationship[] = [];
     for (const id of ids) {
-      const rel = await this.get(id);
+      const rel = this.get(id);
       if (rel) relationships.push(rel);
     }
     return relationships;
@@ -116,7 +116,7 @@ export class RelationshipStore {
   /**
    * Get a relationship by ID.
    */
-  async get(id: string): Promise<StoredRelationship | null> {
+  get(id: string): StoredRelationship | null {
     const row = this.db.get<RelationshipRow>(
       `SELECT * FROM ${this.tableName} WHERE id = ?`,
       [id]
@@ -127,11 +127,11 @@ export class RelationshipStore {
   /**
    * Get all relationships for an entity.
    */
-  async getForEntity(
+  getForEntity(
     entityId: string,
     direction: 'out' | 'in' | 'both' = 'both',
     options?: RelationshipQueryOptions
-  ): Promise<StoredRelationship[]> {
+  ): StoredRelationship[] {
     let sql: string;
     const params: unknown[] = [];
 
@@ -172,10 +172,10 @@ export class RelationshipStore {
   /**
    * Get relationships by type.
    */
-  async getByType(
+  getByType(
     type: GraphRelationshipType,
     options?: { limit?: number }
-  ): Promise<StoredRelationship[]> {
+  ): StoredRelationship[] {
     let sql = `SELECT * FROM ${this.tableName} WHERE relationship = ? ORDER BY weight DESC`;
     const params: unknown[] = [type];
 
@@ -191,11 +191,11 @@ export class RelationshipStore {
   /**
    * Check if a relationship exists between two entities.
    */
-  async exists(
+  exists(
     sourceId: string,
     targetId: string,
     type?: GraphRelationshipType
-  ): Promise<boolean> {
+  ): boolean {
     let sql = `SELECT COUNT(*) as count FROM ${this.tableName}
                WHERE source_id = ? AND target_id = ?`;
     const params: unknown[] = [sourceId, targetId];
@@ -212,7 +212,7 @@ export class RelationshipStore {
   /**
    * Update relationship weight.
    */
-  async updateWeight(id: string, weight: number): Promise<void> {
+  updateWeight(id: string, weight: number): void {
     this.db.run(
       `UPDATE ${this.tableName} SET weight = ? WHERE id = ?`,
       [weight, id]
@@ -222,14 +222,14 @@ export class RelationshipStore {
   /**
    * Delete a relationship.
    */
-  async delete(id: string): Promise<void> {
+  delete(id: string): void {
     this.db.run(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
   }
 
   /**
    * Delete all relationships for an entity.
    */
-  async deleteForEntity(entityId: string): Promise<number> {
+  deleteForEntity(entityId: string): number {
     const result = this.db.run(
       `DELETE FROM ${this.tableName} WHERE source_id = ? OR target_id = ?`,
       [entityId, entityId]
@@ -240,7 +240,7 @@ export class RelationshipStore {
   /**
    * Delete relationships between two specific entities.
    */
-  async deleteBetween(sourceId: string, targetId: string): Promise<number> {
+  deleteBetween(sourceId: string, targetId: string): number {
     const result = this.db.run(
       `DELETE FROM ${this.tableName} WHERE source_id = ? AND target_id = ?`,
       [sourceId, targetId]
@@ -251,7 +251,7 @@ export class RelationshipStore {
   /**
    * Get count of relationships.
    */
-  async count(type?: GraphRelationshipType): Promise<number> {
+  count(type?: GraphRelationshipType): number {
     let sql = `SELECT COUNT(*) as count FROM ${this.tableName}`;
     const params: unknown[] = [];
 
@@ -267,7 +267,7 @@ export class RelationshipStore {
   /**
    * Get relationship statistics grouped by type.
    */
-  async getStatsByType(): Promise<Record<string, number>> {
+  getStatsByType(): Record<string, number> {
     const rows = this.db.all<{ relationship: string; count: number }>(
       `SELECT relationship, COUNT(*) as count FROM ${this.tableName}
        GROUP BY relationship`
@@ -283,7 +283,7 @@ export class RelationshipStore {
   /**
    * Get entities with most connections.
    */
-  async getMostConnected(limit: number = 10): Promise<Array<{ entityId: string; connections: number }>> {
+  getMostConnected(limit: number = 10): Array<{ entityId: string; connections: number }> {
     const rows = this.db.all<{ entity_id: string; connections: number }>(
       `SELECT entity_id, connections FROM (
         SELECT source_id as entity_id, COUNT(*) as connections FROM ${this.tableName} GROUP BY source_id
@@ -325,8 +325,8 @@ export class RelationshipStore {
   /**
    * Get average degree (connections per entity).
    */
-  async getAverageDegree(): Promise<number> {
-    const totalRels = await this.count();
+  getAverageDegree(): number {
+    const totalRels = this.count();
     if (totalRels === 0) return 0;
 
     const uniqueEntities = this.db.get<{ count: number }>(

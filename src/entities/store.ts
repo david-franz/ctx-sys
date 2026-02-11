@@ -30,7 +30,7 @@ export class EntityStore {
   /**
    * Create a new entity.
    */
-  async create(input: EntityCreateInput): Promise<Entity> {
+  create(input: EntityCreateInput): Entity {
     const id = generateId();
     const hash = input.content ? hashContent(input.content) : null;
     const qualifiedName = input.qualifiedName || this.generateQualifiedName(input);
@@ -54,7 +54,7 @@ export class EntityStore {
       ]
     );
 
-    const entity = await this.get(id);
+    const entity = this.get(id);
     if (!entity) {
       throw new Error('Failed to create entity');
     }
@@ -65,9 +65,9 @@ export class EntityStore {
    * Create or update an entity by qualified name.
    * Keeps the same ID if the entity already exists (preserving embedding references).
    */
-  async upsert(input: EntityCreateInput): Promise<Entity> {
+  upsert(input: EntityCreateInput): Entity {
     const qualifiedName = input.qualifiedName || this.generateQualifiedName(input);
-    const existing = await this.getByQualifiedName(qualifiedName);
+    const existing = this.getByQualifiedName(qualifiedName);
 
     if (existing) {
       // Update in place — keeps the same ID so embeddings stay linked
@@ -91,7 +91,7 @@ export class EntityStore {
           existing.id
         ]
       );
-      const updated = await this.get(existing.id);
+      const updated = this.get(existing.id);
       if (!updated) throw new Error('Failed to update entity');
       return updated;
     }
@@ -103,7 +103,7 @@ export class EntityStore {
   /**
    * Create multiple entities in a transaction.
    */
-  async createMany(inputs: EntityCreateInput[]): Promise<Entity[]> {
+  createMany(inputs: EntityCreateInput[]): Entity[] {
     const ids: string[] = [];
 
     this.db.transaction(() => {
@@ -137,7 +137,7 @@ export class EntityStore {
 
     const entities: Entity[] = [];
     for (const id of ids) {
-      const entity = await this.get(id);
+      const entity = this.get(id);
       if (entity) entities.push(entity);
     }
     return entities;
@@ -146,7 +146,7 @@ export class EntityStore {
   /**
    * Get an entity by ID.
    */
-  async get(id: string): Promise<Entity | null> {
+  get(id: string): Entity | null {
     const row = this.db.get<EntityRow>(
       `SELECT * FROM ${this.tableName} WHERE id = ?`,
       [id]
@@ -157,7 +157,7 @@ export class EntityStore {
   /**
    * Get an entity by name, optionally filtered by type.
    */
-  async getByName(name: string, type?: EntityType): Promise<Entity | null> {
+  getByName(name: string, type?: EntityType): Entity | null {
     let sql = `SELECT * FROM ${this.tableName} WHERE name = ?`;
     const params: unknown[] = [name];
 
@@ -173,7 +173,7 @@ export class EntityStore {
   /**
    * Get an entity by qualified name.
    */
-  async getByQualifiedName(qualifiedName: string): Promise<Entity | null> {
+  getByQualifiedName(qualifiedName: string): Entity | null {
     const row = this.db.get<EntityRow>(
       `SELECT * FROM ${this.tableName} WHERE qualified_name = ?`,
       [qualifiedName]
@@ -184,7 +184,7 @@ export class EntityStore {
   /**
    * Get all entities for a file, ordered by start line.
    */
-  async getByFile(filePath: string): Promise<Entity[]> {
+  getByFile(filePath: string): Entity[] {
     const rows = this.db.all<EntityRow>(
       `SELECT * FROM ${this.tableName} WHERE file_path = ? ORDER BY start_line`,
       [filePath]
@@ -195,7 +195,7 @@ export class EntityStore {
   /**
    * Get entities by type.
    */
-  async getByType(type: EntityType | EntityType[]): Promise<Entity[]> {
+  getByType(type: EntityType | EntityType[]): Entity[] {
     const types = Array.isArray(type) ? type : [type];
     const placeholders = types.map(() => '?').join(', ');
     const rows = this.db.all<EntityRow>(
@@ -208,8 +208,8 @@ export class EntityStore {
   /**
    * Update an entity.
    */
-  async update(id: string, updates: EntityUpdateInput): Promise<Entity> {
-    const entity = await this.get(id);
+  update(id: string, updates: EntityUpdateInput): Entity {
+    const entity = this.get(id);
     if (!entity) {
       throw new Error(`Entity not found: ${id}`);
     }
@@ -258,7 +258,7 @@ export class EntityStore {
       params
     );
 
-    const updated = await this.get(id);
+    const updated = this.get(id);
     if (!updated) {
       throw new Error('Failed to update entity');
     }
@@ -268,14 +268,14 @@ export class EntityStore {
   /**
    * Delete an entity by ID.
    */
-  async delete(id: string): Promise<void> {
+  delete(id: string): void {
     this.db.run(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
   }
 
   /**
    * Delete all entities for a file.
    */
-  async deleteByFile(filePath: string): Promise<number> {
+  deleteByFile(filePath: string): number {
     const result = this.db.run(
       `DELETE FROM ${this.tableName} WHERE file_path = ?`,
       [filePath]
@@ -286,7 +286,7 @@ export class EntityStore {
   /**
    * Delete all entities of a specific type.
    */
-  async deleteByType(type: EntityType): Promise<number> {
+  deleteByType(type: EntityType): number {
     const result = this.db.run(
       `DELETE FROM ${this.tableName} WHERE type = ?`,
       [type]
@@ -298,7 +298,7 @@ export class EntityStore {
    * Search entities using FTS5 full-text search with BM25 ranking.
    * F10.10: Falls back to LIKE if FTS5 table doesn't exist or returns no results.
    */
-  async search(query: string, options?: EntitySearchOptions): Promise<Entity[]> {
+  search(query: string, options?: EntitySearchOptions): Entity[] {
     // Empty query: return all entities with limit/offset
     if (!query.trim()) {
       return this.searchAll(options);
@@ -641,7 +641,7 @@ export class EntityStore {
   /**
    * Check if content with given hash already exists.
    */
-  async existsByHash(hash: string): Promise<boolean> {
+  existsByHash(hash: string): boolean {
     const row = this.db.get<{ count: number }>(
       `SELECT COUNT(*) as count FROM ${this.tableName} WHERE hash = ?`,
       [hash]
@@ -652,7 +652,7 @@ export class EntityStore {
   /**
    * Find entity by content hash.
    */
-  async findByHash(hash: string): Promise<Entity | null> {
+  findByHash(hash: string): Entity | null {
     const row = this.db.get<EntityRow>(
       `SELECT * FROM ${this.tableName} WHERE hash = ?`,
       [hash]
@@ -663,7 +663,7 @@ export class EntityStore {
   /**
    * Count entities, optionally filtered by type.
    */
-  async count(type?: EntityType): Promise<number> {
+  count(type?: EntityType): number {
     let sql = `SELECT COUNT(*) as count FROM ${this.tableName}`;
     const params: unknown[] = [];
 
@@ -679,7 +679,7 @@ export class EntityStore {
   /**
    * List all entities with pagination.
    */
-  async list(options?: { limit?: number; offset?: number; type?: EntityType }): Promise<Entity[]> {
+  list(options?: { limit?: number; offset?: number; type?: EntityType }): Entity[] {
     let sql = `SELECT * FROM ${this.tableName}`;
     const params: unknown[] = [];
 

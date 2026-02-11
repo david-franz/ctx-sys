@@ -192,9 +192,9 @@ export class MemoryTierManager {
 
     // Auto-spill if enabled and hot memory would exceed limit
     if (this.config.autoSpillEnabled) {
-      const status = await this.getStatus(sessionId);
+      const status = this.getStatus(sessionId);
       if (status.hot.tokens + tokenCount > this.config.hotTokenLimit) {
-        await this.spillToWarm(sessionId);
+        this.spillToWarm(sessionId);
       }
     }
 
@@ -247,7 +247,7 @@ export class MemoryTierManager {
   /**
    * Get all items in hot memory for a session.
    */
-  async getHot(sessionId: string): Promise<MemoryItem[]> {
+  getHot(sessionId: string): MemoryItem[] {
     const rows = this.db.all<MemoryRow>(
       `SELECT * FROM ${this.prefix}_memory_items
        WHERE session_id = ? AND tier = 'hot'
@@ -261,7 +261,7 @@ export class MemoryTierManager {
   /**
    * Get all items in a specific tier for a session.
    */
-  async getByTier(sessionId: string, tier: MemoryTier): Promise<MemoryItem[]> {
+  getByTier(sessionId: string, tier: MemoryTier): MemoryItem[] {
     const rows = this.db.all<MemoryRow>(
       `SELECT * FROM ${this.prefix}_memory_items
        WHERE session_id = ? AND tier = ?
@@ -275,7 +275,7 @@ export class MemoryTierManager {
   /**
    * Get a specific memory item by ID.
    */
-  async getItem(itemId: string): Promise<MemoryItem | null> {
+  getItem(itemId: string): MemoryItem | null {
     const row = this.db.get<MemoryRow>(
       `SELECT * FROM ${this.prefix}_memory_items WHERE id = ?`,
       [itemId]
@@ -287,13 +287,13 @@ export class MemoryTierManager {
   /**
    * Spill items from hot memory to warm/cold storage.
    */
-  async spillToWarm(
+  spillToWarm(
     sessionId: string,
     options: SpillOptions = {}
-  ): Promise<SpillResult> {
+  ): SpillResult {
     const itemsToSpill = options.itemIds
-      ? await this.getItemsByIds(options.itemIds)
-      : await this.selectItemsForSpill(sessionId, options.count || 4);
+      ? this.getItemsByIds(options.itemIds)
+      : this.selectItemsForSpill(sessionId, options.count || 4);
 
     const spilled: string[] = [];
 
@@ -399,7 +399,7 @@ export class MemoryTierManager {
         (options.autoPromote ?? this.config.autoPromoteEnabled) &&
         relevance >= this.config.promoteThreshold
       ) {
-        await this.promoteToHot(item.id);
+        this.promoteToHot(item.id);
         promoted.push(item.id);
       }
     }
@@ -410,17 +410,17 @@ export class MemoryTierManager {
   /**
    * Promote an item from cold/warm to hot memory.
    */
-  async promoteToHot(itemId: string): Promise<boolean> {
-    const item = await this.getItem(itemId);
+  promoteToHot(itemId: string): boolean {
+    const item = this.getItem(itemId);
     if (!item || item.tier === 'hot') {
       return false;
     }
 
     // Check hot memory capacity and spill if needed
     if (this.config.autoSpillEnabled) {
-      const status = await this.getStatus(item.sessionId);
+      const status = this.getStatus(item.sessionId);
       if (status.hot.tokens + item.tokenCount > this.config.hotTokenLimit) {
-        await this.spillToWarm(item.sessionId, { count: 2 });
+        this.spillToWarm(item.sessionId, { count: 2 });
       }
     }
 
@@ -437,8 +437,8 @@ export class MemoryTierManager {
   /**
    * Demote an item from hot to warm or cold.
    */
-  async demote(itemId: string, targetTier: 'warm' | 'cold' = 'warm'): Promise<boolean> {
-    const item = await this.getItem(itemId);
+  demote(itemId: string, targetTier: 'warm' | 'cold' = 'warm'): boolean {
+    const item = this.getItem(itemId);
     if (!item) {
       return false;
     }
@@ -454,7 +454,7 @@ export class MemoryTierManager {
   /**
    * Get memory status for a session.
    */
-  async getStatus(sessionId: string): Promise<MemoryStatus> {
+  getStatus(sessionId: string): MemoryStatus {
     const rows = this.db.all<{ tier: string; count: number; tokens: number }>(
       `SELECT tier, COUNT(*) as count, COALESCE(SUM(token_count), 0) as tokens
        FROM ${this.prefix}_memory_items
@@ -496,7 +496,7 @@ export class MemoryTierManager {
   /**
    * Delete a memory item.
    */
-  async delete(itemId: string): Promise<boolean> {
+  delete(itemId: string): boolean {
     const result = this.db.run(
       `DELETE FROM ${this.prefix}_memory_items WHERE id = ?`,
       [itemId]
@@ -507,7 +507,7 @@ export class MemoryTierManager {
   /**
    * Clear all memory for a session.
    */
-  async clearSession(sessionId: string): Promise<number> {
+  clearSession(sessionId: string): number {
     const result = this.db.run(
       `DELETE FROM ${this.prefix}_memory_items WHERE session_id = ?`,
       [sessionId]
@@ -518,8 +518,8 @@ export class MemoryTierManager {
   /**
    * Prune cold storage items exceeding the limit.
    */
-  async pruneCold(sessionId: string): Promise<number> {
-    const coldItems = await this.getByTier(sessionId, 'cold');
+  pruneCold(sessionId: string): number {
+    const coldItems = this.getByTier(sessionId, 'cold');
     if (coldItems.length <= this.config.maxColdItems) {
       return 0;
     }
@@ -545,10 +545,10 @@ export class MemoryTierManager {
   /**
    * Select items for spilling based on relevance and recency.
    */
-  private async selectItemsForSpill(
+  private selectItemsForSpill(
     sessionId: string,
     count: number
-  ): Promise<MemoryItem[]> {
+  ): MemoryItem[] {
     const rows = this.db.all<MemoryRow>(
       `SELECT * FROM ${this.prefix}_memory_items
        WHERE session_id = ? AND tier = 'hot'
@@ -563,7 +563,7 @@ export class MemoryTierManager {
   /**
    * Get items by their IDs.
    */
-  private async getItemsByIds(ids: string[]): Promise<MemoryItem[]> {
+  private getItemsByIds(ids: string[]): MemoryItem[] {
     if (ids.length === 0) return [];
 
     const placeholders = ids.map(() => '?').join(',');

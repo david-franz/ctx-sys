@@ -285,10 +285,10 @@ describe('F1.3 Entity Storage', () => {
       expect(updated.updatedAt.getTime()).toBeGreaterThanOrEqual(entity.updatedAt.getTime());
     });
 
-    it('should throw for non-existent entity', async () => {
-      await expect(
+    it('should throw for non-existent entity', () => {
+      expect(() =>
         entityStore.update('non-existent', { name: 'new' })
-      ).rejects.toThrow('not found');
+      ).toThrow('not found');
     });
   });
 
