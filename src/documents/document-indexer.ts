@@ -52,7 +52,7 @@ export interface DocumentIndexResult {
   skipped?: boolean;
 }
 
-type DocumentType = 'markdown' | 'yaml' | 'json' | 'toml' | 'html' | 'text';
+type DocumentType = 'markdown' | 'yaml' | 'json' | 'toml' | 'html' | 'text' | 'csv' | 'xml' | 'pdf';
 
 const EXTENSION_MAP: Record<string, DocumentType> = {
   '.md': 'markdown',
@@ -65,6 +65,15 @@ const EXTENSION_MAP: Record<string, DocumentType> = {
   '.htm': 'html',
   '.txt': 'text',
   '.log': 'text',
+  '.csv': 'csv',
+  '.tsv': 'csv',
+  '.xml': 'xml',
+  '.xsd': 'xml',
+  '.wsdl': 'xml',
+  '.csproj': 'xml',
+  '.fsproj': 'xml',
+  '.vbproj': 'xml',
+  '.pdf': 'pdf',
 };
 
 export class DocumentIndexer {
@@ -83,6 +92,29 @@ export class DocumentIndexer {
 
   async indexFile(filePath: string, options: DocumentIndexOptions = {}): Promise<DocumentIndexResult> {
     const absolutePath = path.resolve(filePath);
+    const ext = path.extname(absolutePath).toLowerCase();
+    const docType = EXTENSION_MAP[ext] || 'text';
+
+    // PDF needs binary reading
+    if (docType === 'pdf') {
+      const buffer = await fs.promises.readFile(absolutePath);
+      const hash = crypto.createHash('md5').update(buffer).digest('hex');
+
+      const existing = await this.entityStore.getByQualifiedName(absolutePath);
+      if (existing && existing.metadata?.hash === hash) {
+        return {
+          documentId: existing.id,
+          entitiesCreated: 0,
+          relationshipsCreated: 0,
+          crossDocLinks: 0,
+          embeddingsGenerated: 0,
+          skipped: true,
+        };
+      }
+
+      return this.indexPdf(absolutePath, buffer, hash);
+    }
+
     const content = await fs.promises.readFile(absolutePath, 'utf-8');
     const hash = crypto.createHash('md5').update(content).digest('hex');
 
@@ -99,9 +131,6 @@ export class DocumentIndexer {
       };
     }
 
-    const ext = path.extname(absolutePath).toLowerCase();
-    const docType = EXTENSION_MAP[ext] || 'text';
-
     switch (docType) {
       case 'markdown':
         return this.indexMarkdown(absolutePath, content, hash, options);
@@ -113,6 +142,10 @@ export class DocumentIndexer {
         return this.indexToml(absolutePath, content, hash);
       case 'html':
         return this.indexHtml(absolutePath, content, hash);
+      case 'csv':
+        return this.indexCsv(absolutePath, content, hash);
+      case 'xml':
+        return this.indexXml(absolutePath, content, hash);
       default:
         return this.indexPlainText(absolutePath, content, hash);
     }
@@ -593,6 +626,235 @@ export class DocumentIndexer {
     }
 
     return { documentId: docEntity.id, entitiesCreated, relationshipsCreated, crossDocLinks, embeddingsGenerated: 0 };
+  }
+
+  private async indexCsv(
+    filePath: string,
+    content: string,
+    hash: string
+  ): Promise<DocumentIndexResult> {
+    const { parseCsv } = await import('./csv-parser.js');
+    const csv = parseCsv(content, { maxRows: 10000 });
+    let entitiesCreated = 0;
+    let relationshipsCreated = 0;
+    const name = path.basename(filePath, path.extname(filePath));
+
+    // Build schema description from headers
+    const schemaDesc = csv.headers.join(', ');
+    const sampleRows = csv.rows.slice(0, 5).map(row =>
+      csv.headers.map((h, i) => `${h}: ${row[i] ?? ''}`).join(' | ')
+    ).join('\n');
+
+    const docEntity = await this.entityStore.upsert({
+      type: 'document',
+      name,
+      qualifiedName: filePath,
+      content: `Columns: ${schemaDesc}\n\nSample rows:\n${sampleRows}`,
+      summary: `CSV: ${name} — ${csv.rowCount} rows, ${csv.headers.length} columns (${csv.headers.slice(0, 5).join(', ')}${csv.headers.length > 5 ? '...' : ''})`,
+      filePath,
+      metadata: {
+        hash,
+        docType: 'csv',
+        columns: csv.headers,
+        rowCount: csv.rowCount,
+        columnCount: csv.headers.length,
+      },
+    });
+    entitiesCreated++;
+
+    // Create variable entities for each column
+    for (const header of csv.headers) {
+      if (!header) continue;
+      const colEntity = await this.entityStore.upsert({
+        type: 'variable',
+        name: header,
+        qualifiedName: `${filePath}::column::${header}`,
+        content: `Column "${header}" in ${name}`,
+        summary: `CSV column: ${header}`,
+        filePath,
+        metadata: { hash, docType: 'csv-column', dataset: name },
+      });
+      entitiesCreated++;
+
+      await this.relationshipStore.upsert({
+        sourceId: docEntity.id,
+        targetId: colEntity.id,
+        relationship: 'CONTAINS',
+      });
+      relationshipsCreated++;
+    }
+
+    return { documentId: docEntity.id, entitiesCreated, relationshipsCreated, crossDocLinks: 0, embeddingsGenerated: 0 };
+  }
+
+  private async indexXml(
+    filePath: string,
+    content: string,
+    hash: string
+  ): Promise<DocumentIndexResult> {
+    const { parseXml, detectXmlType } = await import('./xml-parser.js');
+    const xml = parseXml(content);
+    let entitiesCreated = 0;
+    let relationshipsCreated = 0;
+    let crossDocLinks = 0;
+    const name = path.basename(filePath);
+    const xmlType = detectXmlType(filePath, xml.rootTag, xml.namespaces);
+
+    const docEntity = await this.entityStore.upsert({
+      type: 'document',
+      name,
+      qualifiedName: filePath,
+      content: content.length > 50000 ? content.slice(0, 50000) : content,
+      summary: `XML: ${name} (root: <${xml.rootTag}>, ${xml.elements.length} elements)${xmlType ? ` [${xmlType}]` : ''}`,
+      filePath,
+      metadata: {
+        hash,
+        docType: 'xml',
+        xmlType,
+        rootTag: xml.rootTag,
+        elementCount: xml.elements.length,
+      },
+    });
+    entitiesCreated++;
+
+    // Create section entities for significant top-level elements
+    const topElements = xml.elements.filter(e => e.path.split('/').length <= 3);
+    for (const elem of topElements) {
+      if (elem.textContent.length < 20 && elem.children.length === 0) continue;
+
+      const elemContent = elem.textContent || `<${elem.tag}> with ${elem.children.length} children`;
+      if (elemContent.length < 10) continue;
+
+      const sectionEntity = await this.entityStore.upsert({
+        type: 'section',
+        name: `${name} - <${elem.tag}>`,
+        qualifiedName: `${filePath}::${elem.path}`,
+        content: elemContent,
+        summary: `<${elem.tag}> element in ${name}`,
+        filePath,
+        startLine: elem.line,
+        metadata: { hash, docType: 'xml', tag: elem.tag, xpath: elem.path },
+      });
+      entitiesCreated++;
+
+      await this.relationshipStore.upsert({
+        sourceId: docEntity.id,
+        targetId: sectionEntity.id,
+        relationship: 'CONTAINS',
+      });
+      relationshipsCreated++;
+    }
+
+    // Maven POM: extract dependencies as technology entities
+    if (xmlType === 'maven-pom') {
+      const deps = xml.elements.filter(e => e.path.endsWith('/dependency'));
+      for (const dep of deps) {
+        const artifactId = dep.children.find(c => c.tag === 'artifactId')?.textContent ?? '';
+        const groupId = dep.children.find(c => c.tag === 'groupId')?.textContent ?? '';
+        const version = dep.children.find(c => c.tag === 'version')?.textContent ?? '';
+        if (!artifactId) continue;
+
+        const techEntity = await this.entityStore.upsert({
+          type: 'technology',
+          name: artifactId,
+          qualifiedName: `${filePath}::dep::${groupId}:${artifactId}`,
+          content: `Maven dependency: ${groupId}:${artifactId}:${version}`,
+          summary: `Maven dep: ${artifactId}`,
+          filePath,
+          metadata: { hash, groupId, artifactId, version, source: 'pom.xml' },
+        });
+        entitiesCreated++;
+
+        await this.relationshipStore.upsert({
+          sourceId: docEntity.id,
+          targetId: techEntity.id,
+          relationship: 'DEPENDS_ON',
+        });
+        relationshipsCreated++;
+      }
+    }
+
+    // Resolve code references
+    const fakeDoc: MarkdownDocument = {
+      filePath,
+      title: name,
+      sections: [{
+        id: 'root', title: name, level: 0,
+        content: content.slice(0, 10000),
+        startLine: 0, endLine: 0,
+        codeBlocks: [], links: [], children: [],
+      }],
+    };
+
+    const codeRefs = this.documentLinker.findCodeReferences(fakeDoc);
+    for (const ref of codeRefs) {
+      const resolved = await this.documentLinker.resolveReference(ref.text);
+      if (resolved) {
+        await this.relationshipStore.upsert({
+          sourceId: docEntity.id,
+          targetId: resolved.id,
+          relationship: 'DOCUMENTS',
+        });
+        relationshipsCreated++;
+        crossDocLinks++;
+      }
+    }
+
+    return { documentId: docEntity.id, entitiesCreated, relationshipsCreated, crossDocLinks, embeddingsGenerated: 0 };
+  }
+
+  private async indexPdf(
+    filePath: string,
+    buffer: Buffer,
+    hash: string
+  ): Promise<DocumentIndexResult> {
+    const { parsePdf } = await import('./pdf-parser.js');
+    const pdf = await parsePdf(buffer);
+    let entitiesCreated = 0;
+    let relationshipsCreated = 0;
+    const name = path.basename(filePath);
+    const title = pdf.title || name;
+
+    const docEntity = await this.entityStore.upsert({
+      type: 'document',
+      name: title,
+      qualifiedName: filePath,
+      content: pdf.fullText.slice(0, 100000),
+      summary: `PDF: ${title} — ${pdf.pageCount} pages${pdf.author ? ` by ${pdf.author}` : ''}`,
+      filePath,
+      metadata: {
+        hash,
+        docType: 'pdf',
+        pageCount: pdf.pageCount,
+        ...pdf.metadata,
+      },
+    });
+    entitiesCreated++;
+
+    // Create section entities for each page
+    for (const page of pdf.pages) {
+      if (page.text.length < 50) continue;
+
+      const pageEntity = await this.entityStore.upsert({
+        type: 'section',
+        name: `${title} - Page ${page.pageNumber}`,
+        qualifiedName: `${filePath}::page-${page.pageNumber}`,
+        content: page.text,
+        summary: `Page ${page.pageNumber} of ${title}`,
+        filePath,
+        metadata: { hash, docType: 'pdf', pageNumber: page.pageNumber },
+      });
+      entitiesCreated++;
+
+      await this.relationshipStore.upsert({
+        sourceId: docEntity.id,
+        targetId: pageEntity.id,
+        relationship: 'CONTAINS',
+      });
+      relationshipsCreated++;
+    }
+
+    return { documentId: docEntity.id, entitiesCreated, relationshipsCreated, crossDocLinks: 0, embeddingsGenerated: 0 };
   }
 
   private async indexPlainText(

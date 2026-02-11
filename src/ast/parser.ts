@@ -6,6 +6,8 @@ import {
   LanguageExtractor,
   TypeScriptExtractor,
   PythonExtractor,
+  CppExtractor,
+  CSharpExtractor,
   GenericExtractor
 } from './extractors';
 
@@ -25,7 +27,8 @@ const GRAMMAR_MAP: Record<string, string> = {
   rust: 'tree-sitter-rust.wasm',
   java: 'tree-sitter-java.wasm',
   c: 'tree-sitter-cpp.wasm',  // C uses cpp grammar (compatible)
-  cpp: 'tree-sitter-cpp.wasm'
+  cpp: 'tree-sitter-cpp.wasm',
+  csharp: 'tree-sitter-c_sharp.wasm'
 };
 
 /**
@@ -60,7 +63,8 @@ const EXTENSION_MAP: Record<string, SupportedLanguage> = {
   '.cpp': 'cpp',
   '.hpp': 'cpp',
   '.cc': 'cpp',
-  '.cxx': 'cpp'
+  '.cxx': 'cpp',
+  '.cs': 'csharp'
 };
 
 /**
@@ -191,6 +195,11 @@ export class ASTParser {
         return new TypeScriptExtractor();
       case 'python':
         return new PythonExtractor();
+      case 'c':
+      case 'cpp':
+        return new CppExtractor();
+      case 'csharp':
+        return new CSharpExtractor();
       default:
         return new GenericExtractor();
     }

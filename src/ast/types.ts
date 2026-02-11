@@ -78,4 +78,5 @@ export type SupportedLanguage =
   | 'rust'
   | 'java'
   | 'c'
-  | 'cpp';
+  | 'cpp'
+  | 'csharp';
