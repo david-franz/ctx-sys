@@ -260,22 +260,22 @@ export class CoreService {
     let embeddingsGenerated = 0;
     const embeddingErrors: Array<{ path: string; error: string }> = [];
 
-    // Generate embeddings if requested
+    // Generate embeddings if requested (paginated to bound memory)
     if (options?.generateEmbeddings !== false) {
       try {
         const entityStore = this.context.getEntityStore(projectId);
         const embeddingManager = await this.context.getEmbeddingManager(projectId);
 
-        // Get all entities that need embeddings
-        const entities = await entityStore.list({ limit: 10000 });
-        const toEmbed = entities.map((e) => ({
-          id: e.id,
-          content: `${e.name}: ${e.content || ''}`
-        }));
+        for (const page of entityStore.listPaginated({ pageSize: 500 })) {
+          const toEmbed = page.map((e) => ({
+            id: e.id,
+            content: `${e.name}: ${e.content || ''}`
+          }));
 
-        if (toEmbed.length > 0) {
-          await embeddingManager.embedBatch(toEmbed);
-          embeddingsGenerated = toEmbed.length;
+          if (toEmbed.length > 0) {
+            await embeddingManager.embedBatch(toEmbed);
+            embeddingsGenerated += toEmbed.length;
+          }
         }
       } catch (err) {
         embeddingErrors.push({

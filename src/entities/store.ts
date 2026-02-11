@@ -705,6 +705,39 @@ export class EntityStore {
   }
 
   /**
+   * Iterate entities in fixed-size pages using a synchronous generator.
+   * Only one page of entities is in memory at a time.
+   */
+  *listPaginated(options?: {
+    type?: EntityType;
+    pageSize?: number;
+  }): Generator<Entity[]> {
+    const pageSize = options?.pageSize ?? 500;
+    let offset = 0;
+
+    while (true) {
+      let sql = `SELECT * FROM ${this.tableName}`;
+      const params: unknown[] = [];
+
+      if (options?.type) {
+        sql += ' WHERE type = ?';
+        params.push(options.type);
+      }
+
+      sql += ' ORDER BY id LIMIT ? OFFSET ?';
+      params.push(pageSize, offset);
+
+      const rows = this.db.all<EntityRow>(sql, params);
+      if (rows.length === 0) break;
+
+      yield rows.map(row => this.rowToEntity(row));
+      offset += pageSize;
+
+      if (rows.length < pageSize) break;
+    }
+  }
+
+  /**
    * Generate a qualified name for an entity.
    */
   private generateQualifiedName(input: EntityCreateInput): string {

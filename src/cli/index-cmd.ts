@@ -236,24 +236,33 @@ async function runIndex(
         });
         const embeddingManager = new EmbeddingManager(db, projectId, ollamaProvider);
 
-        const entities = await entityStore.list({ limit: 100000 });
         const batchSize = parseInt(options.embedBatchSize || '50', 10);
+        let totalEmbedded = 0;
+        let totalSkipped = 0;
+        let totalProcessed = 0;
+        let totalErrors = 0;
 
-        const embedResult = await embeddingManager.embedIncremental(entities, {
-          batchSize,
-          onProgress: (completed, total, skipped) => {
-            if (!options.quiet && completed % batchSize === 0) {
-              output.log(`  Progress: ${completed}/${total} embedded (${skipped} unchanged)`);
+        for (const page of entityStore.listPaginated({ pageSize: 500 })) {
+          const pageResult = await embeddingManager.embedIncremental(page, {
+            batchSize,
+            onProgress: (completed, _total, skipped) => {
+              if (!options.quiet && completed % batchSize === 0) {
+                output.log(`  Progress: ${totalProcessed + completed} embedded (${totalSkipped + skipped} unchanged)`);
+              }
             }
-          }
-        });
+          });
+          totalEmbedded += pageResult.embedded;
+          totalSkipped += pageResult.skipped;
+          totalProcessed += pageResult.total;
+          totalErrors += pageResult.errors || 0;
+        }
 
         if (!options.quiet) {
-          let msg = `Embedded ${embedResult.embedded}, skipped ${embedResult.skipped} unchanged`;
-          if (embedResult.errors) {
-            msg += `, ${embedResult.errors} failed`;
+          let msg = `Embedded ${totalEmbedded}, skipped ${totalSkipped} unchanged`;
+          if (totalErrors) {
+            msg += `, ${totalErrors} failed`;
           }
-          msg += ` (${embedResult.total} total)`;
+          msg += ` (${totalProcessed} total)`;
           output.success(msg);
         }
       } catch (err) {
