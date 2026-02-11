@@ -98,7 +98,7 @@ export interface ParseResultLike {
  * Minimal symbol interface for extraction.
  */
 export interface SymbolLike {
-  type: string;
+  type: EntityType;
   name: string;
   qualifiedName: string;
   parameters?: Array<{ name: string; type?: string }>;

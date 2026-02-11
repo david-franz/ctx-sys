@@ -1,6 +1,6 @@
 import { DatabaseConnection } from '../db/connection';
 import { sanitizeProjectId } from '../db/schema';
-import { EntityStore, Entity } from '../entities';
+import { EntityStore, Entity, EntityType } from '../entities';
 import { RelationshipStore } from './relationship-store';
 import {
   SubgraphResult,
@@ -332,11 +332,11 @@ export class GraphTraversal {
    * Get a subgraph containing only specific entity types.
    */
   async getSubgraphByEntityTypes(
-    entityTypes: string[],
+    entityTypes: EntityType[],
     relationshipTypes?: GraphRelationshipType[]
   ): Promise<SubgraphResult> {
     // Get all entities of the specified types
-    const entities = await this.entityStore.getByType(entityTypes as any);
+    const entities = await this.entityStore.getByType(entityTypes);
     const entityIds = new Set(entities.map(e => e.id));
 
     // Get all relationships between these entities

@@ -270,7 +270,7 @@ async function editInstruction(
     }
 
     await entityStore.upsert({
-      type: entity.type as any,
+      type: entity.type,
       name: entity.name,
       qualifiedName: entity.qualifiedName || `instruction::${entity.name}`,
       content: entity.content,

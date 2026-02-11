@@ -17,6 +17,7 @@ export interface EmbeddingProvider {
   readonly name: string;
   readonly modelId: string;
   readonly dimensions: number;
+  readonly maxChars?: number;
 
   embed(text: string, options?: EmbedOptions): Promise<number[]>;
   embedBatch(texts: string[], options?: BatchOptions & EmbedOptions): Promise<number[][]>;

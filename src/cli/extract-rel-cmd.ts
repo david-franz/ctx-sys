@@ -8,6 +8,7 @@ import { ConfigManager } from '../config';
 import { DatabaseConnection } from '../db/connection';
 import { EntityStore } from '../entities';
 import { RelationshipStore } from '../graph/relationship-store';
+import { isEntityType, isGraphRelationshipType } from '../utils/type-guards';
 import { LLMRelationshipExtractor } from '../graph/llm-relationship-extractor';
 import { CLIOutput, defaultOutput } from './init';
 
@@ -64,7 +65,7 @@ async function runExtractRel(
     const limit = parseInt(options.limit || '50', 10);
     const entities = await entityStore.list({
       limit,
-      type: options.type as any,
+      type: options.type && isEntityType(options.type) ? options.type : undefined,
     });
 
     if (!options.quiet) {
@@ -98,7 +99,7 @@ async function runExtractRel(
         await relationshipStore.upsert({
           sourceId: source.id,
           targetId: target.id,
-          relationship: rel.relationship as any,
+          relationship: isGraphRelationshipType(rel.relationship) ? rel.relationship : 'RELATES_TO',
           weight: rel.confidence,
           metadata: { llmDiscovered: true, reasoning: rel.reasoning },
         });

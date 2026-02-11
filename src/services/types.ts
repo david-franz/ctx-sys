@@ -3,6 +3,7 @@
  */
 
 import { EntityType } from '../entities/types';
+import { GraphRelationshipType } from '../graph/types';
 import { SearchStrategy } from '../retrieval/types';
 
 // ─────────────────────────────────────────────────────────
@@ -30,7 +31,7 @@ export interface CreateMessageInput {
 export interface CreateRelationshipInput {
   sourceId: string;
   targetId: string;
-  type: string;
+  type: GraphRelationshipType;
   weight?: number;
   metadata?: Record<string, unknown>;
 }
@@ -152,14 +153,14 @@ export interface DecisionSearchOptions {
 // ─────────────────────────────────────────────────────────
 
 export interface RelationshipQueryOptions {
-  types?: string[];
+  types?: GraphRelationshipType[];
   minWeight?: number;
   limit?: number;
 }
 
 export interface GraphQueryOptions {
   depth?: number;
-  relationships?: string[];
+  relationships?: GraphRelationshipType[];
   direction?: 'in' | 'out' | 'both';
 }
 

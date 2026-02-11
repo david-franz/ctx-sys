@@ -99,9 +99,9 @@ async function runStatus(
     checks.push(ollamaResult);
     const ollamaOk = ollamaResult.status === 'ok';
 
-    checks.push(checkModel('Embedding Model', embeddingModel, (ollamaResult as any).models, ollamaOk, 'fail'));
-    checks.push(checkModel('HyDE Model', hydeModel, (ollamaResult as any).models, ollamaOk, 'warn'));
-    checks.push(checkModel('Summarization Model', summarizationModel, (ollamaResult as any).models, ollamaOk, 'warn'));
+    checks.push(checkModel('Embedding Model', embeddingModel, ollamaResult.models, ollamaOk, 'fail'));
+    checks.push(checkModel('HyDE Model', hydeModel, ollamaResult.models, ollamaOk, 'warn'));
+    checks.push(checkModel('Summarization Model', summarizationModel, ollamaResult.models, ollamaOk, 'warn'));
 
     checks.push(await checkDatabase(dbPath));
     checks.push(await checkConfig(projectPath));

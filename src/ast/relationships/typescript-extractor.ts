@@ -87,9 +87,9 @@ export class TypeScriptRelationshipExtractor implements RelationshipExtractor {
         for (const child of symbol.children || []) {
           relationships.push({
             source: symbol.qualifiedName,
-            sourceType: symbol.type as any,
+            sourceType: symbol.type,
             target: child.qualifiedName,
-            targetType: child.type as any,
+            targetType: child.type,
             type: 'contains',
             weight: 1.0
           });
@@ -99,7 +99,7 @@ export class TypeScriptRelationshipExtractor implements RelationshipExtractor {
         if (symbol.extends) {
           relationships.push({
             source: symbol.qualifiedName,
-            sourceType: symbol.type as any,
+            sourceType: symbol.type,
             target: symbol.extends,
             targetType: symbol.type === 'interface' ? 'interface' : 'class',
             type: 'extends',
@@ -112,7 +112,7 @@ export class TypeScriptRelationshipExtractor implements RelationshipExtractor {
           for (const iface of symbol.implements) {
             relationships.push({
               source: symbol.qualifiedName,
-              sourceType: symbol.type as any,
+              sourceType: symbol.type,
               target: iface,
               targetType: 'interface',
               type: 'implements',
@@ -149,7 +149,7 @@ export class TypeScriptRelationshipExtractor implements RelationshipExtractor {
           if (normalizedType) {
             relationships.push({
               source: symbol.qualifiedName,
-              sourceType: symbol.type as any,
+              sourceType: symbol.type,
               target: normalizedType,
               targetType: 'type',
               type: 'uses_type',
@@ -165,7 +165,7 @@ export class TypeScriptRelationshipExtractor implements RelationshipExtractor {
         if (normalizedType) {
           relationships.push({
             source: symbol.qualifiedName,
-            sourceType: symbol.type as any,
+            sourceType: symbol.type,
             target: normalizedType,
             targetType: 'type',
             type: 'uses_type',

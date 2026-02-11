@@ -88,7 +88,7 @@ export class DocumentIndexer {
 
     // Check if unchanged
     const existing = await this.entityStore.getByQualifiedName(absolutePath);
-    if (existing && (existing.metadata as any)?.hash === hash) {
+    if (existing && existing.metadata?.hash === hash) {
       return {
         documentId: existing.id,
         entitiesCreated: 0,

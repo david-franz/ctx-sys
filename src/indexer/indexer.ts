@@ -2,9 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { ASTParser, ParseResult, defaultRegistry as relationshipRegistry } from '../ast';
+import { ParseResultLike } from '../ast/relationships/types';
 import { GraphRelationshipType } from '../graph/types';
 import { SymbolSummarizer, FileSummary } from '../summarization';
-import { EntityStore, Entity } from '../entities';
+import { EntityStore, Entity, EntityType } from '../entities';
 import { RelationshipStore } from '../graph/relationship-store';
 import {
   IndexedFile,
@@ -455,7 +456,7 @@ export class CodebaseIndexer {
     for (const symbol of summary.symbols) {
       const code = this.extractSymbolCode(sourceCode, symbol);
       const symbolEntity = await this.entityStore.upsert({
-        type: symbol.type as any,
+        type: symbol.type as EntityType,
         name: symbol.name,
         qualifiedName: symbol.qualifiedName,
         content: code,
@@ -536,7 +537,7 @@ export class CodebaseIndexer {
     const extractor = relationshipRegistry.getExtractorForFile(filePath);
     if (!extractor) return;
 
-    const extracted = extractor.extract(parseResult as any);
+    const extracted = extractor.extract(parseResult as ParseResultLike);
 
     for (const rel of extracted) {
       // Skip imports and contains — already handled by storeFileSummary

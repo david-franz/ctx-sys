@@ -526,7 +526,7 @@ export class CoreService {
     const relationship = await relationshipStore.create({
       sourceId: input.sourceId,
       targetId: input.targetId,
-      relationship: input.type as any,
+      relationship: input.type,
       weight: input.weight,
       metadata: input.metadata
     });
@@ -536,7 +536,7 @@ export class CoreService {
   async getRelationships(projectId: string, entityId: string, options?: RelationshipQueryOptions): Promise<any[]> {
     const relationshipStore = this.getRelationshipStore(projectId);
     return relationshipStore.getForEntity(entityId, 'both', {
-      types: options?.types as any,
+      types: options?.types,
       minWeight: options?.minWeight,
       limit: options?.limit
     });
@@ -549,7 +549,7 @@ export class CoreService {
     const neighborhood = await graphTraversal.getNeighborhood(startEntityId, {
       maxDepth: options?.depth || 2,
       direction: options?.direction || 'both',
-      types: options?.relationships as any
+      types: options?.relationships
     });
 
     // Get entity details
@@ -772,7 +772,7 @@ export class CoreService {
 
     return checkpointManager.save(sessionId, agentState, {
       description: metadata?.description as string,
-      triggerType: (metadata?.triggerType as any) || 'manual'
+      triggerType: (metadata?.triggerType === 'auto' || metadata?.triggerType === 'manual' || metadata?.triggerType === 'error') ? metadata.triggerType : 'manual'
     });
   }
 

@@ -88,7 +88,7 @@ export class PythonRelationshipExtractor implements RelationshipExtractor {
             source: symbol.qualifiedName,
             sourceType: 'class',
             target: child.qualifiedName,
-            targetType: child.type as any,
+            targetType: child.type,
             type: 'contains',
             weight: 1.0
           });
@@ -122,7 +122,7 @@ export class PythonRelationshipExtractor implements RelationshipExtractor {
           if (normalizedType) {
             relationships.push({
               source: symbol.qualifiedName,
-              sourceType: symbol.type as any,
+              sourceType: symbol.type,
               target: normalizedType,
               targetType: 'type',
               type: 'uses_type',
@@ -138,7 +138,7 @@ export class PythonRelationshipExtractor implements RelationshipExtractor {
         if (normalizedType) {
           relationships.push({
             source: symbol.qualifiedName,
-            sourceType: symbol.type as any,
+            sourceType: symbol.type,
             target: normalizedType,
             targetType: 'type',
             type: 'uses_type',

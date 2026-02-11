@@ -162,7 +162,7 @@ export class ProviderFactory {
    */
   async checkSummarizationHealth(provider: LLMSummarizer): Promise<boolean> {
     // LLMSummarizer doesn't have isAvailable, so we try a simple call
-    const key = `summarizer:${(provider as any).name ?? 'unknown'}`;
+    const key = `summarizer:${provider.name ?? 'unknown'}`;
     const cached = this.getCachedHealth(key);
 
     if (cached !== undefined) {

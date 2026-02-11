@@ -13,6 +13,9 @@ export type EntityType =
   | 'interface'
   | 'type'
   | 'variable'
+  | 'property'
+  | 'enum'
+  | 'namespace'
   // Document entities
   | 'document'
   | 'section'

@@ -107,6 +107,8 @@ export interface SummarizationOptions {
  * LLM provider interface for generating descriptions.
  */
 export interface LLMSummarizer {
+  readonly name?: string;
+
   /**
    * Generate a description for a symbol.
    */

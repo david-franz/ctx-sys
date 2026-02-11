@@ -1,6 +1,8 @@
 import { AppContext } from '../context';
 import { EntityType } from '../entities/types';
 import { CoreService } from '../services';
+import { ProjectConfig } from '../project/types';
+import { isIndexDepth, isDocumentType, isSearchStrategy, isHookType, isGraphRelationshipType, asGraphRelationshipType } from '../utils/type-guards';
 
 /**
  * Tool definition for MCP.
@@ -121,7 +123,7 @@ export class ToolRegistry {
           path: string;
           config?: Record<string, unknown>;
         };
-        const project = await this.coreService.createProject(name, path, config as any);
+        const project = await this.coreService.createProject(name, path, config as Partial<ProjectConfig>);
         return { success: true, project: { id: project.id, name: project.name, path: project.path } };
       }
     );
@@ -425,7 +427,7 @@ export class ToolRegistry {
         }
 
         const result = await this.coreService.indexCodebase(projectId, indexPath, {
-          depth: depth as any,
+          depth: depth && isIndexDepth(depth) ? depth : undefined,
           ignore,
           languages,
           force
@@ -515,7 +517,7 @@ export class ToolRegistry {
 
         const projectId = await this.resolveProjectId(project);
         const result = await this.coreService.indexDocument(projectId, path, {
-          type: type as any,
+          type: type && isDocumentType(type) ? type : undefined,
           linkToCode: link_to_code ?? true
         });
 
@@ -865,7 +867,7 @@ export class ToolRegistry {
         const result = await this.coreService.addRelationship(projectId, {
           sourceId,
           targetId,
-          type,
+          type: asGraphRelationshipType(type),
           weight: weight ?? 1.0,
           metadata
         });
@@ -924,7 +926,7 @@ export class ToolRegistry {
 
         const result = await this.coreService.queryGraph(projectId, entityId, {
           depth: depth ?? 2,
-          relationships,
+          relationships: relationships?.filter(isGraphRelationshipType),
           direction: direction ?? 'both'
         });
 
@@ -1052,7 +1054,7 @@ export class ToolRegistry {
         const projectId = await this.resolveProjectId(project);
         const result = await this.coreService.queryContext(projectId, query, {
           maxTokens: max_tokens ?? 4000,
-          strategies: strategies as any,
+          strategies: strategies?.filter(isSearchStrategy),
           includeTypes: include_types,
           includeSources: include_sources ?? true,
           minScore: min_score,
@@ -1501,7 +1503,7 @@ export class ToolRegistry {
         }
 
         const installed = await this.coreService.installHooks(projectId, repoPath, {
-          hooks: hooks as any
+          hooks: hooks?.filter(isHookType)
         });
 
         return {
