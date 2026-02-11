@@ -112,7 +112,7 @@ ctx-sys indexes codebases using tree-sitter AST parsing, generates semantic embe
 
 The system runs entirely locally with no cloud dependencies, stores everything in a single SQLite database, and integrates with AI assistants through the Model Context Protocol (MCP). Advanced features include HyDE query expansion, multi-vector chunking for large entities, conversation memory with decision tracking, and agent-oriented memory management.
 
-The implementation comprises approximately 20,000 lines of TypeScript with 1,555 tests across 56 test suites. It supports TypeScript, Python, Rust, Go, and Java, with universal document indexing for Markdown, HTML, and structured formats.
+The implementation comprises approximately 20,000 lines of TypeScript with 1,668 tests across 65 test suites. It supports TypeScript, Python, Rust, Go, Java, C/C++, and C\#, with document indexing for Markdown, HTML, PDF, CSV, XML, and other structured formats.
 
 \medskip
 \noindent\textbf{Keywords:} Retrieval-Augmented Generation, Context Management, AI Coding Assistants, Graph RAG, Local-First, MCP
@@ -161,10 +161,10 @@ This paper makes the following contributions:
 
 \begin{enumerate}
     \item A \textbf{hybrid retrieval architecture} combining vector similarity, graph traversal, and full-text search with Reciprocal Rank Fusion
-    \item \textbf{Code-aware indexing} using tree-sitter AST parsing with automatic relationship extraction across 5 programming languages
+    \item \textbf{Code-aware indexing} using tree-sitter and regex-based AST parsing with automatic relationship extraction across 7 programming languages
     \item \textbf{Advanced retrieval techniques} including HyDE query expansion, multi-vector chunking, retrieval gating, and smart context expansion
     \item \textbf{Conversation memory} with decision extraction and session management for persistent knowledge
-    \item A complete \textbf{reference implementation} with MCP integration, 30 tools, and production-ready deployment as an npm package
+    \item A complete \textbf{reference implementation} with MCP integration, 12 action-based tools, and production-ready deployment as an npm package
 \end{enumerate}
 
 
@@ -199,10 +199,10 @@ Figure~\ref{fig:architecture} shows the overall system architecture. ctx-sys sit
 \node[layer=ctxcyan!15] (mcp) at (0,4) {};
 \node[font=\small\bfseries] at (-5.5,4.5) {MCP Server};
 \node[box, fill=white] (search) at (-4,3.8) {context\_query};
-\node[box, fill=white] (index) at (-0.8,3.8) {index\_codebase};
-\node[box, fill=white] (memory) at (2.4,3.8) {store\_message};
-\node[box, fill=white] (graph) at (5.2,3.8) {query\_graph};
-\node[label] at (0,3.2) {+ 26 more tools};
+\node[box, fill=white] (index) at (-0.8,3.8) {index};
+\node[box, fill=white] (memory) at (2.4,3.8) {session};
+\node[box, fill=white] (graph) at (5.2,3.8) {graph};
+\node[label] at (0,3.2) {12 action-based tools};
 
 % Processing layer
 \node[layer=orange!8] (processing) at (0,1.8) {};
@@ -271,7 +271,7 @@ The database stores entities (code symbols, document sections), their vector emb
 
 \subsection{Multi-Language AST Parsing}
 
-ctx-sys uses tree-sitter to parse source code into Abstract Syntax Trees, extracting meaningful entities from five programming languages:
+ctx-sys parses source code into Abstract Syntax Trees, extracting meaningful entities from seven programming languages. Five use tree-sitter for precise parsing; C/C++ and C\# use regex-based extraction to avoid native compilation dependencies:
 
 \begin{table}[H]
     \centering
@@ -281,11 +281,13 @@ ctx-sys uses tree-sitter to parse source code into Abstract Syntax Trees, extrac
         \toprule
         \textbf{Language} & \textbf{Parser} & \textbf{Extracted Entities} \\
         \midrule
-        TypeScript/JS & tree-sitter-typescript & Functions, classes, methods, interfaces, type aliases, enums, imports \\
-        Python & tree-sitter-python & Functions, classes, methods, decorators, imports \\
-        Rust & tree-sitter-rust & Functions, structs, impls, traits, enums, imports \\
-        Go & tree-sitter-go & Functions, structs, methods, interfaces, imports \\
-        Java & tree-sitter-java & Classes, methods, interfaces, imports \\
+        TypeScript/JS & tree-sitter & Functions, classes, methods, interfaces, type aliases, enums, imports \\
+        Python & tree-sitter & Functions, classes, methods, decorators, imports \\
+        Rust & tree-sitter & Functions, structs, impls, traits, enums, imports \\
+        Go & tree-sitter & Functions, structs, methods, interfaces, imports \\
+        Java & tree-sitter & Classes, methods, interfaces, imports \\
+        C/C++ & regex-based & Functions, classes, structs, enums, namespaces, \#includes \\
+        C\# & regex-based & Classes, interfaces, structs, records, enums, methods, usings \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -351,7 +353,7 @@ Five relationship types are automatically extracted:
 
 \subsection{Document Indexing}
 
-Beyond code, ctx-sys indexes documentation in any text format: Markdown, HTML, YAML, JSON, TOML, and plain text. Documents are split into semantic chunks at paragraph boundaries with configurable overlap, ensuring that each chunk is self-contained for embedding.
+Beyond code, ctx-sys indexes documentation in a wide range of formats: Markdown, HTML, YAML, JSON, TOML, PDF, CSV, XML, and plain text. Documents are split into semantic chunks at paragraph boundaries with configurable overlap, ensuring that each chunk is self-contained for embedding.
 
 The indexing pipeline is:
 \begin{enumerate}
@@ -658,24 +660,28 @@ For long-running AI agent workflows, ctx-sys provides three memory management to
 
 \subsection{Model Context Protocol}
 
-ctx-sys integrates with AI assistants through the Model Context Protocol (MCP), an open standard for connecting LLMs to external data sources. The MCP server exposes 30 tools organized into categories:
+ctx-sys integrates with AI assistants through the Model Context Protocol (MCP), an open standard for connecting LLMs to external data sources. The MCP server exposes 12 action-based tools, each grouping related operations under a single tool with an \texttt{action} enum parameter. This consolidation reduces cognitive load for LLM consumers while preserving full functionality:
 
 \begin{table}[H]
     \centering
-    \caption{MCP tools by category}
+    \caption{MCP tools and their actions}
     \label{tab:mcp-tools}
-    \begin{tabular}{lll}
+    \begin{tabular}{llp{6.5cm}}
         \toprule
-        \textbf{Category} & \textbf{Tools} & \textbf{Key Capabilities} \\
+        \textbf{Tool} & \textbf{Actions} & \textbf{Description} \\
         \midrule
-        Search & 2 & Hybrid RAG retrieval, entity search \\
-        Indexing & 4 & Codebase indexing, document indexing, git sync \\
-        Graph & 3 & Relationship traversal, graph statistics \\
-        Memory & 5 & Message storage, history, session summaries \\
-        Agent & 7 & Checkpoints, memory tiers, reflections \\
-        Project & 4 & Project management, entity operations \\
-        Git Hooks & 2 & Auto-indexing, impact analysis \\
-        Other & 3 & Search decisions, index status, graph stats \\
+        context\_query & \textit{(standalone)} & Hybrid RAG retrieval with source attribution \\
+        project & create, list, set\_active, delete & Multi-project management \\
+        entity & add, get, search, delete & Code and document entity management \\
+        index & codebase, document, sync, status & Parse and index code and docs \\
+        graph & link, query, stats & Entity relationship navigation \\
+        session & create, list, archive, summarize & Conversation session lifecycle \\
+        message & store, history & Conversation messages across sessions \\
+        decision & search, create & Architectural decision tracking \\
+        checkpoint & save, load, list, delete & Agent state persistence \\
+        memory & spill, recall, status & Hot/cold memory tier management \\
+        reflection & store, query & Cross-session learning and lessons \\
+        hooks & install, impact\_report & Git hook integration \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -713,105 +719,7 @@ Key configuration options include embedding model selection, summarization provi
 
 
 % ============================================================================
-% SECTION 9: EVALUATION
-% ============================================================================
-\section{Evaluation}
-\label{sec:evaluation}
-
-\subsection{Implementation Metrics}
-
-\begin{table}[H]
-    \centering
-    \caption{Implementation metrics}
-    \label{tab:metrics}
-    \begin{tabular}{lr}
-        \toprule
-        \textbf{Metric} & \textbf{Value} \\
-        \midrule
-        Source lines of code & $\sim$20,000 \\
-        Test lines of code & $\sim$16,000 \\
-        Passing tests & 1,555 \\
-        Test suites & 56 \\
-        Implementation phases & 10 \\
-        External dependencies & 10 \\
-        MCP tools exposed & 30 \\
-        Supported languages & 5 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\subsection{Retrieval Quality}
-
-Qualitative assessment on real codebases demonstrates:
-
-\begin{itemize}
-    \item \textbf{Keyword queries}: High precision for exact symbol lookup, enhanced by FTS5 with BM25 ranking and camelCase identifier splitting
-    \item \textbf{Conceptual queries}: Good recall with semantic search, significantly improved by multi-vector chunking of large entities
-    \item \textbf{Dependency queries}: Effective graph traversal for import chains and call graphs
-    \item \textbf{Complex queries}: Query decomposition with multi-strategy fusion handles multi-faceted questions well
-    \item \textbf{HyDE benefit}: Measurable improvement for vocabulary-mismatched queries (e.g., ``error handling'' finding \texttt{try/catch} blocks)
-\end{itemize}
-
-Multi-strategy fusion consistently outperforms any single strategy approach. The combination of keyword precision, semantic recall, and structural understanding from graph traversal covers query types that no single strategy handles well alone.
-
-\subsection{Performance}
-
-\begin{table}[H]
-    \centering
-    \caption{Performance characteristics on medium-sized codebases (10K--50K lines)}
-    \begin{tabular}{ll}
-        \toprule
-        \textbf{Operation} & \textbf{Performance} \\
-        \midrule
-        AST parsing & $\sim$100 files/second \\
-        Embedding generation (Ollama) & $\sim$10 entities/second \\
-        Embedding generation (OpenAI) & $\sim$50 entities/second \\
-        FTS5 keyword search & $<$ 5ms \\
-        Vector similarity search (sqlite-vec) & 10--50ms \\
-        Graph traversal (depth 2) & 5--20ms \\
-        Full retrieval pipeline & 50--200ms \\
-        Full pipeline + HyDE & +500--2000ms (LLM generation) \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\subsection{Limitations}
-
-\begin{enumerate}
-    \item \textbf{Language support}: AST parsing limited to TypeScript, Python, Rust, Go, Java. Other languages get document-level indexing only.
-    \item \textbf{Summarization latency}: LLM-based summarization is slow and should be run asynchronously or as a background task.
-    \item \textbf{Embedding model dependency}: Changing embedding models requires re-embedding all entities. Model version tracking detects this but the re-embedding cost is significant for large codebases.
-    \item \textbf{Single-machine}: Currently designed for single-developer use. Multi-user or team scenarios would require shared database access or replication.
-\end{enumerate}
-
-
-% ============================================================================
-% SECTION 10: RELATED WORK
-% ============================================================================
-\section{Related Work}
-\label{sec:related-work}
-
-\subsection{Retrieval-Augmented Generation}
-
-Retrieval-Augmented Generation (RAG) has emerged as a fundamental paradigm for extending LLM capabilities beyond training data. The core insight is that LLMs can effectively utilize external knowledge when provided in context, enabling factual grounding without model retraining.
-
-Standard RAG implementations retrieve text chunks by vector similarity. ctx-sys extends this with graph-aware retrieval and code-specific heuristics, recognizing that code has structural relationships (imports, inheritance, calls) that flat text retrieval misses.
-
-\subsection{Code Intelligence}
-
-Tools like Language Server Protocol (LSP) implementations, GitHub's code search, and Sourcegraph provide structural code understanding. ctx-sys differs by focusing on \textit{retrieval for AI assistants} rather than developer navigation---the goal is to assemble relevant context within token budgets, not to provide exhaustive cross-references.
-
-\subsection{Graph RAG}
-
-Recent work on Graph RAG combines knowledge graphs with retrieval-augmented generation. ctx-sys builds its graph automatically from AST analysis (imports, calls, inheritance) rather than requiring manual knowledge graph construction, making it practical for any codebase without upfront investment.
-
-\subsection{Context Management}
-
-Systems like Mem0, LangChain Memory, and LlamaIndex provide context management for LLM applications. ctx-sys is distinguished by its focus on code-specific retrieval (AST parsing, relationship extraction), its fully local architecture, and its MCP-native integration that works with any compatible AI assistant.
-
-
-% ============================================================================
-% SECTION 11: CONCLUSION
+% SECTION 9: CONCLUSION
 % ============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
