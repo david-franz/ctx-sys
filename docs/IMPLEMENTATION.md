@@ -19,6 +19,7 @@ ctx-sys is implemented in 12 phases, progressing from foundational infrastructur
 | 9 | Analytics & Distribution | Token analytics, git hooks, support docs, website, npm | ✅ Complete |
 | 10 | RAG Enhancements | Code content, scalable indexing, LLM summaries, robustness, Graph RAG | ✅ Complete |
 | 10b | MCP Tool Fixes | Fix 15 bugs/stubs discovered during systematic MCP testing | ✅ Complete |
+| 10i | Code Quality & New Formats | CoreService split, type safety, logging, PDF/CSV/XML, MCP consolidation | Planned |
 | 11 | Integration & Team | VS Code extension, auto context injection, team knowledge base | Planned |
 | 12 | Commercial & Enterprise | Auth & SSO, desktop app, licensing & billing, telemetry | Planned |
 
@@ -405,6 +406,38 @@ Environment health diagnostics and native vector search for production-scale per
 - Smarter defaults: doc, embed, semantic, expand all ON by default
 - Simplified CLI: 7 core commands + 9 subcommand groups
 - MCP context_query: expand and gate default ON for agents
+
+---
+
+## Phase 10i: Code Quality & New Formats
+
+Architectural cleanup, type safety, new document formats, and MCP tool consolidation. Addresses technical debt identified during code review.
+
+| Feature | Description | Doc | Status |
+|---------|-------------|-----|--------|
+| **F10i.1** | CoreService Decomposition | [F10i.1-core-service-decomposition.md](phase-10i/F10i.1-core-service-decomposition.md) | Planned |
+| **F10i.2** | Type Safety — Eliminate `as any` Casts | [F10i.2-type-safety.md](phase-10i/F10i.2-type-safety.md) | Planned |
+| **F10i.3** | Logging Abstraction | [F10i.3-logging-abstraction.md](phase-10i/F10i.3-logging-abstraction.md) | Planned |
+| **F10i.4** | Async Cleanup | [F10i.4-async-cleanup.md](phase-10i/F10i.4-async-cleanup.md) | Planned |
+| **F10i.5** | Reflection Store Integration | [F10i.5-reflection-store-integration.md](phase-10i/F10i.5-reflection-store-integration.md) | Planned |
+| **F10i.6** | Scalable Entity Iteration | [F10i.6-scalable-entity-iteration.md](phase-10i/F10i.6-scalable-entity-iteration.md) | Planned |
+| **F10i.7** | Test Infrastructure Fix | [F10i.7-test-infrastructure.md](phase-10i/F10i.7-test-infrastructure.md) | Planned |
+| **F10i.8** | PDF, CSV & XML Document Support | [F10i.8-pdf-csv-xml-support.md](phase-10i/F10i.8-pdf-csv-xml-support.md) | Planned |
+| **F10i.9** | MCP Tool Consolidation (30 → 12) | [F10i.9-mcp-tool-consolidation.md](phase-10i/F10i.9-mcp-tool-consolidation.md) | Planned |
+| **F10i.10** | Clean Error Messages | [F10i.10-error-messages.md](phase-10i/F10i.10-error-messages.md) | Planned |
+
+**Key Deliverables:**
+
+- Split CoreService (1051 lines, 43 methods) into 8 focused domain services behind a facade
+- Remove all 28 `as any` casts with type guards and const-derived unions
+- Injectable logger interface replacing 19 bare `console.*` calls in library code
+- Remove vestigial `async` from 13+ synchronous EntityStore methods
+- Wire up the full ReflectionStore (557 lines, currently dead code) replacing the message-based workaround
+- Paginated entity iteration for embedding generation (replace `list({ limit: 100000 })`)
+- Fix Jest/ESM test configuration so `npm test` passes reliably
+- PDF, CSV, and XML document indexing with type-specific entity extraction
+- Consolidate 30 MCP tools into 12 action-based tools for better LLM ergonomics
+- Structured error hierarchy replacing raw `TypeError: fetch failed` with actionable messages and fix suggestions
 
 ---
 
