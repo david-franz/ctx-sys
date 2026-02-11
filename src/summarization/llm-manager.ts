@@ -15,6 +15,7 @@ import {
   OpenAIOptions,
   AnthropicOptions
 } from './providers';
+import { Logger, consoleLogger } from '../utils/logger';
 
 /**
  * Configuration for the LLM summarization manager.
@@ -40,6 +41,9 @@ export interface LLMManagerConfig {
 
   /** Timeout per request in ms */
   timeout?: number;
+
+  /** Logger instance */
+  logger?: Logger;
 }
 
 /**
@@ -86,11 +90,13 @@ export class LLMSummarizationManager implements LLMSummarizer {
   private activeProvider: SummarizationProvider | null = null;
   private batchSize: number;
   private maxRetries: number;
+  private logger: Logger;
 
   constructor(config: LLMManagerConfig = {}) {
     this.preferenceOrder = config.providers || ['ollama', 'openai', 'anthropic'];
     this.batchSize = config.batchSize || 20;
     this.maxRetries = config.maxRetries || 3;
+    this.logger = config.logger ?? consoleLogger;
 
     // Initialize providers
     this.providers.set('ollama', new OllamaSummarizationProvider(config.ollama));
@@ -253,7 +259,7 @@ export class LLMSummarizationManager implements LLMSummarizer {
           }
         }
       } catch (error) {
-        console.error(`Batch summarization failed:`, error);
+        this.logger.error(`Batch summarization failed:`, error);
         failed += batch.length;
       }
 

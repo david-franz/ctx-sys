@@ -1,6 +1,7 @@
 import { EmbeddingProvider, ProviderConfig } from './types';
 import { OllamaEmbeddingProvider } from './ollama';
 import { OpenAIEmbeddingProvider } from './openai';
+import { Logger, consoleLogger } from '../utils/logger';
 
 /**
  * Factory for creating embedding providers.
@@ -36,7 +37,8 @@ export class EmbeddingProviderFactory {
    */
   static async createWithFallback(
     primary: ProviderConfig,
-    fallback: ProviderConfig
+    fallback: ProviderConfig,
+    logger: Logger = consoleLogger
   ): Promise<EmbeddingProvider> {
     const primaryProvider = await this.create(primary);
 
@@ -44,7 +46,7 @@ export class EmbeddingProviderFactory {
       return primaryProvider;
     }
 
-    console.warn('Primary embedding provider unavailable, using fallback');
+    logger.warn('Primary embedding provider unavailable, using fallback');
     return await this.create(fallback);
   }
 }

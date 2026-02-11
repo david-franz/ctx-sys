@@ -72,6 +72,8 @@ export interface GlobalConfig {
   providers: ProvidersConfig;
   defaults: DefaultsConfig;
   cli: CLIConfig;
+  /** Log level for library code: debug | info | warn | error | silent */
+  log_level?: 'debug' | 'info' | 'warn' | 'error' | 'silent';
 }
 
 /**

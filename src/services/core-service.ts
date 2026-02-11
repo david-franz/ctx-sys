@@ -146,7 +146,8 @@ export class CoreService {
         embeddingManager,
         graphTraversal,
         undefined,
-        new HeuristicReranker()
+        new HeuristicReranker(),
+        this.context.logger
       ));
     }
     return this.searchServices.get(projectId)!;

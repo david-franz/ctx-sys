@@ -13,6 +13,7 @@ import {
   DEFAULT_HOOK_CONFIG
 } from './types';
 import { ImpactAnalyzer, ToolClient } from './impact-analyzer';
+import { Logger, consoleLogger } from '../utils/logger';
 
 /**
  * Handles git hook events.
@@ -20,14 +21,17 @@ import { ImpactAnalyzer, ToolClient } from './impact-analyzer';
 export class HookHandler {
   private config: HookConfig;
   private impactAnalyzer: ImpactAnalyzer;
+  private logger: Logger;
 
   constructor(
     private db: DatabaseConnection,
     config: Partial<HookConfig> = {},
-    private client?: ToolClient
+    private client?: ToolClient,
+    logger?: Logger
   ) {
     this.config = { ...DEFAULT_HOOK_CONFIG, ...config };
     this.impactAnalyzer = new ImpactAnalyzer(client);
+    this.logger = logger ?? consoleLogger;
   }
 
   /**
@@ -402,17 +406,17 @@ export class HookHandler {
   private displayImpactSummary(report: import('./types').ImpactReport): void {
     if (this.config.verbosity === 'silent') return;
 
-    console.log('\n=== Impact Analysis ===');
-    console.log(`Risk Level: ${report.riskLevel.toUpperCase()}`);
-    console.log(`Files: +${report.filesAdded.length} ~${report.filesModified.length} -${report.filesDeleted.length}`);
-    console.log(`Affected: ${report.affectedEntities.length} entities, ${report.affectedDecisions.length} decisions`);
+    this.logger.info('\n=== Impact Analysis ===');
+    this.logger.info(`Risk Level: ${report.riskLevel.toUpperCase()}`);
+    this.logger.info(`Files: +${report.filesAdded.length} ~${report.filesModified.length} -${report.filesDeleted.length}`);
+    this.logger.info(`Affected: ${report.affectedEntities.length} entities, ${report.affectedDecisions.length} decisions`);
 
     if (report.suggestions.length > 0) {
-      console.log('\nRecommendations:');
-      report.suggestions.forEach(s => console.log(`  - ${s}`));
+      this.logger.info('\nRecommendations:');
+      report.suggestions.forEach(s => this.logger.info(`  - ${s}`));
     }
 
-    console.log('');
+    this.logger.info('');
   }
 
   /**
@@ -489,7 +493,7 @@ export class HookHandler {
     const messageLevel = levels[level];
 
     if (messageLevel <= configLevel) {
-      console.error(`ctx-sys: ${message}`);
+      this.logger.info(`ctx-sys: ${message}`);
     }
   }
 

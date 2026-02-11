@@ -11,6 +11,7 @@ import {
 } from '../embeddings';
 import { LLMSummarizer } from '../summarization';
 import { ConfigManager, GlobalConfig } from '../config';
+import { Logger, consoleLogger } from '../utils/logger';
 
 /**
  * Configuration for a model provider.
@@ -37,6 +38,8 @@ export interface ProviderFactoryOptions {
   configManager?: ConfigManager;
   /** Health check cache TTL in milliseconds (default: 5 minutes) */
   healthCacheTTL?: number;
+  /** Logger instance */
+  logger?: Logger;
 }
 
 /**
@@ -48,10 +51,12 @@ export class ProviderFactory {
   private summarizationProviders: Map<string, LLMSummarizer> = new Map();
   private healthCache: Map<string, ProviderHealth> = new Map();
   private healthCacheTTL: number;
+  private logger: Logger;
 
   constructor(options: ProviderFactoryOptions = {}) {
     this.configManager = options.configManager ?? new ConfigManager({ inMemoryOnly: true });
     this.healthCacheTTL = options.healthCacheTTL ?? 5 * 60 * 1000; // 5 minutes
+    this.logger = options.logger ?? consoleLogger;
   }
 
   /**
@@ -87,9 +92,9 @@ export class ProviderFactory {
         return primaryProvider;
       }
 
-      console.warn(`Primary embedding provider ${primaryConfig.provider}:${primaryConfig.model} unavailable, using fallback`);
+      this.logger.warn(`Primary embedding provider ${primaryConfig.provider}:${primaryConfig.model} unavailable, using fallback`);
     } catch (error) {
-      console.warn(`Failed to create primary embedding provider: ${error}`);
+      this.logger.warn(`Failed to create primary embedding provider: ${error}`);
     }
 
     return this.getEmbeddingProvider(fallbackConfig);
@@ -128,9 +133,9 @@ export class ProviderFactory {
         return primaryProvider;
       }
 
-      console.warn(`Primary summarization provider ${primaryConfig.provider}:${primaryConfig.model} unavailable, using fallback`);
+      this.logger.warn(`Primary summarization provider ${primaryConfig.provider}:${primaryConfig.model} unavailable, using fallback`);
     } catch (error) {
-      console.warn(`Failed to create primary summarization provider: ${error}`);
+      this.logger.warn(`Failed to create primary summarization provider: ${error}`);
     }
 
     return this.getSummarizationProvider(fallbackConfig);

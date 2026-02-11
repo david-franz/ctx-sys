@@ -3,6 +3,7 @@ import { DatabaseConnection } from './db/connection';
 import { ProjectManager, ProjectConfig } from './project';
 import { EntityStore } from './entities';
 import { EmbeddingManager, EmbeddingProviderFactory, EmbeddingProvider, MockEmbeddingProvider, OllamaEmbeddingProvider } from './embeddings';
+import { Logger, consoleLogger } from './utils/logger';
 
 /**
  * Default database path — local to the current working directory.
@@ -18,13 +19,15 @@ export function getDefaultDbPath(): string {
 export class AppContext {
   public readonly db: DatabaseConnection;
   public readonly projectManager: ProjectManager;
+  public readonly logger: Logger;
 
   private entityStores: Map<string, EntityStore> = new Map();
   private embeddingManagers: Map<string, EmbeddingManager> = new Map();
   private embeddingProviders: Map<string, EmbeddingProvider> = new Map();
 
-  constructor(dbPath?: string) {
-    this.db = new DatabaseConnection(dbPath || getDefaultDbPath());
+  constructor(dbPath?: string, options?: { logger?: Logger }) {
+    this.logger = options?.logger ?? consoleLogger;
+    this.db = new DatabaseConnection(dbPath || getDefaultDbPath(), { logger: this.logger });
     this.projectManager = new ProjectManager(this.db);
   }
 

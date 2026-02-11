@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
 import { GLOBAL_SCHEMA, createProjectTables, dropProjectTables } from './schema';
+import { Logger, consoleLogger } from '../utils/logger';
 
 /**
  * Attempt to load sqlite-vec. Returns null if unavailable (unsupported platform, missing binary).
@@ -32,9 +33,11 @@ export class DatabaseConnection {
   private dbPath: string;
   private initialized: boolean = false;
   private _vecAvailable: boolean = false;
+  private logger: Logger;
 
-  constructor(dbPath: string) {
+  constructor(dbPath: string, options?: { logger?: Logger }) {
     this.dbPath = dbPath;
+    this.logger = options?.logger ?? consoleLogger;
   }
 
   /**
@@ -58,8 +61,8 @@ export class DatabaseConnection {
         this._vecAvailable = true;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.warn(`sqlite-vec failed to load: ${msg}`);
-        console.warn('Vector search disabled. Keyword and graph search still work.');
+        this.logger.warn(`sqlite-vec failed to load: ${msg}`);
+        this.logger.warn('Vector search disabled. Keyword and graph search still work.');
       }
     }
 

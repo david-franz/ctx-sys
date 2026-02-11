@@ -9,6 +9,7 @@ import { GraphTraversal } from '../graph';
 import { QueryParser, ParsedQuery, EntityMention } from './query-parser';
 import { SearchResult, SearchStrategy, SearchConfig } from './types';
 import { Reranker } from './heuristic-reranker';
+import { Logger, consoleLogger } from '../utils/logger';
 
 /**
  * Raw search result before fusion.
@@ -71,15 +72,18 @@ const DEFAULT_OPTIONS: Required<MultiSearchOptions> = {
  */
 export class MultiStrategySearch {
   private queryParser: QueryParser;
+  private logger: Logger;
 
   constructor(
     private entityStore: EntityStore,
     private embeddingManager: EmbeddingManager,
     private graphTraversal?: GraphTraversal,
     queryParser?: QueryParser,
-    private reranker?: Reranker
+    private reranker?: Reranker,
+    logger?: Logger
   ) {
     this.queryParser = queryParser ?? new QueryParser();
+    this.logger = logger ?? consoleLogger;
   }
 
   /**
@@ -128,7 +132,7 @@ export class MultiStrategySearch {
       if (result.status === 'fulfilled') {
         rawResults.push(...result.value);
       } else {
-        console.error(`Search strategy failed: ${result.reason}`);
+        this.logger.error(`Search strategy failed: ${result.reason}`);
       }
     }
 
@@ -279,7 +283,7 @@ export class MultiStrategySearch {
 
     return results;
     } catch (err) {
-      console.error(`Semantic search failed: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Semantic search failed: ${err instanceof Error ? err.message : String(err)}`);
       return [];
     }
   }
@@ -334,7 +338,7 @@ export class MultiStrategySearch {
 
     return results;
     } catch (err) {
-      console.error(`Graph search failed: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`Graph search failed: ${err instanceof Error ? err.message : String(err)}`);
       return [];
     }
   }

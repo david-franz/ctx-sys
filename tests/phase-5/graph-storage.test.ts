@@ -292,10 +292,10 @@ describe('F5.1 - Graph Storage and Traversal', () => {
 
   describe('GraphTraversal', () => {
     let entities: {
-      a: ReturnType<typeof entityStore.create> extends Promise<infer T> ? T : never;
-      b: ReturnType<typeof entityStore.create> extends Promise<infer T> ? T : never;
-      c: ReturnType<typeof entityStore.create> extends Promise<infer T> ? T : never;
-      d: ReturnType<typeof entityStore.create> extends Promise<infer T> ? T : never;
+      a: ReturnType<typeof entityStore.create>;
+      b: ReturnType<typeof entityStore.create>;
+      c: ReturnType<typeof entityStore.create>;
+      d: ReturnType<typeof entityStore.create>;
     };
 
     beforeEach(async () => {
