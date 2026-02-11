@@ -113,12 +113,16 @@ export class CtxSysMcpServer {
     const required = new Set(inputSchema.required || []);
 
     for (const [key, value] of Object.entries(inputSchema.properties)) {
-      const prop = value as { type?: string; description?: string };
+      const prop = value as { type?: string; description?: string; enum?: string[] };
       let zodType: z.ZodTypeAny;
 
       switch (prop.type) {
         case 'string':
-          zodType = z.string();
+          if (prop.enum && prop.enum.length > 0) {
+            zodType = z.enum(prop.enum as [string, ...string[]]);
+          } else {
+            zodType = z.string();
+          }
           break;
         case 'number':
           zodType = z.number();
