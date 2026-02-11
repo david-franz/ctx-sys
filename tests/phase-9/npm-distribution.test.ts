@@ -87,7 +87,7 @@ describe('F9.5 NPM Distribution', () => {
 
     it('should have node engine requirement', () => {
       expect(pkg.engines).toBeDefined();
-      expect(pkg.engines.node).toContain('>=18');
+      expect(pkg.engines.node).toContain('>=20');
     });
   });
 
