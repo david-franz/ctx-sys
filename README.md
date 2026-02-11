@@ -248,8 +248,8 @@ providers:
 | Rust | tree-sitter | Functions, structs, impls, traits, imports |
 | Go | tree-sitter | Functions, structs, methods, interfaces, imports |
 | Java | tree-sitter | Classes, methods, interfaces, imports |
-| C/C++ | regex-based | Functions, classes, structs, enums, namespaces, #includes |
-| C# | regex-based | Classes, interfaces, structs, records, enums, methods, usings |
+| C/C++ | tree-sitter | Functions, classes, structs, enums, namespaces, #includes |
+| C# | tree-sitter | Classes, interfaces, structs, records, enums, methods, usings |
 
 Documents (Markdown, HTML, YAML, JSON, TOML, PDF, CSV, XML, plain text) are also indexed with semantic chunking.
 
