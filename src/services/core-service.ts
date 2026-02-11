@@ -14,6 +14,7 @@ import { DocumentIndexer } from '../documents/document-indexer';
 import { MultiStrategySearch, ContextAssembler, SearchResult, HeuristicReranker, ContextExpander, RetrievalGate, QueryDecomposer, HyDEQueryExpander, OllamaHypotheticalProvider } from '../retrieval';
 import { CheckpointManager, Checkpoint, AgentState, SaveOptions } from '../agent/checkpoints';
 import { MemoryTierManager } from '../agent/memory-tier';
+import { ReflectionStore, Reflection } from '../agent/reflection';
 import {
   CreateEntityInput,
   CreateMessageInput,
@@ -59,6 +60,7 @@ export class CoreService {
   private checkpointManagers: Map<string, CheckpointManager> = new Map();
   private memoryManagers: Map<string, MemoryTierManager> = new Map();
   private decisionStores: Map<string, DecisionStore> = new Map();
+  private reflectionStores: Map<string, ReflectionStore> = new Map();
 
   constructor(private context: AppContext) {}
 
@@ -70,6 +72,16 @@ export class CoreService {
       ));
     }
     return this.memoryManagers.get(projectId)!;
+  }
+
+  private getReflectionStore(projectId: string): ReflectionStore {
+    if (!this.reflectionStores.has(projectId)) {
+      this.reflectionStores.set(projectId, new ReflectionStore(
+        this.context.db,
+        projectId
+      ));
+    }
+    return this.reflectionStores.get(projectId)!;
   }
 
   // ─────────────────────────────────────────────────────────
@@ -837,40 +849,34 @@ export class CoreService {
     };
   }
 
-  // Simplified reflection operations (would need full ReflectionStore in production)
-  async storeReflection(projectId: string, sessionId: string, input: CreateReflectionInput): Promise<{ id: string }> {
-    // Store as a message with reflection metadata for now
-    const messageStore = this.getMessageStore(projectId);
-    const message = await messageStore.create({
+  async storeReflection(projectId: string, sessionId: string, input: CreateReflectionInput): Promise<Reflection> {
+    const store = this.getReflectionStore(projectId);
+    return store.store({
       sessionId,
-      role: 'system',
-      content: input.content,
-      metadata: {
-        type: 'reflection',
-        reflectionType: input.type,
-        outcome: input.outcome,
-        tags: input.tags
-      }
+      taskDescription: input.content,
+      outcome: (input.outcome as Reflection['outcome']) ?? 'partial',
+      nextStrategy: '',
+      whatWorked: input.outcome === 'success' ? [input.content] : undefined,
+      whatDidNotWork: input.outcome === 'failure' ? [input.content] : undefined,
+      tags: [
+        ...(input.tags ?? []),
+        ...(input.type ? [input.type] : []),
+      ],
     });
-    return { id: message.id };
   }
 
-  async getReflections(projectId: string, sessionId: string, options?: ReflectionQueryOptions): Promise<any[]> {
-    const messageStore = this.getMessageStore(projectId);
-    const messages = await messageStore.getBySession(sessionId);
-    return messages
-      .filter(m => m.metadata?.type === 'reflection')
-      .slice(0, options?.limit || 10);
+  async getReflections(projectId: string, sessionId: string, options?: ReflectionQueryOptions): Promise<Reflection[]> {
+    const store = this.getReflectionStore(projectId);
+    return store.getRecent(sessionId, options?.limit ?? 10);
   }
 
-  async searchReflections(projectId: string, query: string, options?: { type?: string; outcome?: string }): Promise<any[]> {
-    const messageStore = this.getMessageStore(projectId);
-    const messages = messageStore.search(query, { limit: 100 });
-    return messages.filter(m => {
-      if (m.metadata?.type !== 'reflection') return false;
-      if (options?.type && m.metadata?.reflectionType !== options.type) return false;
-      if (options?.outcome && m.metadata?.outcome !== options.outcome) return false;
-      return true;
+  async searchReflections(projectId: string, query: string, options?: { type?: string; outcome?: string }): Promise<Reflection[]> {
+    const store = this.getReflectionStore(projectId);
+    return store.search({
+      taskDescription: query,
+      outcomeFilter: options?.outcome ? [options.outcome as Reflection['outcome']] : undefined,
+      tags: options?.type ? [options.type] : undefined,
+      limit: 10,
     });
   }
 
@@ -1022,6 +1028,7 @@ export class CoreService {
     this.searchServices.delete(projectId);
     this.checkpointManagers.delete(projectId);
     this.memoryManagers.delete(projectId);
+    this.reflectionStores.delete(projectId);
     this.context.clearProjectCache(projectId);
   }
 

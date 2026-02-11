@@ -1391,7 +1391,7 @@ export class ToolRegistry {
 
         const projectId = await this.resolveProjectId(project);
         const sessionId = await this.resolveSessionId(projectId, session);
-        const result = await this.coreService.storeReflection(projectId, sessionId, {
+        const reflection = await this.coreService.storeReflection(projectId, sessionId, {
           type,
           content,
           outcome,
@@ -1400,7 +1400,11 @@ export class ToolRegistry {
 
         return {
           success: true,
-          reflectionId: result.id
+          reflectionId: reflection.id,
+          session_id: reflection.sessionId,
+          outcome: reflection.outcome,
+          tags: reflection.tags,
+          created_at: reflection.createdAt.toISOString()
         };
       }
     );
@@ -1448,11 +1452,12 @@ export class ToolRegistry {
         return {
           success: true,
           count: reflections.length,
-          reflections: reflections.map((r: any) => ({
+          reflections: reflections.map((r) => ({
             id: r.id,
-            type: r.metadata?.reflectionType,
-            content: r.content,
-            outcome: r.metadata?.outcome
+            content: r.taskDescription,
+            outcome: r.outcome,
+            tags: r.tags,
+            created_at: r.createdAt.toISOString()
           }))
         };
       }
