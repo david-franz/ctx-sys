@@ -161,7 +161,7 @@ This paper makes the following contributions:
 
 \begin{enumerate}
     \item A \textbf{hybrid retrieval architecture} combining vector similarity, graph traversal, and full-text search with Reciprocal Rank Fusion
-    \item \textbf{Code-aware indexing} using tree-sitter and regex-based AST parsing with automatic relationship extraction across 7 programming languages
+    \item \textbf{Code-aware indexing} using tree-sitter AST parsing with automatic relationship extraction across 7 programming languages
     \item \textbf{Advanced retrieval techniques} including HyDE query expansion, multi-vector chunking, retrieval gating, and smart context expansion
     \item \textbf{Conversation memory} with decision extraction and session management for persistent knowledge
     \item A complete \textbf{reference implementation} with MCP integration, 12 action-based tools, and production-ready deployment as an npm package
@@ -271,7 +271,7 @@ The database stores entities (code symbols, document sections), their vector emb
 
 \subsection{Multi-Language AST Parsing}
 
-ctx-sys parses source code into Abstract Syntax Trees, extracting meaningful entities from seven programming languages. Five use tree-sitter for precise parsing; C/C++ and C\# use regex-based extraction to avoid native compilation dependencies:
+ctx-sys parses source code into Abstract Syntax Trees, extracting meaningful entities from seven programming languages, all using tree-sitter WASM grammars for precise, cross-platform parsing:
 
 \begin{table}[H]
     \centering
@@ -286,8 +286,8 @@ ctx-sys parses source code into Abstract Syntax Trees, extracting meaningful ent
         Rust & tree-sitter & Functions, structs, impls, traits, enums, imports \\
         Go & tree-sitter & Functions, structs, methods, interfaces, imports \\
         Java & tree-sitter & Classes, methods, interfaces, imports \\
-        C/C++ & regex-based & Functions, classes, structs, enums, namespaces, \#includes \\
-        C\# & regex-based & Classes, interfaces, structs, records, enums, methods, usings \\
+        C/C++ & tree-sitter & Functions, classes, structs, enums, namespaces, \#includes \\
+        C\# & tree-sitter & Classes, interfaces, structs, records, enums, methods, usings \\
         \bottomrule
     \end{tabular}
 \end{table}
