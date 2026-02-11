@@ -452,6 +452,30 @@ export class MemoryTierManager {
   }
 
   /**
+   * Get aggregate memory status across all sessions.
+   */
+  getStatusAll(): { hotCount: number; coldCount: number; hotTokens: number; coldTokens: number } {
+    const rows = this.db.all<{ tier: string; count: number; tokens: number }>(
+      `SELECT tier, COUNT(*) as count, COALESCE(SUM(token_count), 0) as tokens
+       FROM ${this.prefix}_memory_items
+       GROUP BY tier`,
+      []
+    );
+
+    let hotCount = 0, coldCount = 0, hotTokens = 0, coldTokens = 0;
+    for (const row of rows) {
+      if (row.tier === 'hot') {
+        hotCount = row.count;
+        hotTokens = row.tokens;
+      } else {
+        coldCount += row.count;
+        coldTokens += row.tokens;
+      }
+    }
+    return { hotCount, coldCount, hotTokens, coldTokens };
+  }
+
+  /**
    * Get memory status for a session.
    */
   getStatus(sessionId: string): MemoryStatus {

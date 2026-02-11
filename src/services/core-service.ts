@@ -117,7 +117,7 @@ export class CoreService {
   async deleteCheckpoint(projectId: string, checkpointId: string) { return this.agent.deleteCheckpoint(projectId, checkpointId); }
   async spillMemory(projectId: string, sessionId: string, options?: SpillOptions) { return this.agent.spillMemory(projectId, sessionId, options); }
   async recallMemory(projectId: string, sessionId: string, query: string) { return this.agent.recallMemory(projectId, sessionId, query); }
-  async getMemoryStatus(projectId: string, sessionId: string) { return this.agent.getMemoryStatus(projectId, sessionId); }
+  async getMemoryStatus(projectId: string, sessionId?: string) { return this.agent.getMemoryStatus(projectId, sessionId); }
   async storeReflection(projectId: string, sessionId: string, input: CreateReflectionInput) { return this.agent.storeReflection(projectId, sessionId, input); }
   async getReflections(projectId: string, sessionId: string, options?: ReflectionQueryOptions) { return this.agent.getReflections(projectId, sessionId, options); }
   async searchReflections(projectId: string, query: string, options?: { type?: string; outcome?: string }) { return this.agent.searchReflections(projectId, query, options); }

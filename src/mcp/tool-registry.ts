@@ -645,7 +645,6 @@ export class ToolRegistry {
             return { success: true, ...result };
           }
           case 'status': {
-            this.requireParams(a, ['session']);
             const status = await this.coreService.getMemoryStatus(projectId, a.session);
             return { success: true, ...status };
           }

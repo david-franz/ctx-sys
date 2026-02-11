@@ -109,8 +109,11 @@ export class AgentService {
     };
   }
 
-  async getMemoryStatus(projectId: string, sessionId: string): Promise<MemoryStatus> {
+  async getMemoryStatus(projectId: string, sessionId?: string): Promise<MemoryStatus> {
     const manager = this.getMemoryManager(projectId);
+    if (!sessionId) {
+      return manager.getStatusAll();
+    }
     const status = await manager.getStatus(sessionId);
     return {
       hotCount: status.hot.items,
