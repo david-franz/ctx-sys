@@ -97,73 +97,60 @@ describe('F1.5 MCP Server Scaffold', () => {
       expect(tools.length).toBeGreaterThan(0);
     });
 
-    it('should have project management tools', () => {
+    it('should have project management tool with actions', () => {
       const registry = new ToolRegistry(context);
       const tools = registry.getToolDefinitions();
       const toolNames = tools.map(t => t.name);
 
-      expect(toolNames).toContain('create_project');
-      expect(toolNames).toContain('list_projects');
-      expect(toolNames).toContain('set_active_project');
-      expect(toolNames).toContain('delete_project');
+      expect(toolNames).toContain('project');
+      const project = tools.find(t => t.name === 'project')!;
+      const actions = (project.inputSchema.properties.action as any).enum;
+      expect(actions).toContain('create');
+      expect(actions).toContain('list');
+      expect(actions).toContain('set_active');
+      expect(actions).toContain('delete');
     });
 
-    it('should have entity management tools', () => {
+    it('should have entity management tool with actions', () => {
       const registry = new ToolRegistry(context);
       const tools = registry.getToolDefinitions();
       const toolNames = tools.map(t => t.name);
 
-      expect(toolNames).toContain('add_entity');
-      expect(toolNames).toContain('get_entity');
-      expect(toolNames).toContain('search_entities');
+      expect(toolNames).toContain('entity');
+      const entity = tools.find(t => t.name === 'entity')!;
+      const actions = (entity.inputSchema.properties.action as any).enum;
+      expect(actions).toContain('add');
+      expect(actions).toContain('get');
+      expect(actions).toContain('search');
     });
 
-    it('should have all core tools implemented', () => {
+    it('should have all 12 consolidated tools', () => {
       const registry = new ToolRegistry(context);
       const tools = registry.getToolDefinitions();
-      const toolNames = tools.map(t => t.name);
+      const toolNames = tools.map(t => t.name).sort();
 
-      // Retrieval tools
-      expect(toolNames).toContain('context_query');
-
-      // Indexing tools
-      expect(toolNames).toContain('index_codebase');
-      expect(toolNames).toContain('index_document');
-      expect(toolNames).toContain('sync_from_git');
-      expect(toolNames).toContain('get_index_status');
-
-      // Conversation tools
-      expect(toolNames).toContain('store_message');
-      expect(toolNames).toContain('get_history');
-      expect(toolNames).toContain('summarize_session');
-      expect(toolNames).toContain('list_sessions');
-
-      // Graph tools
-      expect(toolNames).toContain('link_entities');
-      expect(toolNames).toContain('query_graph');
-      expect(toolNames).toContain('get_graph_stats');
-
-      // Agent tools
-      expect(toolNames).toContain('checkpoint_save');
-      expect(toolNames).toContain('checkpoint_load');
-      expect(toolNames).toContain('memory_spill');
-      expect(toolNames).toContain('reflection_store');
-
+      expect(toolNames).toEqual([
+        'checkpoint', 'context_query', 'decision', 'entity',
+        'graph', 'hooks', 'index', 'memory',
+        'message', 'project', 'reflection', 'session',
+      ]);
     });
 
     it('should check tool existence', () => {
       const registry = new ToolRegistry(context);
 
-      expect(registry.hasTool('create_project')).toBe(true);
+      expect(registry.hasTool('project')).toBe(true);
+      expect(registry.hasTool('entity')).toBe(true);
       expect(registry.hasTool('nonexistent_tool')).toBe(false);
     });
 
-    it('should execute create_project tool', async () => {
+    it('should execute project create action', async () => {
       const registry = new ToolRegistry(context);
       const projectPath = path.join(testDir, 'test-project');
       fs.mkdirSync(projectPath, { recursive: true });
 
-      const result = await registry.execute('create_project', {
+      const result = await registry.execute('project', {
+        action: 'create',
         name: 'test-proj',
         path: projectPath
       }) as { success: boolean; project: { name: string } };
@@ -172,17 +159,18 @@ describe('F1.5 MCP Server Scaffold', () => {
       expect(result.project.name).toBe('test-proj');
     });
 
-    it('should execute list_projects tool', async () => {
+    it('should execute project list action', async () => {
       const registry = new ToolRegistry(context);
       const projectPath = path.join(testDir, 'test-project');
       fs.mkdirSync(projectPath, { recursive: true });
 
-      await registry.execute('create_project', {
+      await registry.execute('project', {
+        action: 'create',
         name: 'test-proj',
         path: projectPath
       });
 
-      const result = await registry.execute('list_projects', {}) as {
+      const result = await registry.execute('project', { action: 'list' }) as {
         projects: Array<{ name: string }>;
       };
 
@@ -190,17 +178,19 @@ describe('F1.5 MCP Server Scaffold', () => {
       expect(result.projects[0].name).toBe('test-proj');
     });
 
-    it('should execute set_active_project tool', async () => {
+    it('should execute project set_active action', async () => {
       const registry = new ToolRegistry(context);
       const projectPath = path.join(testDir, 'test-project');
       fs.mkdirSync(projectPath, { recursive: true });
 
-      await registry.execute('create_project', {
+      await registry.execute('project', {
+        action: 'create',
         name: 'test-proj',
         path: projectPath
       });
 
-      const result = await registry.execute('set_active_project', {
+      const result = await registry.execute('project', {
+        action: 'set_active',
         name: 'test-proj'
       }) as { success: boolean; activeProject: string };
 
@@ -208,19 +198,21 @@ describe('F1.5 MCP Server Scaffold', () => {
       expect(result.activeProject).toBe('test-proj');
     });
 
-    it('should execute add_entity tool', async () => {
+    it('should execute entity add action', async () => {
       const registry = new ToolRegistry(context);
       const projectPath = path.join(testDir, 'test-project');
       fs.mkdirSync(projectPath, { recursive: true });
 
-      await registry.execute('create_project', {
+      await registry.execute('project', {
+        action: 'create',
         name: 'test-proj',
         path: projectPath
       });
-      await registry.execute('set_active_project', { name: 'test-proj' });
+      await registry.execute('project', { action: 'set_active', name: 'test-proj' });
 
       // Don't provide content to skip embedding generation (tested separately)
-      const result = await registry.execute('add_entity', {
+      const result = await registry.execute('entity', {
+        action: 'add',
         type: 'concept',
         name: 'test-concept',
         summary: 'Test concept summary'
@@ -231,24 +223,27 @@ describe('F1.5 MCP Server Scaffold', () => {
       expect(result.entity.type).toBe('concept');
     });
 
-    it('should execute search_entities tool', async () => {
+    it('should execute entity search action', async () => {
       const registry = new ToolRegistry(context);
       const projectPath = path.join(testDir, 'test-project');
       fs.mkdirSync(projectPath, { recursive: true });
 
-      await registry.execute('create_project', {
+      await registry.execute('project', {
+        action: 'create',
         name: 'test-proj',
         path: projectPath
       });
-      await registry.execute('set_active_project', { name: 'test-proj' });
+      await registry.execute('project', { action: 'set_active', name: 'test-proj' });
       // Don't provide content to skip embedding generation (tested separately)
-      await registry.execute('add_entity', {
+      await registry.execute('entity', {
+        action: 'add',
         type: 'concept',
         name: 'test-concept',
         summary: 'Test concept summary'
       });
 
-      const result = await registry.execute('search_entities', {
+      const result = await registry.execute('entity', {
+        action: 'search',
         query: 'test'
       }) as { success: boolean; count: number; entities: Array<{ name: string }> };
 
@@ -355,33 +350,32 @@ describe('F1.5 MCP Server Scaffold', () => {
       }
     });
 
-    it('create_project should have required name and path', () => {
+    it('project tool should require action', () => {
       const registry = new ToolRegistry(context);
       const tools = registry.getToolDefinitions();
-      const createProject = tools.find(t => t.name === 'create_project');
+      const project = tools.find(t => t.name === 'project');
 
-      expect(createProject).toBeDefined();
-      expect(createProject!.inputSchema.required).toContain('name');
-      expect(createProject!.inputSchema.required).toContain('path');
+      expect(project).toBeDefined();
+      expect(project!.inputSchema.required).toContain('action');
     });
 
-    it('add_entity should have required type and name', () => {
+    it('entity tool should require action', () => {
       const registry = new ToolRegistry(context);
       const tools = registry.getToolDefinitions();
-      const addEntity = tools.find(t => t.name === 'add_entity');
+      const entity = tools.find(t => t.name === 'entity');
 
-      expect(addEntity).toBeDefined();
-      expect(addEntity!.inputSchema.required).toContain('type');
-      expect(addEntity!.inputSchema.required).toContain('name');
+      expect(entity).toBeDefined();
+      expect(entity!.inputSchema.required).toContain('action');
     });
 
-    it('search_entities should have required query', () => {
+    it('context_query should require query, not action', () => {
       const registry = new ToolRegistry(context);
       const tools = registry.getToolDefinitions();
-      const searchEntities = tools.find(t => t.name === 'search_entities');
+      const cq = tools.find(t => t.name === 'context_query');
 
-      expect(searchEntities).toBeDefined();
-      expect(searchEntities!.inputSchema.required).toContain('query');
+      expect(cq).toBeDefined();
+      expect(cq!.inputSchema.required).toContain('query');
+      expect(cq!.inputSchema.properties.action).toBeUndefined();
     });
   });
 
@@ -401,7 +395,8 @@ describe('F1.5 MCP Server Scaffold', () => {
       const registry = new ToolRegistry(context);
 
       await expect(
-        registry.execute('add_entity', {
+        registry.execute('entity', {
+          action: 'add',
           type: 'concept',
           name: 'test'
         })
@@ -412,26 +407,28 @@ describe('F1.5 MCP Server Scaffold', () => {
       const registry = new ToolRegistry(context);
 
       await expect(
-        registry.execute('set_active_project', {
+        registry.execute('project', {
+          action: 'set_active',
           name: 'nonexistent'
         })
       ).rejects.toThrow();
     });
 
-    it('should throw when entity id or qualified_name not provided', async () => {
+    it('should throw when entity get missing id or qualified_name', async () => {
       const registry = new ToolRegistry(context);
       const projectPath = path.join(testDir, 'test-project');
       fs.mkdirSync(projectPath, { recursive: true });
 
-      await registry.execute('create_project', {
+      await registry.execute('project', {
+        action: 'create',
         name: 'test-proj',
         path: projectPath
       });
-      await registry.execute('set_active_project', { name: 'test-proj' });
+      await registry.execute('project', { action: 'set_active', name: 'test-proj' });
 
       await expect(
-        registry.execute('get_entity', {})
-      ).rejects.toThrow('Either id or qualified_name is required');
+        registry.execute('entity', { action: 'get' })
+      ).rejects.toThrow();
     });
   });
 });
